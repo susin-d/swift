@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, Clock, Image as ImageIcon, Store, Globe, MapPin } from 'lucide-react';
+import { Save, Image as ImageIcon, MapPin } from 'lucide-react';
 import api from '../lib/api';
 
 interface StoreSettingsProps {

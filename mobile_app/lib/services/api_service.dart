@@ -7,7 +7,7 @@ class ApiService {
   final _storage = const FlutterSecureStorage();
   final _logger = Logger();
 
-  static const String baseUrl = 'http://localhost:3000/api/v1';
+  static const String baseUrl = 'http://10.0.2.2:3000/api/v1';
 
   ApiService() {
     _dio.options.baseUrl = baseUrl;

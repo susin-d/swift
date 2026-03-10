@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, Users, ShoppingCart, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, ShoppingCart, ArrowUpRight } from 'lucide-react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, Legend, PieChart, Pie, Cell
@@ -28,7 +28,6 @@ const pieData = [
 
 const Analytics: React.FC = () => {
     const { user } = useAuth();
-    const isAdmin = user?.role === 'admin';
 
     return (
         <div className="p-10 space-y-10 pb-20">

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { supabase } from '../lib/supabase';
-import api from '../lib/api';
 
 interface UserProfile {
     id: string;

@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.campusfood.mobile_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "26.1.10909125" // Forced stable version to bypass corrupt 28.x download
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

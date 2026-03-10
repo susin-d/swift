@@ -19,7 +19,7 @@ describe('RBAC Middleware', () => {
 
     it('should allow access if user has required role', async () => {
         mockRequest = {
-            user: { role: 'admin' }
+            user: { sub: 'admin-uuid', role: 'admin' }
         };
         const middleware = requireRole(['admin']);
 
@@ -31,7 +31,7 @@ describe('RBAC Middleware', () => {
 
     it('should allow access if user has one of the required roles', async () => {
         mockRequest = {
-            user: { role: 'vendor' }
+            user: { sub: 'vendor-uuid', role: 'vendor' }
         };
         const middleware = requireRole(['admin', 'vendor']);
 
@@ -43,7 +43,7 @@ describe('RBAC Middleware', () => {
 
     it('should deny access if user does not have required role', async () => {
         mockRequest = {
-            user: { role: 'user' }
+            user: { sub: 'user-uuid', role: 'user' }
         };
         const middleware = requireRole(['admin']);
 

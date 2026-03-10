@@ -36,7 +36,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     // 1. Verify payment on backend
     final verifyRes = await http.post(
-      Uri.parse('http://localhost:3000/api/v1/payments/verify'),
+      Uri.parse('http://10.0.2.2:3000/api/v1/payments/verify'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${ref.read(supabaseClientProvider).auth.currentSession?.accessToken}',
@@ -77,7 +77,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       
       // 1. Create Razorpay Order via Backend
       final orderRes = await http.post(
-        Uri.parse('http://localhost:3000/api/v1/payments/create-order'),
+        Uri.parse('http://10.0.2.2:3000/api/v1/payments/create-order'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${ref.read(supabaseClientProvider).auth.currentSession?.accessToken}',

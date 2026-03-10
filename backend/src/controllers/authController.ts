@@ -50,9 +50,18 @@ export const getMeHandler = async (request: FastifyRequest, reply: FastifyReply)
         .single();
 
     if (error || !baseUser) {
-        const err = new Error('Profile not found') as any;
-        err.statusCode = 404;
-        throw err;
+        // Log for monitoring but don't fail with 404
+        console.warn(`[getMeHandler] Profile not found in database for user ${user.sub}. Returning default.`);
+
+        return reply.send({
+            user: {
+                id: user.sub,
+                email: user.email,
+                role: user.role || 'user',
+                name: user.email?.split('@')[0] || 'User',
+                profile: {}
+            }
+        });
     }
 
     // Fetch role-specific details

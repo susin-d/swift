@@ -3,17 +3,13 @@ import { NavLink } from 'react-router-dom';
 import {
     Users,
     Store,
-    ShoppingBag,
-    TrendingUp,
     ShieldCheck,
     Settings,
     LogOut,
     LayoutDashboard,
-    ShieldAlert,
     ClipboardList,
     MenuSquare,
     BarChart3,
-    MessageSquare,
     Star,
     FileText,
     CreditCard,
@@ -25,7 +21,6 @@ import { useAuth } from '../../context/AuthContext';
 const Sidebar: React.FC = () => {
     const { user, signOut } = useAuth();
     const isAdmin = user?.role === 'admin';
-    const isVendor = user?.role === 'vendor';
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'vendor'], path: isAdmin ? '/admin' : '/vendor' },
