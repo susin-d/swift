@@ -1,0 +1,69 @@
+name: Campus Food Delivery Pipeline
+
+on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    name: Node.js Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+      - name: Run Tests & Coverage
+        working-directory: ./backend
+        run: npm test -- --coverage
+
+  vendor-dashboard-tests:
+    name: Vendor Dashboard (React) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Dependencies
+        working-directory: ./vendor-dashboard
+        run: npm ci
+      - name: Run Vitest
+        working-directory: ./vendor-dashboard
+        run: npm run test -- --coverage
+
+  admin-dashboard-tests:
+    name: Admin Dashboard (React) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Dependencies
+        working-directory: ./admin-dashboard
+        run: npm ci
+      - name: Run Vitest
+        working-directory: ./admin-dashboard
+        run: npm run test -- --coverage
+
+  flutter-app-tests:
+    name: Mobile App (Flutter) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+      - name: Install Dependencies
+        working-directory: ./mobile_app
+        run: flutter pub get
+      - name: Run Widget Tests
+        working-directory: ./mobile_app
+        run: flutter test --coverage

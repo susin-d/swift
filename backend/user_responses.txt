@@ -1,0 +1,186 @@
+[
+  {
+    "name": "Health",
+    "method": "GET",
+    "path": "/health",
+    "status": 200,
+    "data": {
+      "status": "ok",
+      "timestamp": "2026-03-10T06:36:47.440Z"
+    }
+  },
+  {
+    "name": "Register (Mock)",
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "An internal server error occurred"
+    }
+  },
+  {
+    "name": "Login (Mock)",
+    "method": "POST",
+    "path": "/api/v1/auth/session",
+    "status": 401,
+    "data": {
+      "error": "Unauthorized",
+      "message": "Invalid login credentials"
+    }
+  },
+  {
+    "name": "My Profile",
+    "method": "GET",
+    "path": "/api/v1/auth/me",
+    "status": 200,
+    "data": {
+      "user": {
+        "id": "120352bb-bca3-4fb6-9ae4-11a4d09bf6be",
+        "role": "user",
+        "name": "Test User",
+        "email": "user@example.com",
+        "phone": null,
+        "campus_id": null,
+        "created_at": "2026-03-10T04:03:22.898465+00:00"
+      }
+    }
+  },
+  {
+    "name": "Vendor Menus",
+    "method": "GET",
+    "path": "/api/v1/menus/vendor/1",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Invalid ID format"
+    }
+  },
+  {
+    "name": "Create Menu",
+    "method": "POST",
+    "path": "/api/v1/menus",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Create Menu Item",
+    "method": "POST",
+    "path": "/api/v1/menus/items",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Admin Stats",
+    "method": "GET",
+    "path": "/api/v1/admin/stats",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Admin Charts",
+    "method": "GET",
+    "path": "/api/v1/admin/charts",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Pending Vendors",
+    "method": "GET",
+    "path": "/api/v1/admin/vendors/pending",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Create Order",
+    "method": "POST",
+    "path": "/api/v1/orders",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Required field missing"
+    }
+  },
+  {
+    "name": "My Orders",
+    "method": "GET",
+    "path": "/api/v1/orders/me",
+    "status": 200,
+    "data": []
+  },
+  {
+    "name": "Create Payment Order",
+    "method": "POST",
+    "path": "/api/v1/payments/create-order",
+    "status": 200,
+    "data": {
+      "amount": 10000,
+      "amount_due": 10000,
+      "amount_paid": 0,
+      "attempts": 0,
+      "created_at": 1773124612,
+      "currency": "INR",
+      "entity": "order",
+      "id": "order_SPQUMqiH8FWVKf",
+      "notes": [],
+      "offer_id": null,
+      "receipt": "receipt_1773124611866",
+      "status": "created"
+    }
+  },
+  {
+    "name": "Vendor Profile",
+    "method": "GET",
+    "path": "/api/v1/vendor-ops/profile",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Vendor Menu (Ops)",
+    "method": "GET",
+    "path": "/api/v1/vendor-ops/menu",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Register: Attempt Admin Role",
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "An internal server error occurred"
+    }
+  },
+  {
+    "name": "Admin: Promote User to Vendor",
+    "method": "POST",
+    "path": "/api/v1/admin/users/role",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  }
+]

@@ -1,0 +1,14 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/vendor_model.dart';
+import '../models/menu_model.dart';
+import '../services/vendor_service.dart';
+
+final vendorServiceProvider = Provider((ref) => VendorService());
+
+final vendorsProvider = FutureProvider<List<VendorModel>>((ref) async {
+  return ref.watch(vendorServiceProvider).getAllVendors();
+});
+
+final vendorMenuProvider = FutureProvider.family<List<MenuItemModel>, String>((ref, vendorId) async {
+  return ref.watch(vendorServiceProvider).getVendorMenu(vendorId);
+});

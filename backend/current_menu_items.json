@@ -1,0 +1,402 @@
+[
+  {
+    "id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+    "name": "Medhu Vada"
+  },
+  {
+    "id": "003cb3cd-70b6-4edd-9992-c0866dc5c384",
+    "name": "Chicken 65"
+  },
+  {
+    "id": "b820d737-5b6c-41b3-8a3c-c90a08f079a0",
+    "name": "Mutton Sukka"
+  },
+  {
+    "id": "4afc27e7-2c4a-4707-ba59-c2ec3aa5e7bf",
+    "name": "Pepper Fry Prawns"
+  },
+  {
+    "id": "63da7789-91e2-4f1b-a10a-b768e2d34301",
+    "name": "Fish Fry"
+  },
+  {
+    "id": "54f8d74b-6052-4fbc-9740-a655c8e70317",
+    "name": "Chilli Chicken"
+  },
+  {
+    "id": "64fd698c-b33b-4432-9948-ff1e8e4b83ad",
+    "name": "Vanjaram Tawa Fry"
+  },
+  {
+    "id": "41cdcfa0-25a7-4590-9575-eee5fb0e3a04",
+    "name": "Egg Bonda"
+  },
+  {
+    "id": "fa53a2db-233b-4e3e-957b-320e9e6f61c7",
+    "name": "Crab Lollipop"
+  },
+  {
+    "id": "5f9f53d5-c8b0-4aee-b1c7-56ca6ba23edb",
+    "name": "Dindigul Thalappakatti Biryani"
+  },
+  {
+    "id": "ca154899-c910-479d-b058-03238ba7e8c8",
+    "name": "Ambur Chicken Biryani"
+  },
+  {
+    "id": "b37753aa-124a-44cb-9846-1faef8036407",
+    "name": "Egg Biryani"
+  },
+  {
+    "id": "615eb639-3472-441f-9724-a0814e5791e7",
+    "name": "Prawn Biryani"
+  },
+  {
+    "id": "c904f0c7-ef63-4b14-9a44-4e1166f6e038",
+    "name": "Fish Biryani"
+  },
+  {
+    "id": "58953100-08ca-48eb-bced-b94caff18673",
+    "name": "Chicken Chettinad"
+  },
+  {
+    "id": "0b9a49eb-de72-4267-af47-86ad9ea9d028",
+    "name": "Mutton Curry"
+  },
+  {
+    "id": "7c8b30c2-c48a-4b32-bfdf-7884e1fb2b6f",
+    "name": "Fish Pulikuzhambu"
+  },
+  {
+    "id": "21152b97-bac4-4e1f-8dcd-ec2e6dbe1b73",
+    "name": "Chicken Chinthamani"
+  },
+  {
+    "id": "d6215e60-f991-4918-9522-49c507e8b6bb",
+    "name": "Nethili Fry"
+  },
+  {
+    "id": "cfdc1b52-260f-4c80-bdbe-ba09fb485873",
+    "name": "Brain Fry"
+  },
+  {
+    "id": "d5e88f86-e9e1-43ae-911e-fb632d7494cc",
+    "name": "Liver Masala"
+  },
+  {
+    "id": "9a22c201-982c-4279-ac82-20222a28e9bd",
+    "name": "Quail Fry"
+  },
+  {
+    "id": "a1fcc4e8-47b7-47ff-bbd1-76c88ca05650",
+    "name": "Bun Parotta"
+  },
+  {
+    "id": "66a79805-e128-49bf-89d6-414374e2e218",
+    "name": "Muttai Parotta"
+  },
+  {
+    "id": "69ba049d-940f-4987-9e76-71b9a04ff159",
+    "name": "Kothu Parotta - Chicken"
+  },
+  {
+    "id": "5b4a78ae-ae41-4950-9561-60fb3155e47f",
+    "name": "Ceylone Parotta"
+  },
+  {
+    "id": "281f9200-e326-49c0-8e85-0f24ee6471b0",
+    "name": "Veechu Parotta"
+  },
+  {
+    "id": "54093741-1d43-4b1e-a591-3dabd7444389",
+    "name": "Omelette"
+  },
+  {
+    "id": "d54b47ad-efdb-4567-8f2a-022048bb4ee3",
+    "name": "Egg Podimas"
+  },
+  {
+    "id": "3f55a955-c6b5-402c-8377-99220db0f3bd",
+    "name": "Kaadai Gravy"
+  },
+  {
+    "id": "9428b4c7-1d5f-49ef-b26d-57c063e1a76d",
+    "name": "Sambar Idli"
+  },
+  {
+    "id": "b10ca07b-b9bb-404b-9f61-2b7b5b4f0405",
+    "name": "Ghee Roast Dosa"
+  },
+  {
+    "id": "33ebe078-dddd-4c86-819b-ad415bb409d1",
+    "name": "Pongal"
+  },
+  {
+    "id": "73f48225-8da8-4334-929d-423b6f5324c7",
+    "name": "Onion Uthappam"
+  },
+  {
+    "id": "ae1f3121-0729-431f-ad28-824f7fa79a1b",
+    "name": "Poori Masala"
+  },
+  {
+    "id": "89c5aff3-9401-4727-b300-6976c39678dd",
+    "name": "Rava Dosa"
+  },
+  {
+    "id": "27901b09-15d2-4c5e-9866-cd55cf7f5974",
+    "name": "Masala Dosa"
+  },
+  {
+    "id": "3077675a-1279-4be4-af0c-d2fca9e4e155",
+    "name": "Podi Idli"
+  },
+  {
+    "id": "069a0d26-fe4c-4dd9-a1da-3c4054680b9f",
+    "name": "Appam with Coconut Milk"
+  },
+  {
+    "id": "5e858c5f-5109-4e98-8a8b-f212bccefca5",
+    "name": "Vada Sambar"
+  },
+  {
+    "id": "e4573c99-5dee-4008-9bc8-c5953012a6ed",
+    "name": "Ada Pradhaman"
+  },
+  {
+    "id": "5f072af6-b179-43d0-b0ee-f74b2c273e61",
+    "name": "Kuzhi Paniyaram"
+  },
+  {
+    "id": "4c4491ec-64e6-4a43-8a4c-be35112c8a7f",
+    "name": "Pineapple Sheera"
+  },
+  {
+    "id": "4c4aef8e-4ece-4cdd-b813-bb509758eb20",
+    "name": "Filter Coffee"
+  },
+  {
+    "id": "4e990af7-6799-4a73-b8c5-6944d0d04851",
+    "name": "Badam Milk"
+  },
+  {
+    "id": "8e72f5aa-a8b6-4b53-897d-48f8b5614b0b",
+    "name": "Mini Tiffin"
+  },
+  {
+    "id": "f452f83d-ad23-42b4-94a0-6843feb91c09",
+    "name": "Set Dosa"
+  },
+  {
+    "id": "4b778a88-f211-4573-a1f7-77c0a836f2f4",
+    "name": "Mutton Paya"
+  },
+  {
+    "id": "8858db79-e17b-483c-b0d5-56cb486a766a",
+    "name": "Nool Parotta"
+  },
+  {
+    "id": "2eca2566-7683-496f-a16e-b6173e5efb1c",
+    "name": "Coin Parotta"
+  },
+  {
+    "id": "8a85af29-8191-4d9a-be73-ec70b86f4019",
+    "name": "Veg Kothu Parotta"
+  },
+  {
+    "id": "55051c81-6213-4766-ad2a-78bc4a45c9f4",
+    "name": "Egg Veechu Parotta"
+  },
+  {
+    "id": "9495291f-aa78-453c-8230-989f928b5cb0",
+    "name": "Chicken Keema Parotta"
+  },
+  {
+    "id": "38cc59df-2373-4f85-a20d-62adbdd4cd53",
+    "name": "Malabar Parotta"
+  },
+  {
+    "id": "ebed3549-1ec2-48d4-8ddf-6f4b40540e44",
+    "name": "Lemon Juice"
+  },
+  {
+    "id": "15950ae5-7e18-4a09-b73e-051d63b2e7ba",
+    "name": "Rose Milk"
+  },
+  {
+    "id": "83eba019-0de4-40d2-b05b-ef4a33db5af9",
+    "name": "Nannari Sarbath"
+  },
+  {
+    "id": "0141c190-4fdf-46d2-b52e-2329b255ebaf",
+    "name": "Panakam"
+  },
+  {
+    "id": "4b1b595d-8d8a-42e8-8a6c-eb0b02be5235",
+    "name": "Madurai Jigarthanda"
+  },
+  {
+    "id": "eaceb4e7-a302-4261-8c9e-553520a9886e",
+    "name": "Blood Fry"
+  },
+  {
+    "id": "3d3a89bb-954c-4743-aba3-a79910fec64c",
+    "name": "Boti Fry"
+  },
+  {
+    "id": "11e46e7d-1d1e-4db7-815b-22e8152bec14",
+    "name": "Ragi Dosa"
+  },
+  {
+    "id": "360316ba-c1d1-4c49-89c7-a65d9f894c98",
+    "name": "Kal Dosa"
+  },
+  {
+    "id": "a336637e-1eee-42c3-8130-afb8d7ec8d81",
+    "name": "Pesarattu"
+  },
+  {
+    "id": "94b66c56-cf22-4733-9dd3-1dfc8dd9d25f",
+    "name": "Upma"
+  },
+  {
+    "id": "3599cc3e-e0e6-45b3-a972-0786a12a2e3e",
+    "name": "Idiyappam"
+  },
+  {
+    "id": "060d0d46-09e4-40ba-aac9-3642a696a961",
+    "name": "Wheat Parotta"
+  },
+  {
+    "id": "bb68a408-e411-46a4-89ea-f9ac306798e0",
+    "name": "Adai Avial"
+  },
+  {
+    "id": "eaaa9a40-2e7e-421d-8095-aa79417379ce",
+    "name": "Veg Biryani"
+  },
+  {
+    "id": "cd3cf701-b224-4eb5-8a17-520445568e69",
+    "name": "Jeera Rice"
+  },
+  {
+    "id": "b62b4a29-eda5-401f-a054-e57916c21607",
+    "name": "Kaalaan Fry"
+  },
+  {
+    "id": "8dddfaea-2cb7-421b-8154-09fd3f5f9fea",
+    "name": "Vazhaipoo Vadai"
+  },
+  {
+    "id": "028867ec-21f7-43af-858c-4730c575f3c7",
+    "name": "Mirchi Bajji"
+  },
+  {
+    "id": "65d9a619-cd09-4ab1-a091-8846d11f88e9",
+    "name": "Onion Pakoda"
+  },
+  {
+    "id": "ca29c9fd-0230-46bd-a6dc-bf7f6ef71132",
+    "name": "Masala Sundal"
+  },
+  {
+    "id": "92de0894-336e-4391-9931-17eae5a1941a",
+    "name": "Sweet Poli"
+  },
+  {
+    "id": "1664fae3-d08f-425f-9c4b-654c2408df7a",
+    "name": "Samosa - Set of 2"
+  },
+  {
+    "id": "d629a78e-7b6b-4540-8a38-ddcb3270217a",
+    "name": "Keema Samosa"
+  },
+  {
+    "id": "b2940575-6c80-49f4-b955-cccb95efc616",
+    "name": "Chicken Lollipops"
+  },
+  {
+    "id": "fc5496ca-5a9f-4171-973c-018b900b4bda",
+    "name": "Paneer 65"
+  },
+  {
+    "id": "812c8379-4adf-47d1-89ce-3d9b3314806d",
+    "name": "Cauliflower Gobi 65"
+  },
+  {
+    "id": "298f754b-faa6-4fc5-ae9a-3498b947e70d",
+    "name": "Chilli Parotta"
+  },
+  {
+    "id": "1c8566cd-5682-48e8-b501-c8f1a14a56dc",
+    "name": "Butter Milk"
+  },
+  {
+    "id": "6023099f-1bec-4709-90cc-de041abbeb90",
+    "name": "Mango Lassi"
+  },
+  {
+    "id": "5142252f-2dd4-4984-8145-dc723ee20ee6",
+    "name": "Falooda"
+  },
+  {
+    "id": "490fc242-bb17-43ff-b535-5f4f339585da",
+    "name": "Boneless Chicken Fry"
+  },
+  {
+    "id": "7a0edf23-d7ae-4a38-aa79-8ca817a95874",
+    "name": "Karandi Omelette"
+  },
+  {
+    "id": "a164a714-1065-47a2-9564-8903ae9f07a5",
+    "name": "Plain Gravy"
+  },
+  {
+    "id": "f5edf811-2ada-481a-9add-cfa45853db77",
+    "name": "Curd Rice"
+  },
+  {
+    "id": "0b80d217-2294-44b1-bba8-559cece927ee",
+    "name": "Raita"
+  },
+  {
+    "id": "6e69c451-aa58-4cb6-aa2a-3e158cd15089",
+    "name": "Nalli Fry"
+  },
+  {
+    "id": "4f3b0c00-71ce-4331-aeea-73eae1df27a8",
+    "name": "Turkey Roast"
+  },
+  {
+    "id": "ccce5ac5-1b72-4e22-8aac-1dd2ec9c1bca",
+    "name": "Crab Masala"
+  },
+  {
+    "id": "24c8c66b-a243-414d-9211-1b04fe5701e3",
+    "name": "Pepper Chicken Soup"
+  },
+  {
+    "id": "e04b9156-d991-4cca-a9b0-7c68c03929a4",
+    "name": "Chicken Salna"
+  },
+  {
+    "id": "2f1aabec-da3c-421c-a8e2-57a7964de943",
+    "name": "Egg Salna"
+  },
+  {
+    "id": "b5379b14-b86d-489f-996a-b36bc128067c",
+    "name": "Butter Chicken"
+  },
+  {
+    "id": "35669266-660b-4c43-b960-eebed0a2eeb2",
+    "name": "Garlic Chicken"
+  },
+  {
+    "id": "da0e89de-4b90-446c-a30d-07c4c0b4f699",
+    "name": "Chicken Kari Dosa"
+  },
+  {
+    "id": "a27da857-ac7c-4086-a614-ecbae492cbf9",
+    "name": "Mutton Kari Dosa"
+  }
+]

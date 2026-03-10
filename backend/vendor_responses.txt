@@ -1,0 +1,699 @@
+[
+  {
+    "name": "Health",
+    "method": "GET",
+    "path": "/health",
+    "status": 200,
+    "data": {
+      "status": "ok",
+      "timestamp": "2026-03-10T06:36:36.260Z"
+    }
+  },
+  {
+    "name": "Register (Mock)",
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "An internal server error occurred"
+    }
+  },
+  {
+    "name": "Login (Mock)",
+    "method": "POST",
+    "path": "/api/v1/auth/session",
+    "status": 401,
+    "data": {
+      "error": "Unauthorized",
+      "message": "Invalid login credentials"
+    }
+  },
+  {
+    "name": "My Profile",
+    "method": "GET",
+    "path": "/api/v1/auth/me",
+    "status": 200,
+    "data": {
+      "user": {
+        "id": "f9994a91-ca34-4f1f-8439-6b4c5268d26a",
+        "role": "vendor",
+        "name": "ANNA",
+        "email": "anna@bhawan.com",
+        "phone": null,
+        "campus_id": null,
+        "created_at": "2026-03-08T04:53:06.65753+00:00"
+      }
+    }
+  },
+  {
+    "name": "Vendor Menus",
+    "method": "GET",
+    "path": "/api/v1/menus/vendor/1",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Invalid ID format"
+    }
+  },
+  {
+    "name": "Create Menu",
+    "method": "POST",
+    "path": "/api/v1/menus",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Access Denied"
+    }
+  },
+  {
+    "name": "Create Menu Item",
+    "method": "POST",
+    "path": "/api/v1/menus/items",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Access Denied"
+    }
+  },
+  {
+    "name": "Admin Stats",
+    "method": "GET",
+    "path": "/api/v1/admin/stats",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Admin Charts",
+    "method": "GET",
+    "path": "/api/v1/admin/charts",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Pending Vendors",
+    "method": "GET",
+    "path": "/api/v1/admin/vendors/pending",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  },
+  {
+    "name": "Create Order",
+    "method": "POST",
+    "path": "/api/v1/orders",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "Required field missing"
+    }
+  },
+  {
+    "name": "My Orders",
+    "method": "GET",
+    "path": "/api/v1/orders/me",
+    "status": 200,
+    "data": []
+  },
+  {
+    "name": "Create Payment Order",
+    "method": "POST",
+    "path": "/api/v1/payments/create-order",
+    "status": 200,
+    "data": {
+      "amount": 10000,
+      "amount_due": 10000,
+      "amount_paid": 0,
+      "attempts": 0,
+      "created_at": 1773124605,
+      "currency": "INR",
+      "entity": "order",
+      "id": "order_SPQUEK0M4qmPRq",
+      "notes": [],
+      "offer_id": null,
+      "receipt": "receipt_1773124604023",
+      "status": "created"
+    }
+  },
+  {
+    "name": "Vendor Profile",
+    "method": "GET",
+    "path": "/api/v1/vendor-ops/profile",
+    "status": 200,
+    "data": {
+      "vendor": {
+        "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+        "owner_id": "f9994a91-ca34-4f1f-8439-6b4c5268d26a",
+        "name": "Annapoorna Bhavan",
+        "description": "Traditional South Indian vegetarian breakfast and meals.",
+        "is_open": true,
+        "image_url": null,
+        "created_at": "2026-03-08T04:53:08.732784+00:00"
+      }
+    }
+  },
+  {
+    "name": "Vendor Menu (Ops)",
+    "method": "GET",
+    "path": "/api/v1/vendor-ops/menu",
+    "status": 200,
+    "data": {
+      "items": [
+        {
+          "id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+          "name": "Medhu Vada",
+          "price": 40,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9028e52d.jpg",
+          "description": "Golden crispy lentil donuts served with chutney.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "b10ca07b-b9bb-404b-9f61-2b7b5b4f0405",
+          "name": "Ghee Roast Dosa",
+          "price": 90,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_b10ca07b.jpg",
+          "description": "Crispy thin dosa roasted with pure cow ghee.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "33ebe078-dddd-4c86-819b-ad415bb409d1",
+          "name": "Pongal",
+          "price": 70,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_33ebe078.jpg",
+          "description": "Creamy rice and lentil mash tempered with pepper and cumin.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "3077675a-1279-4be4-af0c-d2fca9e4e155",
+          "name": "Podi Idli",
+          "price": 70,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3077675a.jpg",
+          "description": "Mini idlis tossed in spicy lentil powder.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "73f48225-8da8-4334-929d-423b6f5324c7",
+          "name": "Onion Uthappam",
+          "price": 85,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_73f48225.jpg",
+          "description": "Thick pancake topped with fresh onions and green chilies.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "ae1f3121-0729-431f-ad28-824f7fa79a1b",
+          "name": "Poori Masala",
+          "price": 75,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_ae1f3121.jpg",
+          "description": "Fluffy deep-fried pooris served with potato masala.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "89c5aff3-9401-4727-b300-6976c39678dd",
+          "name": "Rava Dosa",
+          "price": 95,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_89c5aff3.jpg",
+          "description": "Lacy, crispy semolina dosa with peppercorns.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "27901b09-15d2-4c5e-9866-cd55cf7f5974",
+          "name": "Masala Dosa",
+          "price": 100,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_27901b09.jpg",
+          "description": "Classic dosa stuffed with spiced potato filling.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "069a0d26-fe4c-4dd9-a1da-3c4054680b9f",
+          "name": "Appam with Coconut Milk",
+          "price": 80,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_069a0d26.jpg",
+          "description": "Fermented rice pancakes with sweet coconut milk.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "5e858c5f-5109-4e98-8a8b-f212bccefca5",
+          "name": "Vada Sambar",
+          "price": 50,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5e858c5f.jpg",
+          "description": "Crispy vada dipped in hot aromatic sambar.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "e4573c99-5dee-4008-9bc8-c5953012a6ed",
+          "name": "Ada Pradhaman",
+          "price": 90,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_e4573c99.jpg",
+          "description": "Traditional kheer with rice flakes and jaggery.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "5f072af6-b179-43d0-b0ee-f74b2c273e61",
+          "name": "Kuzhi Paniyaram",
+          "price": 75,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5f072af6.jpg",
+          "description": "Small steamed and fried dumplings.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "4c4491ec-64e6-4a43-8a4c-be35112c8a7f",
+          "name": "Pineapple Sheera",
+          "price": 60,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4491ec.jpg",
+          "description": "Sweet semolina pudding with pineapple chunks.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "4c4aef8e-4ece-4cdd-b813-bb509758eb20",
+          "name": "Filter Coffee",
+          "price": 30,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4aef8e.jpg",
+          "description": "Authentic South Indian decoction coffee.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "4e990af7-6799-4a73-b8c5-6944d0d04851",
+          "name": "Badam Milk",
+          "price": 50,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4e990af7.jpg",
+          "description": "Hot milk with almond paste and saffron.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "8e72f5aa-a8b6-4b53-897d-48f8b5614b0b",
+          "name": "Mini Tiffin",
+          "price": 150,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_8e72f5aa.jpg",
+          "description": "Assorted breakfast sampler platter.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "f452f83d-ad23-42b4-94a0-6843feb91c09",
+          "name": "Set Dosa",
+          "price": 80,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_f452f83d.jpg",
+          "description": "Spongy dosa served in a set of three.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "9428b4c7-1d5f-49ef-b26d-57c063e1a76d",
+          "name": "Sambar Idli",
+          "price": 60,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9428b4c7.jpg",
+          "description": "Pair of soft idlis soaked in traditional sambar.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "a336637e-1eee-42c3-8130-afb8d7ec8d81",
+          "name": "Pesarattu",
+          "price": 110,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_a336637e.jpg",
+          "description": "Green gram crepe from Andhra origin.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "94b66c56-cf22-4733-9dd3-1dfc8dd9d25f",
+          "name": "Upma",
+          "price": 60,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_94b66c56.jpg",
+          "description": "Savory semolina porridge with vegetables.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "3599cc3e-e0e6-45b3-a972-0786a12a2e3e",
+          "name": "Idiyappam",
+          "price": 70,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3599cc3e.jpg",
+          "description": "String hoppers served with coconut milk.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "060d0d46-09e4-40ba-aac9-3642a696a961",
+          "name": "Wheat Parotta",
+          "price": 80,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_060d0d46.jpg",
+          "description": "Healthier whole wheat version of parotta.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "bb68a408-e411-46a4-89ea-f9ac306798e0",
+          "name": "Adai Avial",
+          "price": 120,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_bb68a408.jpg",
+          "description": "Multi-lentil crepe with mixed vegetable stew.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "360316ba-c1d1-4c49-89c7-a65d9f894c98",
+          "name": "Kal Dosa",
+          "price": 70,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_360316ba.jpg",
+          "description": "Traditional soft handmade dosa.",
+          "is_available": true,
+          "category": "Breakfast"
+        },
+        {
+          "id": "11e46e7d-1d1e-4db7-815b-22e8152bec14",
+          "name": "Ragi Dosa",
+          "price": 90,
+          "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_11e46e7d.jpg",
+          "description": "Nutritious finger millet crepe.",
+          "is_available": true,
+          "category": "Breakfast"
+        }
+      ],
+      "categories": [
+        {
+          "id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Breakfast",
+          "sort_order": 0,
+          "menu_items": [
+            {
+              "id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+              "name": "Medhu Vada",
+              "price": 40,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9028e52d.jpg",
+              "description": "Golden crispy lentil donuts served with chutney.",
+              "is_available": true
+            },
+            {
+              "id": "b10ca07b-b9bb-404b-9f61-2b7b5b4f0405",
+              "name": "Ghee Roast Dosa",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_b10ca07b.jpg",
+              "description": "Crispy thin dosa roasted with pure cow ghee.",
+              "is_available": true
+            },
+            {
+              "id": "33ebe078-dddd-4c86-819b-ad415bb409d1",
+              "name": "Pongal",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_33ebe078.jpg",
+              "description": "Creamy rice and lentil mash tempered with pepper and cumin.",
+              "is_available": true
+            },
+            {
+              "id": "3077675a-1279-4be4-af0c-d2fca9e4e155",
+              "name": "Podi Idli",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3077675a.jpg",
+              "description": "Mini idlis tossed in spicy lentil powder.",
+              "is_available": true
+            },
+            {
+              "id": "73f48225-8da8-4334-929d-423b6f5324c7",
+              "name": "Onion Uthappam",
+              "price": 85,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_73f48225.jpg",
+              "description": "Thick pancake topped with fresh onions and green chilies.",
+              "is_available": true
+            },
+            {
+              "id": "ae1f3121-0729-431f-ad28-824f7fa79a1b",
+              "name": "Poori Masala",
+              "price": 75,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_ae1f3121.jpg",
+              "description": "Fluffy deep-fried pooris served with potato masala.",
+              "is_available": true
+            },
+            {
+              "id": "89c5aff3-9401-4727-b300-6976c39678dd",
+              "name": "Rava Dosa",
+              "price": 95,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_89c5aff3.jpg",
+              "description": "Lacy, crispy semolina dosa with peppercorns.",
+              "is_available": true
+            },
+            {
+              "id": "27901b09-15d2-4c5e-9866-cd55cf7f5974",
+              "name": "Masala Dosa",
+              "price": 100,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_27901b09.jpg",
+              "description": "Classic dosa stuffed with spiced potato filling.",
+              "is_available": true
+            },
+            {
+              "id": "069a0d26-fe4c-4dd9-a1da-3c4054680b9f",
+              "name": "Appam with Coconut Milk",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_069a0d26.jpg",
+              "description": "Fermented rice pancakes with sweet coconut milk.",
+              "is_available": true
+            },
+            {
+              "id": "5e858c5f-5109-4e98-8a8b-f212bccefca5",
+              "name": "Vada Sambar",
+              "price": 50,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5e858c5f.jpg",
+              "description": "Crispy vada dipped in hot aromatic sambar.",
+              "is_available": true
+            },
+            {
+              "id": "e4573c99-5dee-4008-9bc8-c5953012a6ed",
+              "name": "Ada Pradhaman",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_e4573c99.jpg",
+              "description": "Traditional kheer with rice flakes and jaggery.",
+              "is_available": true
+            },
+            {
+              "id": "5f072af6-b179-43d0-b0ee-f74b2c273e61",
+              "name": "Kuzhi Paniyaram",
+              "price": 75,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5f072af6.jpg",
+              "description": "Small steamed and fried dumplings.",
+              "is_available": true
+            },
+            {
+              "id": "4c4491ec-64e6-4a43-8a4c-be35112c8a7f",
+              "name": "Pineapple Sheera",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4491ec.jpg",
+              "description": "Sweet semolina pudding with pineapple chunks.",
+              "is_available": true
+            },
+            {
+              "id": "4c4aef8e-4ece-4cdd-b813-bb509758eb20",
+              "name": "Filter Coffee",
+              "price": 30,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4aef8e.jpg",
+              "description": "Authentic South Indian decoction coffee.",
+              "is_available": true
+            },
+            {
+              "id": "4e990af7-6799-4a73-b8c5-6944d0d04851",
+              "name": "Badam Milk",
+              "price": 50,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4e990af7.jpg",
+              "description": "Hot milk with almond paste and saffron.",
+              "is_available": true
+            },
+            {
+              "id": "8e72f5aa-a8b6-4b53-897d-48f8b5614b0b",
+              "name": "Mini Tiffin",
+              "price": 150,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_8e72f5aa.jpg",
+              "description": "Assorted breakfast sampler platter.",
+              "is_available": true
+            },
+            {
+              "id": "f452f83d-ad23-42b4-94a0-6843feb91c09",
+              "name": "Set Dosa",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_f452f83d.jpg",
+              "description": "Spongy dosa served in a set of three.",
+              "is_available": true
+            },
+            {
+              "id": "9428b4c7-1d5f-49ef-b26d-57c063e1a76d",
+              "name": "Sambar Idli",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9428b4c7.jpg",
+              "description": "Pair of soft idlis soaked in traditional sambar.",
+              "is_available": true
+            },
+            {
+              "id": "a336637e-1eee-42c3-8130-afb8d7ec8d81",
+              "name": "Pesarattu",
+              "price": 110,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_a336637e.jpg",
+              "description": "Green gram crepe from Andhra origin.",
+              "is_available": true
+            },
+            {
+              "id": "94b66c56-cf22-4733-9dd3-1dfc8dd9d25f",
+              "name": "Upma",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_94b66c56.jpg",
+              "description": "Savory semolina porridge with vegetables.",
+              "is_available": true
+            },
+            {
+              "id": "3599cc3e-e0e6-45b3-a972-0786a12a2e3e",
+              "name": "Idiyappam",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3599cc3e.jpg",
+              "description": "String hoppers served with coconut milk.",
+              "is_available": true
+            },
+            {
+              "id": "060d0d46-09e4-40ba-aac9-3642a696a961",
+              "name": "Wheat Parotta",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_060d0d46.jpg",
+              "description": "Healthier whole wheat version of parotta.",
+              "is_available": true
+            },
+            {
+              "id": "bb68a408-e411-46a4-89ea-f9ac306798e0",
+              "name": "Adai Avial",
+              "price": 120,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_bb68a408.jpg",
+              "description": "Multi-lentil crepe with mixed vegetable stew.",
+              "is_available": true
+            },
+            {
+              "id": "360316ba-c1d1-4c49-89c7-a65d9f894c98",
+              "name": "Kal Dosa",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_360316ba.jpg",
+              "description": "Traditional soft handmade dosa.",
+              "is_available": true
+            },
+            {
+              "id": "11e46e7d-1d1e-4db7-815b-22e8152bec14",
+              "name": "Ragi Dosa",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_11e46e7d.jpg",
+              "description": "Nutritious finger millet crepe.",
+              "is_available": true
+            }
+          ]
+        },
+        {
+          "id": "d50d10e6-99e7-47d3-91a7-0adb0a7d9ff6",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Quick Bites",
+          "sort_order": 1,
+          "menu_items": []
+        },
+        {
+          "id": "efb11425-cbba-4484-95af-b5f22f713f7c",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Main Course",
+          "sort_order": 2,
+          "menu_items": []
+        },
+        {
+          "id": "f6f4fcc5-1e15-4561-9ab4-5806665f22df",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Beverages",
+          "sort_order": 3,
+          "menu_items": []
+        }
+      ]
+    }
+  },
+  {
+    "name": "Register: Attempt Admin Role",
+    "method": "POST",
+    "path": "/api/v1/auth/register",
+    "status": 500,
+    "data": {
+      "error": "InternalServerError",
+      "message": "An internal server error occurred"
+    }
+  },
+  {
+    "name": "Admin: Promote User to Vendor",
+    "method": "POST",
+    "path": "/api/v1/admin/users/role",
+    "status": 403,
+    "data": {
+      "error": "Forbidden",
+      "message": "You do not have permission to access this resource"
+    }
+  }
+]
