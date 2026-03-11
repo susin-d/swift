@@ -1,6 +1,9 @@
 import { requireRole } from '../../../src/middleware/rbac';
+import '../../../src/middleware/auth';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import Sinon from 'sinon';
+import { describe, it, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
 
 describe('RBAC Middleware', () => {
     let mockRequest: Partial<FastifyRequest>;
@@ -11,6 +14,7 @@ describe('RBAC Middleware', () => {
     beforeEach(() => {
         replySendStub = Sinon.stub();
         replyCodeStub = Sinon.stub().returns({ send: replySendStub });
+
         mockReply = {
             code: replyCodeStub as any,
             send: replySendStub as any
@@ -21,9 +25,10 @@ describe('RBAC Middleware', () => {
         mockRequest = {
             user: { sub: 'admin-uuid', role: 'admin' }
         };
+
         const middleware = requireRole(['admin']);
 
-        await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
+        await middleware(mockRequest as any, mockReply as any);
 
         Sinon.assert.notCalled(replyCodeStub);
         Sinon.assert.notCalled(replySendStub);
@@ -33,9 +38,10 @@ describe('RBAC Middleware', () => {
         mockRequest = {
             user: { sub: 'vendor-uuid', role: 'vendor' }
         };
+
         const middleware = requireRole(['admin', 'vendor']);
 
-        await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
+        await middleware(mockRequest as any, mockReply as any);
 
         Sinon.assert.notCalled(replyCodeStub);
         Sinon.assert.notCalled(replySendStub);
@@ -45,25 +51,23 @@ describe('RBAC Middleware', () => {
         mockRequest = {
             user: { sub: 'user-uuid', role: 'user' }
         };
+
         const middleware = requireRole(['admin']);
 
-        await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
-
-        Sinon.assert.calledWith(replyCodeStub, 403);
-        Sinon.assert.calledWith(replySendStub, Sinon.match({
-            error: 'Forbidden'
-        }));
+        await assert.rejects(
+            middleware(mockRequest as any, mockReply as any),
+            { message: 'You do not have permission to access this resource' }
+        );
     });
 
     it('should deny access if no user is present', async () => {
         mockRequest = {};
+
         const middleware = requireRole(['admin']);
 
-        await middleware(mockRequest as FastifyRequest, mockReply as FastifyReply);
-
-        Sinon.assert.calledWith(replyCodeStub, 403);
-        Sinon.assert.calledWith(replySendStub, Sinon.match({
-            error: 'Forbidden'
-        }));
+        await assert.rejects(
+            middleware(mockRequest as any, mockReply as any),
+            { message: 'You do not have permission to access this resource' }
+        );
     });
 });
