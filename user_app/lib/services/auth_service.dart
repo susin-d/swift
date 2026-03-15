@@ -29,11 +29,14 @@ class AuthService {
   }
 
   Future<void> updateProfile({String? name, String? phone, String? address}) async {
-    await _api.patch('/auth/me', data: {
-      if (name != null) 'name': name,
-      if (phone != null) 'phone': phone,
-      if (address != null) 'address': address,
-    });
+    final payload = <String, dynamic>{
+      'name': name,
+      'phone': phone,
+      'address': address,
+    };
+    payload.removeWhere((_, value) => value == null);
+
+    await _api.patch('/auth/me', data: payload);
   }
 
   Future<void> signOut() async {

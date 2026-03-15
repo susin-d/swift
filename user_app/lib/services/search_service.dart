@@ -1,6 +1,4 @@
 import 'api_service.dart';
-import '../models/menu_model.dart';
-import '../models/vendor_model.dart';
 
 class SearchService {
   final ApiService _api = ApiService();

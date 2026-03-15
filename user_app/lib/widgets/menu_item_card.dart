@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../core/constants/app_colors.dart';
 import '../models/menu_model.dart';
 
 class MenuItemCard extends StatelessWidget {
   final MenuItemModel item;
-  final VoidCallback onAdd;
+  final int quantityInCart;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
 
   const MenuItemCard({
     super.key,
     required this.item,
-    required this.onAdd,
+    required this.quantityInCart,
+    required this.onIncrement,
+    required this.onDecrement,
   });
 
   @override
@@ -21,7 +26,7 @@ class MenuItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -48,11 +53,24 @@ class MenuItemCard extends StatelessWidget {
                       style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: AppColors.primary),
                     ),
                     const SizedBox(width: 12),
+                    if ((item.category ?? '').isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          item.category!.toUpperCase(),
+                          style: const TextStyle(color: AppColors.info, fontSize: 10, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    if ((item.category ?? '').isNotEmpty) const SizedBox(width: 8),
                     if (!item.isAvailable)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -84,27 +102,70 @@ class MenuItemCard extends StatelessWidget {
                   left: 0,
                   right: 0,
                   child: Center(
-                    child: GestureDetector(
-                      onTap: onAdd,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                    child: quantityInCart > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Text(
-                          'ADD',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
-                        ),
-                      ),
-                    ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    onDecrement();
+                                  },
+                                  child: const Icon(Icons.remove, size: 16, color: Colors.white),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '$quantityInCart',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
+                                ),
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    onIncrement();
+                                  },
+                                  child: const Icon(Icons.add, size: 16, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          )
+                        : GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              onIncrement();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'ADD',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
+                              ),
+                            ),
+                          ),
                   ),
                 ),
             ],

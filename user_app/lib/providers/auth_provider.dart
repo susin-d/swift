@@ -1,6 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
+
+final authRefreshListenableProvider = Provider<Listenable>((ref) {
+  final notifier = ValueNotifier<User?>(ref.read(userProvider));
+  ref.listen<User?>(userProvider, (previous, next) {
+    notifier.value = next;
+  });
+  return notifier;
+});
 
 final authServiceProvider = Provider((ref) => AuthService());
 
@@ -25,7 +34,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<void> signUp(String email, String password, String name) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _authService.signUp(email, password, name));
+    state = await AsyncValue.guard(() async {
+      await _authService.signUp(email, password, name);
+      await _authService.signIn(email, password);
+    });
   }
 
   Future<void> signOut() async {

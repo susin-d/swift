@@ -9,6 +9,15 @@ import '../../widgets/cart_item_widget.dart';
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
+  static const int _etaMin = 14;
+  static const int _etaMax = 24;
+
+  String _etaConfidenceLabel(int itemCount) {
+    if (itemCount <= 2) return 'High confidence';
+    if (itemCount <= 4) return 'Medium confidence';
+    return 'Medium confidence';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartProvider);
@@ -53,7 +62,7 @@ class CartScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_basket_outlined, size: 80, color: AppColors.textMuted.withOpacity(0.5)),
+          Icon(Icons.shopping_basket_outlined, size: 80, color: AppColors.textMuted.withValues(alpha: 0.5)),
           const SizedBox(height: 24),
           const Text(
             'Your basket is empty',
@@ -84,7 +93,7 @@ class CartScreen extends ConsumerWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, -10),
           ),
@@ -138,6 +147,32 @@ class CartScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'ETA $_etaMin-$_etaMax min • ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
+                      style: const TextStyle(
+                        color: AppColors.info,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -157,21 +192,34 @@ class CartScreen extends ConsumerWidget {
     if (cart.isEmpty) return;
 
     final firstItem = cart.values.first;
+    final vendorId = firstItem.item.vendorId;
+    if (vendorId == null || vendorId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to place order right now. Missing vendor context.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
     
     try {
       final order = await ref.read(orderServiceProvider).placeOrder(
-        vendorId: firstItem.item.menuId, // Simplified for now
+        vendorId: vendorId,
         items: cart.values.map((i) => {
-          'menu_item_id': i.item.id,
+          'id': i.item.id,
           'quantity': i.quantity,
-          'unit_price': i.item.price,
+          'price': i.item.price,
         }).toList(),
         totalAmount: ref.read(cartProvider.notifier).totalAmount,
       );
 
+      if (!context.mounted) return;
+
       ref.read(cartProvider.notifier).clearCart();
       context.push('/order-status/${order.id}');
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Checkout failed: $e'), backgroundColor: AppColors.error),
       );

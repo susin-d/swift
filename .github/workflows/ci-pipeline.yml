@@ -11,10 +11,12 @@ jobs:
     name: Node.js Backend Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./backend/package-lock.json
       - name: Install Dependencies
         working-directory: ./backend
         run: npm ci
@@ -22,48 +24,59 @@ jobs:
         working-directory: ./backend
         run: npm test -- --coverage
 
-  vendor-dashboard-tests:
-    name: Vendor Dashboard (React) Tests
+  user-app-tests:
+    name: User App (Flutter) Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install Dependencies
-        working-directory: ./vendor-dashboard
-        run: npm ci
-      - name: Run Vitest
-        working-directory: ./vendor-dashboard
-        run: npm run test -- --coverage
-
-  admin-dashboard-tests:
-    name: Admin Dashboard (React) Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install Dependencies
-        working-directory: ./admin-dashboard
-        run: npm ci
-      - name: Run Vitest
-        working-directory: ./admin-dashboard
-        run: npm run test -- --coverage
-
-  flutter-app-tests:
-    name: Mobile App (Flutter) Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
-          channel: 'stable'
+          channel: stable
+          cache: true
       - name: Install Dependencies
-        working-directory: ./mobile_app
+        working-directory: ./user_app
         run: flutter pub get
+      - name: Analyze
+        working-directory: ./user_app
+        run: flutter analyze
+      - name: Run Tests
+        working-directory: ./user_app
+        run: flutter test --coverage
+
+  vendor-app-tests:
+    name: Vendor App (Flutter) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Dependencies
+        working-directory: ./vendor_app
+        run: flutter pub get
+      - name: Analyze
+        working-directory: ./vendor_app
+        run: flutter analyze
+      - name: Run Tests
+        working-directory: ./vendor_app
+        run: flutter test --coverage
+
+  admin-app-tests:
+    name: Admin App (Flutter) Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Dependencies
+        working-directory: ./admin_app
+        run: flutter pub get
+      - name: Analyze
+        working-directory: ./admin_app
+        run: flutter analyze
       - name: Run Widget Tests
-        working-directory: ./mobile_app
+        working-directory: ./admin_app
         run: flutter test --coverage

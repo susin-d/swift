@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   admin_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
   action_performed TEXT NOT NULL,
   target_id UUID,
+  reason TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

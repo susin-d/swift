@@ -13,4 +13,5 @@ export const requireRole = (roles: string[]) => {
 };
 
 export const requireAdmin = requireRole(['admin']);
+export const requireUser = requireRole(['user']);
 export const requireVendor = requireRole(['vendor', 'admin']);

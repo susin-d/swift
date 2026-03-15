@@ -20,19 +20,47 @@ export const authMiddlewarePlugin = fp(async (app: FastifyInstance) => {
         try {
             const authHeader = request.headers.authorization;
             if (!authHeader) {
-                return reply.code(401).send({ error: 'Missing authorization header' });
+                return reply.code(401).send({
+                    error: 'Unauthorized',
+                    message: 'Missing authorization header'
+                });
             }
 
-            const token = authHeader.replace('Bearer ', '');
-            console.log('Verifying token:', token.substring(0, 20) + '...');
+            if (!authHeader.startsWith('Bearer ')) {
+                return reply.code(401).send({
+                    error: 'Unauthorized',
+                    message: 'Invalid authorization header format'
+                });
+            }
+
+            const token = authHeader.replace('Bearer ', '').trim();
+            if (!token) {
+                return reply.code(401).send({
+                    error: 'Unauthorized',
+                    message: 'Missing bearer token'
+                });
+            }
+
             const { data: { user }, error } = await supabase.auth.getUser(token);
 
             if (error || !user) {
-                console.error('Supabase getUser error detail:', JSON.stringify(error, null, 2));
-                return reply.code(401).send({ error: 'Invalid or expired token' });
+                return reply.code(401).send({
+                    error: 'Unauthorized',
+                    message: 'Invalid or expired token'
+                });
             }
 
-            console.log('User verified:', user.email);
+            const isBlocked = user.user_metadata?.is_blocked === true;
+            const bannedUntilRaw = (user as any).banned_until as string | null | undefined;
+            const bannedUntilMs = bannedUntilRaw ? Date.parse(bannedUntilRaw) : Number.NaN;
+            const isBanned = Number.isFinite(bannedUntilMs) && bannedUntilMs > Date.now();
+
+            if (isBlocked || isBanned) {
+                return reply.code(403).send({
+                    error: 'Forbidden',
+                    message: 'Account is blocked. Contact support.'
+                });
+            }
 
             // Map Supabase user to request.user for consistency
             request.user = {
@@ -40,9 +68,11 @@ export const authMiddlewarePlugin = fp(async (app: FastifyInstance) => {
                 email: user.email,
                 role: user.user_metadata?.role || 'user'
             };
-        } catch (err) {
-            console.error('Auth middleware catch:', err);
-            reply.code(401).send({ error: 'Authentication failed' });
+        } catch (_err) {
+            reply.code(401).send({
+                error: 'Unauthorized',
+                message: 'Authentication failed'
+            });
         }
     });
 });

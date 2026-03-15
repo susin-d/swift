@@ -32,6 +32,38 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    npm run dev
    ```
 
+   Contract governance endpoints (Sprint 3+):
+   - `GET /api/v1/contracts/registry` returns canonical request/response contract metadata and standardized error envelope details.
+   - `GET /api/v1/contracts/changelog` returns versioned contract change history for consumer sync.
+   - `GET /api/v1/contracts/flags` returns staged rollout flags for contract/reliability features.
+
+   Reliability standards (Sprint 4):
+   - Admin list endpoints expose shared pagination metadata (`meta.totalPages`, `meta.hasNextPage`, `meta.hasPreviousPage`).
+   - App clients apply bounded retry/backoff, superseded request cancellation, and short-lived contracts feed caching.
+
+   Trust surfaces (Sprint 5):
+   - Order create/list responses include ETA confidence envelope (`eta.min_minutes`, `eta.max_minutes`, `eta.confidence`).
+   - Checkout and tracking experiences consume the same ETA trust contract for consistency.
+
+   Vendor productivity (Sprint 6):
+   - Vendor order queue responses include pacing metadata (`pacing.elapsed_minutes`, `pacing.target_prep_minutes`, `pacing.recommended_prep_minutes`, `pacing.sla_risk`, `pacing.pace_label`).
+   - Vendor dashboard queue rails, sorts, and prep-time assist consume the same pacing contract.
+
+   Admin governance (Sprint 7):
+   - Admin dashboard now centers governance command workflows for moderation, audit, settings, and finance review.
+   - Audit and settings flows emphasize decision traceability and safer local review before policy changes are saved.
+   - Finance surfaces now highlight payout health and top-vendor visibility for faster operator review.
+
+   Security hardening (Sprint 8):
+   - Auth middleware rejects blocked or actively banned accounts with `403 Forbidden` on protected session flows.
+   - Admin client now propagates `X-Client-Request-Id` and persistent `X-Device-Trust` headers for privileged API calls.
+   - Backend error observability logs include server request id plus client request id correlation.
+   - Sensitive admin actions (block user, reject vendor, cancel order) now require an explicit reason, captured through a dialog widget in the admin app and stored in the audit log.
+   - Admin app `ReasonCaptureDialog` enforces a minimum 10-character justification before any destructive moderation action proceeds.
+   - Admin app shell now surfaces session posture (`Trusted device` / `Untrusted device`) with an inline remediation banner so operators can confirm trust on active devices.
+   - Customer-only mutations (`/orders`, `/orders/me`, `/addresses`, `/payments`, `/reviews`) now reject vendor/admin tokens with `403 Forbidden`.
+   - Delivery location updates are now explicitly scoped to vendor or admin operators, and the vendor app clears/restores sessions only for vendor-role accounts.
+
 3. **Vendor Dashboard**
    ```bash
    cd vendor-dashboard

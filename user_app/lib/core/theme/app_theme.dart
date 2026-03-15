@@ -10,7 +10,6 @@ class AppTheme {
         seedColor: AppColors.primary,
         primary: AppColors.primary,
         secondary: AppColors.primaryDark,
-        background: AppColors.background,
         surface: AppColors.cardBackground,
         error: AppColors.error,
         onPrimary: Colors.white,
@@ -18,93 +17,114 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       
-      // Modern Typography using Inter
+      // Modern Typography using Outfit for Headlines and Inter for Body
       textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(
-          fontSize: 32,
+        displayLarge: GoogleFonts.outfit(
+          fontSize: 36,
           fontWeight: FontWeight.w900,
           color: AppColors.textPrimary,
-          letterSpacing: -1,
+          letterSpacing: -1.5,
         ),
-        displayMedium: GoogleFonts.inter(
-          fontSize: 24,
+        displayMedium: GoogleFonts.outfit(
+          fontSize: 28,
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
           letterSpacing: -0.5,
         ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+        displaySmall: GoogleFonts.outfit(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 17,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+          letterSpacing: 0.1,
+        ),
         bodyMedium: GoogleFonts.inter(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w500,
           color: AppColors.textSecondary,
         ),
+        labelLarge: GoogleFonts.outfit(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
+          letterSpacing: 1.2,
+        ),
       ),
 
-      // Premium Card Design
+      // Premium Card Design with deeper shadows and smoother corners
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.border, width: 1),
+          borderRadius: BorderRadius.circular(28),
+          side: const BorderSide(color: AppColors.border, width: 1.5),
         ),
       ),
 
-      // AppBar Glassmorphism (Simulated)
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
+      // AppBar Design
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white.withValues(alpha: 0.8),
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: TextStyle(
+        titleTextStyle: GoogleFonts.outfit(
           color: AppColors.textPrimary,
-          fontSize: 20,
+          fontSize: 22,
           fontWeight: FontWeight.w900,
           letterSpacing: -0.5,
         ),
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
       ),
 
-      // Modern Buttons
+      // Modern Buttons with gradients and shadows
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 8,
-          shadowColor: AppColors.primary.withOpacity(0.3),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
+          elevation: 12,
+          shadowColor: AppColors.primary.withValues(alpha: 0.4),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: GoogleFonts.outfit(
             fontWeight: FontWeight.w800,
-            fontSize: 16,
+            fontSize: 18,
             letterSpacing: 0.5,
           ),
         ),
       ),
 
-      // Input Decoration
+      // Input Decoration with glassmorphism style
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.inputBackground,
+        fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2.5),
         ),
-        contentPadding: const EdgeInsets.all(20),
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w500),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(22),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+        hintStyle: GoogleFonts.inter(
+          color: AppColors.textMuted,
+          fontWeight: FontWeight.w500,
+          fontSize: 15,
+        ),
+        prefixIconColor: AppColors.primary,
       ),
     );
   }

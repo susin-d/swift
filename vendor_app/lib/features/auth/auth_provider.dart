@@ -24,6 +24,7 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final ApiService _api;
+  static const _tokenKey = 'auth_token';
 
   AuthNotifier(this._api) : super(AuthState()) {
     _checkAuth();
@@ -31,9 +32,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _checkAuth() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    if (token != null) {
+    final token = prefs.getString(_tokenKey);
+    if (token == null) {
+      return;
+    }
+
+    try {
+      final response = await _api.get('/auth/me');
+      final role = response.data['user']?['role'] as String? ?? 'user';
+      if (role != 'vendor') {
+        await prefs.remove(_tokenKey);
+        state = AuthState(error: 'Access denied. Vendor role required.');
+        return;
+      }
+
       state = state.copyWith(isAuthenticated: true);
+    } catch (_) {
+      await prefs.remove(_tokenKey);
+      state = AuthState();
     }
   }
 
@@ -46,9 +62,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       });
 
       if (response.statusCode == 200) {
+        final role = response.data['user']?['role'] as String? ?? 'user';
+        if (role != 'vendor') {
+          state = state.copyWith(
+            isLoading: false,
+            isAuthenticated: false,
+            error: 'Access denied. Vendor role required.',
+          );
+          return;
+        }
+
         final token = response.data['session']['access_token'];
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
+        await prefs.setString(_tokenKey, token);
         state = state.copyWith(isLoading: false, isAuthenticated: true);
       } else {
         state = state.copyWith(isLoading: false, error: 'Login failed');
@@ -60,7 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
+    await prefs.remove(_tokenKey);
     state = AuthState();
   }
 }

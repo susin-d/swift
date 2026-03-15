@@ -10,6 +10,7 @@ import { deliveryRoutes } from './delivery';
 import { publicRoutes } from './public';
 import { reviewRoutes } from './reviews';
 import { addressRoutes } from './addresses';
+import { contractsRoutes } from './contracts';
 
 export const setupRoutes = (app: FastifyInstance) => {
     app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -24,4 +25,5 @@ export const setupRoutes = (app: FastifyInstance) => {
     app.register(publicRoutes, { prefix: '/api/v1/public' });
     app.register(reviewRoutes, { prefix: '/api/v1/reviews' });
     app.register(addressRoutes, { prefix: '/api/v1/addresses' });
+    app.register(contractsRoutes, { prefix: '/api/v1/contracts' });
 };

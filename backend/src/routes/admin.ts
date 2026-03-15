@@ -1,5 +1,24 @@
 import { FastifyInstance } from 'fastify';
-import { getGlobalStats, getChartData, getPendingVendors, approveVendor, updateUserRole, createVendorAccount } from '../controllers/adminController';
+import {
+    approveVendor,
+    blockAdminUser,
+    cancelAdminOrder,
+    createVendorAccount,
+    getAdminAuditLogs,
+    getAdminOrders,
+    getAdminSettings,
+    getAdminUsers,
+    getChartData,
+    getDashboardSummary,
+    getFinancePayouts,
+    getFinanceSummary,
+    getGlobalStats,
+    getPendingVendors,
+    rejectVendor,
+    updateAdminSettings,
+    updateAdminUserRole,
+    updateUserRole,
+} from '../controllers/adminController';
 import { requireAdmin } from '../middleware/rbac';
 
 export const adminRoutes = async (app: FastifyInstance) => {
@@ -7,9 +26,21 @@ export const adminRoutes = async (app: FastifyInstance) => {
     app.addHook('preHandler', requireAdmin);
 
     app.get('/stats', getGlobalStats);
+    app.get('/dashboard/summary', getDashboardSummary);
     app.get('/charts', getChartData);
+    app.get('/finance/summary', getFinanceSummary);
+    app.get('/finance/payouts', getFinancePayouts);
+    app.get('/audit', getAdminAuditLogs);
+    app.get('/settings', getAdminSettings);
+    app.post('/settings', updateAdminSettings);
+    app.get('/orders', getAdminOrders);
+    app.patch('/orders/:id/cancel', cancelAdminOrder);
+    app.get('/users', getAdminUsers);
+    app.patch('/users/:id/block', blockAdminUser);
+    app.patch('/users/:id/role', updateAdminUserRole);
     app.get('/vendors/pending', getPendingVendors);
     app.patch('/vendors/:id/approve', approveVendor);
+    app.patch('/vendors/:id/reject', rejectVendor);
     app.post('/users/role', updateUserRole);
     app.post('/vendors', createVendorAccount);
 };

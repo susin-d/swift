@@ -1,5 +1,4 @@
 import '../models/order_model.dart';
-import '../models/vendor_model.dart';
 import 'api_service.dart';
 
 class OrderService {
@@ -21,11 +20,14 @@ class OrderService {
       'items': items,
       'total_amount': totalAmount,
     });
-    return OrderModel.fromJson(response.data['order']);
+
+    // Backend returns the created order object directly.
+    return OrderModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   Future<OrderModel> getOrderDetails(String orderId) async {
-    final response = await _api.get('/orders/$orderId');
-    return OrderModel.fromJson(response.data['order']);
+    // There is no dedicated GET /orders/:id route.
+    final orders = await getUserOrders();
+    return orders.firstWhere((o) => o.id == orderId);
   }
 }

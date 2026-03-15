@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/order_provider.dart';
-import '../../widgets/order_status_widget.dart';
 import '../../widgets/loading_widget.dart';
 import '../../models/order_model.dart';
 
@@ -43,7 +42,7 @@ class OrderTrackingScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -65,6 +64,8 @@ class OrderTrackingScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 20),
+          _buildEtaTrustCard(order),
           const SizedBox(height: 60),
           
           // Stepper-like visualization
@@ -108,6 +109,41 @@ class OrderTrackingScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildEtaTrustCard(OrderModel order) {
+    final eta = order.eta;
+    final minMinutes = eta?.minMinutes ?? 0;
+    final maxMinutes = eta?.maxMinutes ?? 0;
+    final confidence = (eta?.confidence ?? 'medium').toUpperCase();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.schedule_rounded, color: AppColors.info),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              minMinutes == 0 && maxMinutes == 0
+                  ? 'ETA confidence $confidence • status settled'
+                  : 'ETA $minMinutes-$maxMinutes min • confidence $confidence',
+              style: const TextStyle(
+                color: AppColors.info,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusStep(BuildContext context, String title, String subtitle, bool isDone) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
@@ -139,7 +175,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDone ? AppColors.textSecondary : AppColors.textMuted.withOpacity(0.5),
+                    color: isDone ? AppColors.textSecondary : AppColors.textMuted.withValues(alpha: 0.5),
                   ),
                 ),
               ],

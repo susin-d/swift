@@ -2,8 +2,6 @@ import { requireRole } from '../../../src/middleware/rbac';
 import '../../../src/middleware/auth';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import Sinon from 'sinon';
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
 
 describe('RBAC Middleware', () => {
     let mockRequest: Partial<FastifyRequest>;
@@ -54,10 +52,9 @@ describe('RBAC Middleware', () => {
 
         const middleware = requireRole(['admin']);
 
-        await assert.rejects(
-            middleware(mockRequest as any, mockReply as any),
-            { message: 'You do not have permission to access this resource' }
-        );
+        await expect(middleware(mockRequest as any, mockReply as any)).rejects.toMatchObject({
+            message: 'You do not have permission to access this resource'
+        });
     });
 
     it('should deny access if no user is present', async () => {
@@ -65,9 +62,8 @@ describe('RBAC Middleware', () => {
 
         const middleware = requireRole(['admin']);
 
-        await assert.rejects(
-            middleware(mockRequest as any, mockReply as any),
-            { message: 'You do not have permission to access this resource' }
-        );
+        await expect(middleware(mockRequest as any, mockReply as any)).rejects.toMatchObject({
+            message: 'You do not have permission to access this resource'
+        });
     });
 });

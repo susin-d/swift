@@ -1,6 +1,7 @@
 class MenuItemModel {
   final String id;
   final String menuId;
+  final String? vendorId;
   final String name;
   final String? description;
   final double price;
@@ -11,6 +12,7 @@ class MenuItemModel {
   MenuItemModel({
     required this.id,
     required this.menuId,
+    this.vendorId,
     required this.name,
     this.description,
     required this.price,
@@ -23,6 +25,7 @@ class MenuItemModel {
     return MenuItemModel(
       id: json['id'],
       menuId: json['menu_id'],
+      vendorId: json['vendor_id'],
       name: json['name'],
       description: json['description'],
       price: (json['price'] ?? 0.0).toDouble(),
@@ -36,6 +39,7 @@ class MenuItemModel {
     return {
       'id': id,
       'menu_id': menuId,
+      'vendor_id': vendorId,
       'name': name,
       'description': description,
       'price': price,

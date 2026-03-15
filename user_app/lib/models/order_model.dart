@@ -18,6 +18,7 @@ class OrderModel {
   final OrderStatus status;
   final List<OrderItemModel> items;
   final DateTime createdAt;
+  final OrderEta? eta;
 
   OrderModel({
     required this.id,
@@ -28,6 +29,7 @@ class OrderModel {
     required this.status,
     required this.items,
     required this.createdAt,
+    this.eta,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -43,6 +45,10 @@ class OrderModel {
               .toList() ??
           [],
       createdAt: DateTime.parse(json['created_at']),
+      eta: json['eta'] != null ? OrderEta.fromJson(json['eta']) : OrderEta.derivedFromStatus(
+        status: _statusFromString(json['status']),
+        createdAt: DateTime.parse(json['created_at']),
+      ),
     );
   }
 
@@ -58,6 +64,82 @@ class OrderModel {
   }
 
   String get statusText => status.name.toUpperCase();
+}
+
+class OrderEta {
+  final int minMinutes;
+  final int maxMinutes;
+  final String confidence;
+  final String? note;
+
+  const OrderEta({
+    required this.minMinutes,
+    required this.maxMinutes,
+    required this.confidence,
+    this.note,
+  });
+
+  factory OrderEta.fromJson(Map<String, dynamic> json) {
+    return OrderEta(
+      minMinutes: (json['min_minutes'] ?? 0) as int,
+      maxMinutes: (json['max_minutes'] ?? 0) as int,
+      confidence: (json['confidence'] ?? 'medium').toString(),
+      note: json['note']?.toString(),
+    );
+  }
+
+  factory OrderEta.derivedFromStatus({
+    required OrderStatus status,
+    required DateTime createdAt,
+  }) {
+    final ageMinutes = DateTime.now().difference(createdAt).inMinutes.clamp(0, 120);
+
+    int baseMin;
+    int baseMax;
+    String confidence;
+
+    switch (status) {
+      case OrderStatus.accepted:
+        baseMin = 10;
+        baseMax = 18;
+        confidence = 'high';
+        break;
+      case OrderStatus.preparing:
+        baseMin = 6;
+        baseMax = 14;
+        confidence = 'medium';
+        break;
+      case OrderStatus.ready:
+        baseMin = 2;
+        baseMax = 6;
+        confidence = 'high';
+        break;
+      case OrderStatus.completed:
+        baseMin = 0;
+        baseMax = 0;
+        confidence = 'high';
+        break;
+      case OrderStatus.cancelled:
+        baseMin = 0;
+        baseMax = 0;
+        confidence = 'low';
+        break;
+      case OrderStatus.pending:
+        baseMin = 14;
+        baseMax = 24;
+        confidence = 'high';
+    }
+
+    final minMinutes = (baseMin - (ageMinutes ~/ 2)).clamp(0, baseMin).toInt();
+    final maxMinutes = (baseMax - ageMinutes).clamp(minMinutes, baseMax).toInt();
+
+    return OrderEta(
+      minMinutes: minMinutes,
+      maxMinutes: maxMinutes,
+      confidence: confidence,
+      note: 'ETA range is a rolling estimate based on queue progress.',
+    );
+  }
 }
 
 class OrderItemModel {

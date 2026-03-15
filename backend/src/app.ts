@@ -3,6 +3,15 @@ import cors from '@fastify/cors';
 import { setupRoutes } from './routes';
 import { authMiddlewarePlugin } from './middleware/auth';
 
+const mapStatusToError = (statusCode: number) => {
+    if (statusCode === 400) return 'ValidationError';
+    if (statusCode === 401) return 'Unauthorized';
+    if (statusCode === 403) return 'Forbidden';
+    if (statusCode === 404) return 'NotFound';
+    if (statusCode === 409) return 'Conflict';
+    return 'InternalServerError';
+};
+
 export const buildApp = async (authOverride?: any) => {
     const app = Fastify({ logger: false }); // Disable logger for cleaner test output
 
@@ -19,11 +28,21 @@ export const buildApp = async (authOverride?: any) => {
     // Global Error Handler
     app.setErrorHandler((error: any, request: any, reply: any) => {
         const statusCode = error.statusCode || 500;
+        const requestId = request.id ?? 'unknown';
+        const clientRequestId = request.headers?.['x-client-request-id'] ?? 'n/a';
 
         // Log simplified error for monitoring
-        console.error(`[API Error] ${request.method} ${request.url} - Status ${statusCode}:`, error.message || String(error));
+        console.error(
+            `[API Error] reqId=${requestId} clientReqId=${clientRequestId} ${request.method} ${request.url} - Status ${statusCode}:`,
+            error.message || String(error)
+        );
 
         let message = error.message || String(error);
+        if (statusCode === 404) {
+            message = 'Resource not found';
+        } else if (statusCode === 400 && error.validation) {
+            message = 'Validation failed';
+        }
         const isTechnical = message.includes('violates') || message.includes('relation') ||
             message.includes('column') || message.includes('syntax') || message.includes('uuid');
 
@@ -37,8 +56,15 @@ export const buildApp = async (authOverride?: any) => {
         }
 
         return reply.status(statusCode).send({
-            error: (statusCode === 403 ? 'Forbidden' : (statusCode === 401 ? 'Unauthorized' : 'InternalServerError')),
+            error: mapStatusToError(statusCode),
             message: message
+        });
+    });
+
+    app.setNotFoundHandler((_request, reply) => {
+        return reply.status(404).send({
+            error: 'NotFound',
+            message: 'Resource not found'
         });
     });
 

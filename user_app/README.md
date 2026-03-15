@@ -1,16 +1,38 @@
-# mobile_app
+# user_app
 
-A new Flutter project.
+Flutter client for end-user food discovery, ordering, and delivery tracking in the Campus Pulse monorepo.
 
-## Getting Started
+## Core Features
 
-This project is a starting point for a Flutter application.
+- Discovery feed with category and mood-driven browse interactions
+- Vendor catalog, menu browsing, and cart/checkout flow
+- Order timeline and user order history
+- Shared contracts feed support (registry, changelog, flags)
 
-A few resources to get you started if this is your first Flutter project:
+## Sprint 5 Home Experience (Current)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Mood-to-Meal chips on Home to guide intent-based vendor discovery
+- Reorder Studio card driven by latest user order for faster repeat entry
+- ETA confidence band surfaced in top hero area for trust messaging
+- Menu decision-clarity controls: category chips, availability filter, price sort toggle
+- Inline quantity stepper on menu cards for faster add/remove decisions
+- Reorder Studio quick-repeat: one-tap repeat order from latest order snapshot
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Primary implementation file:
+
+- `lib/screens/home/home_screen.dart`
+
+## Development Commands
+
+Run from `user_app/`:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
+
+## Monorepo Verification Policy
+
+Changes that affect shared contracts or backend behavior must be validated with corresponding backend and app checks as defined in the root repository docs (`AGENTS.md`, `sprints_master.md`).

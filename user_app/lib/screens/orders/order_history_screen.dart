@@ -42,13 +42,22 @@ class OrderHistoryScreen extends ConsumerWidget {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.history_rounded, size: 64, color: AppColors.textMuted),
-          SizedBox(height: 16),
-          Text('No orders yet', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined, size: 80, color: AppColors.textMuted.withValues(alpha: 0.4)),
+            const SizedBox(height: 24),
+            const Text('No orders yet', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+            const SizedBox(height: 8),
+            const Text(
+              'Your order history will appear here\nonce you place your first meal.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
