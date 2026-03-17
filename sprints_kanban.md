@@ -35,7 +35,7 @@ Source plans:
 | ID | Title | Product(s) | Owner | Started | Next Action | Status |
 |---|---|---|---|---|---|---|
 | S9-01 | Sprint 9 coverage matrix baseline | backend + all apps | Product + QA | 2026-03-17 | Lock module/screen target list and publish owner checklist | In Progress |
-| S9-04 | Expand vendor_app core and queue transition tests | vendor_app | Frontend Vendor | 2026-03-17 | Continue from provider coverage into dashboard/widget-level queue action tests | In Progress |
+| S9-04 | Expand vendor_app core and queue transition tests | vendor_app | Frontend Vendor | 2026-03-17 | Vendor core, provider, and dashboard widget queue-action coverage now in place; next move is wider regression sweep | In Progress |
 
 ## Sprint 9 Day-By-Day Plan
 - Day 1 (2026-03-17)
@@ -219,6 +219,7 @@ Source plans:
   - Owners and dependencies aligned for S9-02 through S9-06.
   - Added vendor_app core API resilience tests at `test/core/api_service_test.dart` (retry, envelope mapping, cancel-key supersession), passing via `flutter test test/core/api_service_test.dart`.
   - Improved orders status update error handling in `lib/features/orders/orders_provider.dart` and expanded `test/providers/orders_provider_test.dart` to cover successful refresh plus failed patch handling, passing via `flutter test test/providers/orders_provider_test.dart`.
+  - Added dashboard widget coverage in `test/widgets/dashboard_screen_test.dart` for Update-menu success flow and protected 86-hold failure feedback; fixed queue rail overflow in `lib/features/dashboard/dashboard_screen.dart`; passing via `flutter test test/widgets/dashboard_screen_test.dart`.
 - Blockers: None reported.
 
 ### YYYY-MM-DD

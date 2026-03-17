@@ -214,6 +214,8 @@ Capacity model:
 - First coding slice started in vendor_app: ApiService resilience tests added for retry, envelope mapping, and cancel-key supersession in `vendor_app/test/core/api_service_test.dart`.
 - Orders provider failure-path handling improved in `vendor_app/lib/features/orders/orders_provider.dart` so status update failures surface to state and callers.
 - Queue-transition coverage expanded in `vendor_app/test/providers/orders_provider_test.dart` for patch payload verification, successful refresh, and failed status update handling.
+- Dashboard widget coverage added in `vendor_app/test/widgets/dashboard_screen_test.dart` for popup-menu status updates and protected 86-hold failure feedback.
+- Queue rail card layout in `vendor_app/lib/features/dashboard/dashboard_screen.dart` was tightened during Sprint 9 testing to remove overflow under constrained heights.
 
 ### Blocked
 

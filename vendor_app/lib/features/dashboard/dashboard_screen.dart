@@ -286,9 +286,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   final revenue = orders.fold<num>(0, (sum, o) => sum + ((o['total_amount'] ?? 0) as num));
                   return Row(
                     children: [
-                      AppAnimations.staggeredList(0, _StatCard(title: 'Orders Today', value: '$count', color: Colors.blue)),
+                      Expanded(
+                        child: AppAnimations.staggeredList(
+                          0,
+                          _StatCard(title: 'Orders Today', value: '$count', color: Colors.blue),
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      AppAnimations.staggeredList(1, _StatCard(title: 'Revenue Today', value: '₹${revenue.toInt()}', color: Colors.green)),
+                      Expanded(
+                        child: AppAnimations.staggeredList(
+                          1,
+                          _StatCard(title: 'Revenue Today', value: '₹${revenue.toInt()}', color: Colors.green),
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -301,9 +311,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 error: (_, __) => Row(
                   children: const [
-                    _StatCard(title: 'Orders Today', value: '-', color: Colors.blue),
+                    Expanded(child: _StatCard(title: 'Orders Today', value: '-', color: Colors.blue)),
                     SizedBox(width: 16),
-                    _StatCard(title: 'Revenue Today', value: '-', color: Colors.green),
+                    Expanded(child: _StatCard(title: 'Revenue Today', value: '-', color: Colors.green)),
                   ],
                 ),
               ),
@@ -495,7 +505,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             onTap: () => setState(() => _selectedQueueFilter = rail.id),
             child: Container(
               width: 122,
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: selected ? rail.color : Colors.white,
                 borderRadius: BorderRadius.circular(14),
@@ -503,21 +513,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     rail.label,
                     style: GoogleFonts.poppins(
                       color: selected ? Colors.white : Colors.black87,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
                   Text(
                     '${rail.count}',
                     style: GoogleFonts.poppins(
                       color: selected ? Colors.white : rail.color,
-                      fontSize: 22,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -677,22 +689,20 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 8),
-            Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
+          const SizedBox(height: 8),
+          Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+        ],
       ),
     );
   }
