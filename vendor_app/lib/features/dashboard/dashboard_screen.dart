@@ -98,8 +98,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     String successLabel,
   ) async {
     if (orderId.isEmpty) return;
-    await ref.read(ordersProvider.notifier).updateStatus(orderId, nextStatus);
+    final didUpdate = await ref.read(ordersProvider.notifier).updateStatus(orderId, nextStatus);
     if (!context.mounted) return;
+    if (!didUpdate) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update order status')),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(successLabel)),
     );
@@ -189,9 +195,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     if (shouldHold != true || !context.mounted) return;
 
-    await ref.read(ordersProvider.notifier).updateStatus(orderId, 'cancelled');
+    final didUpdate = await ref.read(ordersProvider.notifier).updateStatus(orderId, 'cancelled');
     if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
+    if (!didUpdate) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Failed to move order to 86 HOLD')),
+      );
+      return;
+    }
     messenger.clearSnackBars();
     messenger.showSnackBar(
       SnackBar(

@@ -171,38 +171,49 @@ Capacity model:
 
 ### Active Sprint
 
-- Sprint: Sprint 8
-- Goal: Security, RBAC, and compliance hardening with safer admin session enforcement and action observability
-- Dates: 2026-03-15 to 2026-03-28
+- Sprint: Sprint 9
+- Goal: Quality engineering expansion with stronger backend/frontend regression coverage and CI hard gates
+- Dates: 2026-03-17 to 2026-03-30
 - Status: In Progress
 
 ### Backlog
 
 | ID    | Title                               | Product(s) | Owner          | Estimate | Dependency | Risk | Acceptance                                                   | Status  |
 | ----- | ----------------------------------- | ---------- | -------------- | -------: | ---------- | ---- | ------------------------------------------------------------ | ------- |
-|        |                                     |            |                |          |            |      |                                                              |         |
+| S9-02 | Expand backend controller coverage  | backend    | Backend Team   |        8 | S9-01      | Med  | High-risk controllers covered with passing unit/controller tests | Backlog |
+| S9-03 | Expand user_app provider/model tests | user_app  | Frontend User  |        6 | S9-01      | Med  | Checkout/order/cart provider and model tests added and passing | Backlog |
+| S9-04 | Expand vendor_app core and queue workflow tests | vendor_app | Frontend Vendor |      6 | S9-01      | Med  | Core API resilience and queue transition failure-path tests added and passing | Backlog |
+| S9-05 | Expand admin_app governance tests   | admin_app  | Frontend Admin |        6 | S9-01      | Med  | Dashboard/finance/governance widget/provider coverage increased | Backlog |
+| S9-06 | Full monorepo regression gate pass  | all apps + backend | QA + DevOps | 8 | S9-02,S9-03,S9-04,S9-05 | High | backend npm test + all Flutter analyze/test clean in CI and local matrix | Backlog |
 
 ### In Progress
 
 | ID | Title | Product(s) | Owner | Started | Next Action | Status |
 | -- | ----- | ---------- | ----- | ------- | ----------- | ------ |
-|    |       |            |       |         |             |        |
+| S9-01 | Sprint 9 coverage matrix baseline | backend, user_app, vendor_app, admin_app | Product + QA | 2026-03-17 | Finalize owners and target modules/screens for coverage expansion | In Progress |
 
-### Sprint 8 Immediate Execution Plan
+### Sprint 9 Immediate Execution Plan
 
 - backend
-  - Enforce blocked/banned account denial behavior at auth middleware.
-  - Improve error observability with request and client trace identifiers.
+  - Expand controller/unit coverage for high-risk modules and contract replay tests.
+  - Enforce CI gate parity for contract and RBAC-sensitive paths.
 - admin_app
-  - Propagate request trace and device trust headers on privileged API traffic.
-  - Prepare sensitive-action guardrail UX for high-risk operations.
+  - Increase widget and provider coverage for dashboard, finance, and governance workflows.
 - user_app
-  - No mandatory feature work in Sprint 8 unless shared auth/session behavior changes.
+  - Strengthen model/provider tests around checkout, orders, and cart correctness.
 - vendor_app
-  - No mandatory feature work in Sprint 8 unless shared auth/session behavior changes.
-- qa/design
-  - Validate auth/session behavior, route protection parity, and moderation safety cues.
-  - Maintain regression and accessibility coverage while security hardening lands.
+  - Expand provider and queue workflow tests for status transitions and error handling.
+- qa/devops
+  - Maintain full monorepo verification matrix and prepare Sprint 9 closure checklist.
+
+### Sprint 9 Kickoff Notes (2026-03-17)
+
+- Sprint 9 moved to active execution state.
+- Work sequence locked: baseline matrix first, then app/backend expansions, then full regression gate.
+- Acceptance remains mandatory monorepo verification before closure.
+- First coding slice started in vendor_app: ApiService resilience tests added for retry, envelope mapping, and cancel-key supersession in `vendor_app/test/core/api_service_test.dart`.
+- Orders provider failure-path handling improved in `vendor_app/lib/features/orders/orders_provider.dart` so status update failures surface to state and callers.
+- Queue-transition coverage expanded in `vendor_app/test/providers/orders_provider_test.dart` for patch payload verification, successful refresh, and failed status update handling.
 
 ### Blocked
 
@@ -261,7 +272,7 @@ Capacity model:
 | S8-04 | Device trust and session posture UX | admin_app | Frontend Admin | 2026-03-15 | Admin shell now displays trusted/untrusted session posture cues, untrusted warning banner, and one-click trust confirmation workflow with widget coverage | Done |
 | S8-05 | Security docs and regression closure | backend, user_app, vendor_app, admin_app | QA + Product | 2026-03-15 | Sprint 8 docs updated (README, API_REFERENCE, DEVELOPER_GUIDE) and full monorepo verification matrix passed (backend 47 tests, all Flutter apps analyze/test clean) | Done |
 
-### Sprint Burndown Snapshot
+### Sprint 8 Burndown Snapshot (Closed)
 
 - Planned points: 30
 - Completed points: 30

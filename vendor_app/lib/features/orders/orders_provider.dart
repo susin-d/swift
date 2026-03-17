@@ -26,12 +26,14 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<dynamic>>> {
     }
   }
 
-  Future<void> updateStatus(String orderId, String status) async {
+  Future<bool> updateStatus(String orderId, String status) async {
     try {
       await _api.patch('/orders/$orderId/status', data: {'status': status});
-      fetchOrders();
-    } catch (e) {
-      // Handle error
+      await fetchOrders();
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e.toString(), st);
+      return false;
     }
   }
 }

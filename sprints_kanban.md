@@ -17,50 +17,55 @@ Source plans:
 - Done: accepted and released for sprint scope
 
 ## Current Sprint Focus
-- Sprint: Sprint 8
-- Goal: Security, RBAC, and compliance hardening with safer admin session enforcement and action observability
-- Sprint dates: 2026-03-15 to 2026-03-28
+- Sprint: Sprint 9
+- Goal: Quality engineering expansion with stronger regression coverage and CI hard gates
+- Sprint dates: 2026-03-17 to 2026-03-30
 - Sprint status: In Progress
 
 ## Backlog
 | ID | Title | Product(s) | Owner | Estimate | Dependency | Risk | Acceptance | Status |
 |---|---|---|---|---:|---|---|---|---|
-|  |  |  |  |  |  |  |  |  |
+| S9-02 | Expand backend controller/unit and contract replay tests | backend | Backend Team | 8 | S9-01 | Med | High-risk backend areas covered with green test suite | Backlog |
+| S9-03 | Expand user_app model/provider tests | user_app | Frontend User | 6 | S9-01 | Med | Cart, checkout, and order path tests added and green | Backlog |
+| S9-04 | Expand vendor_app core and queue transition tests | vendor_app | Frontend Vendor | 6 | S9-01 | Med | Core API resilience plus queue workflow failure-path tests added and green | Backlog |
+| S9-05 | Expand admin_app dashboard/finance/governance tests | admin_app | Frontend Admin | 6 | S9-01 | Med | Coverage increase with stable widget/provider tests | Backlog |
+| S9-06 | Full monorepo verification matrix and CI gate pass | backend + all apps | QA + DevOps | 8 | S9-02,S9-03,S9-04,S9-05 | High | backend npm test + all Flutter analyze/test green | Backlog |
 
 ## In Progress
 | ID | Title | Product(s) | Owner | Started | Next Action | Status |
 |---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |
+| S9-01 | Sprint 9 coverage matrix baseline | backend + all apps | Product + QA | 2026-03-17 | Lock module/screen target list and publish owner checklist | In Progress |
+| S9-04 | Expand vendor_app core and queue transition tests | vendor_app | Frontend Vendor | 2026-03-17 | Continue from provider coverage into dashboard/widget-level queue action tests | In Progress |
 
-## Sprint 8 Day-By-Day Plan
-- Day 1 (2026-03-15)
-  - Enforce blocked/banned session denial and tighten bearer token parsing in auth middleware.
-  - Owner: Backend
-  - Output: S8-01 backend enforcement baseline
-- Day 2 (2026-03-16)
-  - Add sensitive action reason-capture and audit signal scaffolding.
-  - Owner: Backend + Frontend Admin
-  - Output: S8-02 safeguard workflow baseline
-- Day 3 (2026-03-17)
-  - Run RBAC parity audit across privileged routes and close discovered gaps.
-  - Owner: Backend + Frontend Leads
-  - Output: S8-03 authorization audit pass
-- Day 4 (2026-03-18)
-  - Surface device trust/session posture cues in admin UX.
-  - Owner: Frontend Admin
-  - Output: S8-04 trust posture visibility
-- Day 5 (2026-03-19)
-  - Complete docs and contract governance sync for security behaviors.
+## Sprint 9 Day-By-Day Plan
+- Day 1 (2026-03-17)
+  - Finalize Sprint 9 test expansion scope and ownership.
   - Owner: Product + QA
-  - Output: Sprint 8 documentation package
-- Day 6 (2026-03-20)
-  - Execute regression for backend and all Flutter apps.
+  - Output: Sprint 9 coverage matrix baseline
+- Day 2 (2026-03-18)
+  - Expand backend controller/unit and contract replay tests.
+  - Owner: Backend
+  - Output: S9 backend coverage increment
+- Day 3 (2026-03-19)
+  - Expand user_app model/provider tests (orders/cart/checkout paths).
+  - Owner: Frontend User
+  - Output: S9 user_app test increment
+- Day 4 (2026-03-20)
+  - Expand vendor_app provider/queue transition tests.
+  - Owner: Frontend Vendor
+  - Output: S9 vendor_app test increment
+- Day 5 (2026-03-21)
+  - Expand admin_app dashboard/finance/governance tests.
+  - Owner: Frontend Admin
+  - Output: S9 admin_app test increment
+- Day 6 (2026-03-22)
+  - Execute full monorepo verification and close flaky tests.
   - Owner: QA + DevOps
-  - Output: Sprint 8 verification matrix
-- Day 7 (2026-03-21)
-  - Resolve final review findings and prepare Sprint 8 closure checkpoint.
-  - Owner: QA + Product
-  - Output: Sprint 8 closure readiness decision
+  - Output: Sprint 9 verification matrix
+- Day 7 (2026-03-23)
+  - Finalize docs and closure readiness checkpoint.
+  - Owner: Product + QA
+  - Output: Sprint 9 closure readiness decision
 
 ## Blocked
 | ID | Title | Product(s) | Owner | Blocker | Since | Unblock Owner | ETA Impact |
@@ -117,10 +122,10 @@ Source plans:
 | S8-05 | Security docs and regression closure | backend, user_app, vendor_app, admin_app | QA + Product | 2026-03-15 | Sprint 8 docs updated (README, API_REFERENCE, DEVELOPER_GUIDE) and full monorepo verification matrix passed (backend 47 tests, all Flutter apps analyze/test clean) | Done |
 
 ## Sprint Burndown Snapshot
-- Planned points: 30
-- Completed points: 30
-- Remaining points: 0
-- At risk: No
+- Planned points: 34
+- Completed points: 0
+- Remaining points: 34
+- At risk: Low
 
 ## Daily Standup Notes
 ### YYYY-MM-DD
@@ -206,6 +211,16 @@ Source plans:
     - Sprint closure docs and evidence updated, including `sprint7_completion_report.md`.
 - Blockers: None reported.
 
+### 2026-03-17
+- Yesterday: Sprint 8 closure and docs sync completed.
+- Today:
+  - Sprint 9 started and moved to In Progress.
+  - S9-01 (coverage matrix baseline) started.
+  - Owners and dependencies aligned for S9-02 through S9-06.
+  - Added vendor_app core API resilience tests at `test/core/api_service_test.dart` (retry, envelope mapping, cancel-key supersession), passing via `flutter test test/core/api_service_test.dart`.
+  - Improved orders status update error handling in `lib/features/orders/orders_provider.dart` and expanded `test/providers/orders_provider_test.dart` to cover successful refresh plus failed patch handling, passing via `flutter test test/providers/orders_provider_test.dart`.
+- Blockers: None reported.
+
 ### YYYY-MM-DD
 - Yesterday:
 - Today:
@@ -229,6 +244,6 @@ Source plans:
 ## Next Sprint Queue (Preview)
 | Priority | Candidate Story | Product(s) | Dependency | Risk |
 |---|---|---|---|---|
-| P1 | Security and RBAC parity kickoff | backend + admin_app + user_app + vendor_app | Sprint 7 complete | High |
-| P1 | Sensitive action safeguards and observability | backend + admin_app | Sprint 7 complete | High |
-| P2 | Device trust and session hardening | backend + all apps | Sprint 7 complete | Med |
+| P1 | Launch readiness verification matrix and release checklist | backend + all apps | Sprint 9 complete | High |
+| P1 | North Star dashboard instrumentation and baseline tracking | backend + user_app + vendor_app + admin_app | Sprint 9 complete | Med |
+| P2 | In-app feedback capture and triage workflow | user_app + vendor_app + admin_app + backend | Sprint 9 complete | Med |

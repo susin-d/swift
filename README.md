@@ -3,11 +3,18 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 
 ## 🌟 Platform Components
 
-1. **User Mobile App (Flutter)**: Allows students and staff to browse vendors, order food, and track deliveries in real-time.
-2. **Vendor Dashboard (React/Vite)**: A tablet-optimized web dashboard for canteens to manage their menus and process live orders.
-3. **Admin Dashboard (React/Vite)**: A control panel for campus management to oversee vendor approvals and platform analytics.
-4. **Backend API (Node.js/Fastify)**: The central brain handling authentication, order processing, and RBAC security.
-5. **Database (Supabase PostgreSQL)**: A strictly secured database using Row Level Security (RLS) with Realtime WebSockets built-in.
+1. **User App (Flutter)**: Allows students and staff to browse vendors, order food, and track deliveries in real-time.
+2. **Vendor App (Flutter)**: Vendor operations app for queue triage, prep-time pacing, and live order handling.
+3. **Admin App (Flutter)**: Governance control panel for moderation, audits, settings safety, and finance visibility.
+4. **Backend API (Node.js/Fastify)**: The central brain handling authentication, order processing, contracts, and RBAC security.
+5. **Database (Supabase PostgreSQL)**: A strictly secured database using Row Level Security (RLS) with Realtime support.
+
+## 📌 Sprint Status
+
+- Completed: Sprint 1 through Sprint 8
+- Pending: Sprint 9 (Quality Engineering Expansion), Sprint 10 (Launch Readiness and Improvement Loop)
+- Sprint planning sources: `sprints_master.md` and `sprints_kanban.md`
+- Legacy `sprints.md`: archived/removed
 
 ## 🚀 Getting Started
 
@@ -64,16 +71,23 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - Customer-only mutations (`/orders`, `/orders/me`, `/addresses`, `/payments`, `/reviews`) now reject vendor/admin tokens with `403 Forbidden`.
    - Delivery location updates are now explicitly scoped to vendor or admin operators, and the vendor app clears/restores sessions only for vendor-role accounts.
 
-3. **Vendor Dashboard**
+3. **Vendor App**
    ```bash
-   cd vendor-dashboard
-   npm install
-   npm run dev
+   cd vendor_app
+   flutter pub get
+   flutter run
    ```
 
-4. **User Mobile App**
+4. **User App**
    ```bash
-   cd mobile_app
+   cd user_app
+   flutter pub get
+   flutter run
+   ```
+
+5. **Admin App**
+   ```bash
+   cd admin_app
    flutter pub get
    flutter run
    ```

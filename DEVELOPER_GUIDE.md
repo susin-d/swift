@@ -111,3 +111,22 @@ supabase
   .subscribe()
 ```
 
+## Windows Test Runner Note
+
+On some Windows environments, Flutter test finalization may fail with a temp listener cleanup error similar to:
+
+`PathNotFoundException: ... flutter_test_listener ...`
+
+Use a stable workspace-local temp directory before running Flutter tests:
+
+```powershell
+New-Item -ItemType Directory -Path c:\project\food\.tmp -Force | Out-Null
+$env:TEMP='c:\project\food\.tmp'
+$env:TMP='c:\project\food\.tmp'
+
+cd c:\project\food\user_app
+flutter test
+```
+
+This workaround is only required when the OS temp path is flaky; keep regular test commands unchanged in CI.
+
