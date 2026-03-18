@@ -245,7 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                                   ? null
                                   : () {
                                       HapticFeedback.lightImpact();
-                                      ref.read(authProvider.notifier).login('anna@bhawan.com', 'password123');
+                                      ref.read(authProvider.notifier).login('demo.vendor@swift.com', 'Demo@1234');
                                     },
                               icon: const Icon(Icons.storefront_outlined, size: 20, color: _teal),
                               label: Text('Login as Demo Vendor', style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15)),

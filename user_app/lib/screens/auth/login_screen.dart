@@ -278,7 +278,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                                   ? null
                                   : () {
                                       HapticFeedback.lightImpact();
-                                      ref.read(authNotifierProvider.notifier).signIn('demo@user.com', 'password123');
+                                      ref.read(authNotifierProvider.notifier).signIn('demo.user@swift.com', 'Demo@1234');
                                     },
                               icon: const Icon(Icons.account_circle_outlined, size: 24, color: AppColors.primary),
                               label: Text(
