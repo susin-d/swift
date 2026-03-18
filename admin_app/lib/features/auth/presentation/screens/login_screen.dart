@@ -229,6 +229,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     onPressed: _submitting ? null : _submit,
                                     child: Text(_submitting ? 'Signing in...' : 'Sign in'),
                                   ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      const Expanded(child: Divider()),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        child: Text('OR', style: Theme.of(context).textTheme.labelSmall),
+                                      ),
+                                      const Expanded(child: Divider()),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  OutlinedButton(
+                                    onPressed: _submitting
+                                        ? null
+                                        : () async {
+                                            setState(() => _submitting = true);
+                                            final ok = await ref.read(authProvider.notifier).login(
+                                              'demo.admin@swift.com',
+                                              'Demo@1234',
+                                            );
+                                            if (!mounted) return;
+                                            setState(() => _submitting = false);
+                                            if (!ok) {
+                                              setState(() => _errorMessage = 'Demo login failed');
+                                            }
+                                          },
+                                    child: Text(_submitting ? 'Loading...' : 'Try Demo Admin'),
+                                  ),
                                 ],
                               ),
                             ),
