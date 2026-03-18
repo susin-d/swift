@@ -18,8 +18,13 @@ describe('API - Orders Expansion', () => {
         Sinon.restore();
     });
 
+    beforeEach(() => {
+        mockSupabase.from.resetHistory();
+        mockSupabase.from.resetBehavior();
+    });
+
     it('POST / - creates order and order items', async () => {
-        const mockOrder = { id: 'ord_123', status: 'pending' };
+        const mockOrder = { id: 'ord_123', status: 'pending', created_at: new Date().toISOString() };
 
         mockSupabase.from.withArgs('orders').returns({
             insert: Sinon.stub().returnsThis(),
@@ -42,6 +47,13 @@ describe('API - Orders Expansion', () => {
 
         expect(response.status).toBe(201);
         expect(response.body.id).toBe('ord_123');
+        expect(response.body.eta).toEqual(
+            expect.objectContaining({
+                min_minutes: expect.any(Number),
+                max_minutes: expect.any(Number),
+                confidence: expect.any(String),
+            })
+        );
     });
 
     it('PATCH /:id/status - updates status (Vendor Only)', async () => {
@@ -60,5 +72,55 @@ describe('API - Orders Expansion', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('preparing');
+        expect(response.body.eta).toEqual(
+            expect.objectContaining({
+                min_minutes: expect.any(Number),
+                max_minutes: expect.any(Number),
+                confidence: expect.any(String),
+            })
+        );
+    });
+
+    it('GET /me - returns eta and pacing fields for each order', async () => {
+        const orders = [
+            {
+                id: 'ord_456',
+                status: 'accepted',
+                created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+                total_amount: 220,
+                order_items: [{ id: 'oi_1' }],
+                vendors: { name: 'Campus Canteen' },
+            },
+        ];
+
+        mockSupabase.from.withArgs('orders').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            order: Sinon.stub().resolves({ data: orders, error: null }),
+        } as any);
+
+        const response = await supertest(app.server as any)
+            .get('/api/v1/orders/me')
+            .set('Authorization', 'Bearer valid_user_token');
+
+        expect(response.status).toBe(200);
+        expect(Array.isArray(response.body)).toBe(true);
+        expect(response.body[0]).toEqual(
+            expect.objectContaining({
+                id: 'ord_456',
+                eta: expect.objectContaining({
+                    min_minutes: expect.any(Number),
+                    max_minutes: expect.any(Number),
+                    confidence: expect.any(String),
+                }),
+                pacing: expect.objectContaining({
+                    elapsed_minutes: expect.any(Number),
+                    target_prep_minutes: expect.any(Number),
+                    recommended_prep_minutes: expect.any(Number),
+                    sla_risk: expect.any(String),
+                    pace_label: expect.any(String),
+                }),
+            })
+        );
     });
 });

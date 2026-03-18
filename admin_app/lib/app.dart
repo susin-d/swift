@@ -11,7 +11,7 @@ class AdminApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
-      title: 'Swift Admin',
+      title: 'Admin Swift',
       debugShowCheckedModeBanner: false,
       theme: AdminTheme.light,
       routerConfig: router,

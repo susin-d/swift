@@ -52,7 +52,8 @@ export const getGlobalStats = async (request: FastifyRequest, reply: FastifyRepl
                 users: userCount || 0,
                 vendors: vendorCount || 0,
                 orders: orderCount || 0,
-                gmv: gmv
+                revenue: gmv,
+                gmv: gmv,
             }
         });
     } catch (err: any) {

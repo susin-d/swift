@@ -107,6 +107,26 @@ Returns paginated admin audit logs and metadata. Each entry includes a `reason` 
 ### `GET /admin/vendors/pending`
 Returns paginated pending vendors and metadata.
 
+### `GET /admin/stats`
+Returns top-level admin metrics.
+
+- **Response** `200 OK`:
+  ```json
+  {
+    "stats": {
+      "users": 120,
+      "vendors": 18,
+      "orders": 542,
+      "revenue": 128450,
+      "gmv": 128450
+    }
+  }
+  ```
+
+Notes:
+- `revenue` is the canonical contract field for admin consumers.
+- `gmv` remains as a backward-compatible alias and mirrors `revenue`.
+
 
 ## Sensitive Action Safeguards (Sprint 8.2)
 

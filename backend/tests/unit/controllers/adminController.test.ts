@@ -9,8 +9,11 @@ import {
     getAdminOrders,
     getAdminSettings,
     getAdminUsers,
+    getChartData,
+    getDashboardSummary,
     getFinancePayouts,
     getFinanceSummary,
+    getGlobalStats,
     getPendingVendors,
     rejectVendor,
     updateAdminSettings,
@@ -314,6 +317,123 @@ describe('Admin Controller - Vendor Moderation', () => {
         expect(payload.summary.today_revenue).toBe(100);
         expect(payload.summary.week_revenue).toBe(300);
         expect(payload.summary.month_revenue).toBeGreaterThanOrEqual(300);
+    });
+
+    it('getDashboardSummary returns aggregated counts and completed revenue', async () => {
+        const userSelectStub = Sinon.stub().resolves({ count: 12, error: null });
+        const vendorSelectStub = Sinon.stub().resolves({ count: 4, error: null });
+        const orderCountSelectStub = Sinon.stub().resolves({ count: 9, error: null });
+
+        const completedOrdersEqStub = Sinon.stub().resolves({
+            data: [
+                { total_amount: 120, status: 'completed' },
+                { total_amount: '80', status: 'completed' },
+            ],
+            error: null,
+        });
+        const completedOrdersSelectStub = Sinon.stub().returns({ eq: completedOrdersEqStub });
+
+        fromStub.onCall(0).returns({ select: userSelectStub } as any);
+        fromStub.onCall(1).returns({ select: vendorSelectStub } as any);
+        fromStub.onCall(2).returns({ select: orderCountSelectStub } as any);
+        fromStub.onCall(3).returns({ select: completedOrdersSelectStub } as any);
+
+        const reply: any = { send: Sinon.stub() };
+
+        await getDashboardSummary({} as any, reply);
+
+        Sinon.assert.calledWithExactly(userSelectStub, '*', { count: 'exact', head: true });
+        Sinon.assert.calledWithExactly(vendorSelectStub, '*', { count: 'exact', head: true });
+        Sinon.assert.calledWithExactly(orderCountSelectStub, '*', { count: 'exact', head: true });
+        Sinon.assert.calledWithExactly(completedOrdersSelectStub, 'total_amount, status');
+        Sinon.assert.calledWithExactly(completedOrdersEqStub, 'status', 'completed');
+
+        expect(reply.send.firstCall.args[0]).toEqual({
+            summary: {
+                total_users: 12,
+                total_vendors: 4,
+                active_orders: 9,
+                completed_orders: 2,
+                revenue: 200,
+            },
+        });
+    });
+
+    it('getGlobalStats returns contract revenue field with gmv alias', async () => {
+        const userSelectStub = Sinon.stub().resolves({ count: 20, error: null });
+        const vendorSelectStub = Sinon.stub().resolves({ count: 6, error: null });
+        const orderCountSelectStub = Sinon.stub().resolves({ count: 14, error: null });
+
+        const completedOrdersEqStub = Sinon.stub().resolves({
+            data: [
+                { total_amount: 75 },
+                { total_amount: '25' },
+            ],
+            error: null,
+        });
+        const completedOrdersSelectStub = Sinon.stub().returns({ eq: completedOrdersEqStub });
+
+        fromStub.onCall(0).returns({ select: userSelectStub } as any);
+        fromStub.onCall(1).returns({ select: vendorSelectStub } as any);
+        fromStub.onCall(2).returns({ select: orderCountSelectStub } as any);
+        fromStub.onCall(3).returns({ select: completedOrdersSelectStub } as any);
+
+        const reply: any = { send: Sinon.stub() };
+
+        await getGlobalStats({} as any, reply);
+
+        const payload = reply.send.firstCall.args[0];
+        expect(payload.stats).toEqual({
+            users: 20,
+            vendors: 6,
+            orders: 14,
+            revenue: 100,
+            gmv: 100,
+        });
+    });
+
+    it('getChartData returns seven-day chart and only counts completed revenue', async () => {
+        const now = new Date();
+        const orders = [
+            {
+                created_at: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+                total_amount: 150,
+                status: 'completed',
+            },
+            {
+                created_at: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                total_amount: 90,
+                status: 'preparing',
+            },
+            {
+                created_at: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                total_amount: 50,
+                status: 'completed',
+            },
+        ];
+
+        const orderByStub = Sinon.stub().resolves({ data: orders, error: null });
+        const gteStub = Sinon.stub().returns({ order: orderByStub });
+        const selectStub = Sinon.stub().returns({ gte: gteStub });
+
+        fromStub.withArgs('orders').returns({ select: selectStub } as any);
+
+        const reply: any = { send: Sinon.stub() };
+
+        await getChartData({} as any, reply);
+
+        Sinon.assert.calledWithExactly(selectStub, 'created_at, total_amount, status');
+        Sinon.assert.calledWithExactly(orderByStub, 'created_at', { ascending: true });
+
+        const payload = reply.send.firstCall.args[0];
+        expect(payload.chartData).toHaveLength(7);
+        expect(payload.chartData.map((d: any) => d.name).sort()).toEqual(['Fri', 'Mon', 'Sat', 'Sun', 'Thu', 'Tue', 'Wed'].sort());
+
+        const totalOrders = payload.chartData.reduce((sum: number, d: any) => sum + d.orders, 0);
+        const totalRevenue = payload.chartData.reduce((sum: number, d: any) => sum + d.revenue, 0);
+
+        expect(totalOrders).toBe(3);
+        expect(totalRevenue).toBe(200);
     });
 
     it('getFinancePayouts groups completed orders by vendor', async () => {

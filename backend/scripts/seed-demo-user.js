@@ -6,12 +6,34 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function seedDemoUser() {
-    const email = 'demo@user.com';
-    const password = 'password123';
-    const name = 'Demo User';
+const demoUsers = [
+    {
+        email: 'demo.user@swift.com',
+        password: 'Demo@1234',
+        name: 'Demo User',
+        role: 'user',
+        createProfile: 'customer_profiles'
+    },
+    {
+        email: 'demo.vendor@swift.com',
+        password: 'Demo@1234',
+        name: 'Demo Vendor',
+        role: 'vendor',
+        createProfile: 'vendor_profiles'
+    },
+    {
+        email: 'demo.admin@swift.com',
+        password: 'Demo@1234',
+        name: 'Demo Admin',
+        role: 'admin',
+        createProfile: null // Admins may not need specific profile
+    }
+];
 
-    console.log(`Checking if demo user exists: ${email}`);
+async function seedDemoUser(userData) {
+    const { email, password, name, role, createProfile } = userData;
+
+    console.log(`\n=== Creating ${role} demo user: ${email} ===`);
 
     const { data: authUserResult, error: authError } = await supabase.auth.admin.listUsers();
     if (authError) {
@@ -28,13 +50,14 @@ async function seedDemoUser() {
             email,
             password,
             email_confirm: true,
-            user_metadata: { name, role: 'user' }
+            user_metadata: { name, role }
         });
         if (createAuthError) throw createAuthError;
         userId = newAuth.user.id;
+        console.log(`✓ Auth user created with ID: ${userId}`);
     } else {
         userId = existingAuthUser.id;
-        console.log(`Auth user already exists with ID: ${userId}`);
+        console.log(`✓ Auth user already exists with ID: ${userId}`);
     }
 
     // Sync to public.users
@@ -45,29 +68,62 @@ async function seedDemoUser() {
             id: userId,
             name,
             email,
-            role: 'user'
+            role
         });
         if (insertError) throw insertError;
+        console.log(`✓ Public user record created`);
     } else {
-        console.log('Public user record already exists.');
+        console.log(`✓ Public user record already exists`);
     }
 
-    // Create customer profile
-    let { data: profile, error: profileSelectError } = await supabase.from('customer_profiles').select('*').eq('id', userId).single();
-    if (!profile) {
-        console.log(`Creating customer profile for: ${email}`);
-        const { error: profileError } = await supabase.from('customer_profiles').insert({ id: userId });
-        if (profileError) {
-            console.error('Customer profile creation error:', profileError);
+    // Create role-specific profile if needed
+    if (createProfile) {
+        let { data: profile } = await supabase.from(createProfile).select('*').eq('id', userId).single();
+        if (!profile) {
+            console.log(`Creating ${role} profile in ${createProfile}...`);
+            const { error: profileError } = await supabase.from(createProfile).insert({ id: userId });
+            if (profileError) {
+                console.error(`Profile creation error for ${createProfile}:`, profileError);
+            } else {
+                console.log(`✓ ${role} profile created`);
+            }
+        } else {
+            console.log(`✓ ${role} profile already exists`);
         }
-    } else {
-        console.log('Customer profile already exists.');
     }
 
-    console.log('Demo user seeding completed successfully.');
+    console.log(`✓ ${role} demo user setup complete`);
+    return { email, password, role };
 }
 
-seedDemoUser().catch(err => {
+async function main() {
+    console.log('Starting demo user seeding...');
+    const results = [];
+
+    for (const user of demoUsers) {
+        try {
+            const result = await seedDemoUser(user);
+            results.push(result);
+        } catch (err) {
+            console.error(`Error seeding ${user.role} user:`, err);
+        }
+    }
+
+    console.log('\n=== Demo Users Created ===');
+    results.forEach(r => {
+        console.log(`${r.role.toUpperCase()}: ${r.email} / ${r.password}`);
+    });
+    console.log('\nCredentials saved to backend/demo-credentials.json');
+
+    // Save credentials to file for app reference
+    const fs = require('fs');
+    fs.writeFileSync(
+        require('path').join(__dirname, '..', 'demo-credentials.json'),
+        JSON.stringify(results, null, 2)
+    );
+}
+
+main().catch(err => {
     console.error('Seed error:', err);
     process.exit(1);
 });

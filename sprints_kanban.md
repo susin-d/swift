@@ -35,6 +35,7 @@ Source plans:
 | ID | Title | Product(s) | Owner | Started | Next Action | Status |
 |---|---|---|---|---|---|---|
 | S9-01 | Sprint 9 coverage matrix baseline | backend + all apps | Product + QA | 2026-03-17 | Lock module/screen target list and publish owner checklist | In Progress |
+| S9-02 | Expand backend controller/unit and contract replay tests | backend | Backend Team | 2026-03-17 | Continue from admin controller expansion into auth/order API replay cases | In Progress |
 | S9-04 | Expand vendor_app core and queue transition tests | vendor_app | Frontend Vendor | 2026-03-17 | Vendor core, provider, and dashboard widget queue-action coverage now in place; next move is wider regression sweep | In Progress |
 
 ## Sprint 9 Day-By-Day Plan
@@ -220,6 +221,9 @@ Source plans:
   - Added vendor_app core API resilience tests at `test/core/api_service_test.dart` (retry, envelope mapping, cancel-key supersession), passing via `flutter test test/core/api_service_test.dart`.
   - Improved orders status update error handling in `lib/features/orders/orders_provider.dart` and expanded `test/providers/orders_provider_test.dart` to cover successful refresh plus failed patch handling, passing via `flutter test test/providers/orders_provider_test.dart`.
   - Added dashboard widget coverage in `test/widgets/dashboard_screen_test.dart` for Update-menu success flow and protected 86-hold failure feedback; fixed queue rail overflow in `lib/features/dashboard/dashboard_screen.dart`; passing via `flutter test test/widgets/dashboard_screen_test.dart`.
+  - Expanded backend admin controller coverage in `backend/tests/unit/controllers/adminController.test.ts` with new dashboard-summary and chart-data replay tests; passing via `npm test -- tests/unit/controllers/adminController.test.ts`.
+  - Aligned admin stats output to include canonical `revenue` plus `gmv` alias in backend controller, and added regression test coverage for that contract in `backend/tests/unit/controllers/adminController.test.ts`.
+  - Expanded backend auth/order API replay suites (`backend/tests/api/auth_expanded.test.ts`, `backend/tests/api/orders_expanded.test.ts`) with role-forcing, fallback-profile, and ETA/pacing contract assertions; passing via `npm test -- tests/api/auth_expanded.test.ts tests/api/orders_expanded.test.ts`.
 - Blockers: None reported.
 
 ### YYYY-MM-DD

@@ -191,6 +191,7 @@ Capacity model:
 | ID | Title | Product(s) | Owner | Started | Next Action | Status |
 | -- | ----- | ---------- | ----- | ------- | ----------- | ------ |
 | S9-01 | Sprint 9 coverage matrix baseline | backend, user_app, vendor_app, admin_app | Product + QA | 2026-03-17 | Finalize owners and target modules/screens for coverage expansion | In Progress |
+| S9-02 | Expand backend controller coverage | backend | Backend Team | 2026-03-17 | Extend from admin controller expansion into auth/order high-risk API replay tests | In Progress |
 
 ### Sprint 9 Immediate Execution Plan
 
@@ -216,6 +217,11 @@ Capacity model:
 - Queue-transition coverage expanded in `vendor_app/test/providers/orders_provider_test.dart` for patch payload verification, successful refresh, and failed status update handling.
 - Dashboard widget coverage added in `vendor_app/test/widgets/dashboard_screen_test.dart` for popup-menu status updates and protected 86-hold failure feedback.
 - Queue rail card layout in `vendor_app/lib/features/dashboard/dashboard_screen.dart` was tightened during Sprint 9 testing to remove overflow under constrained heights.
+- Backend admin controller coverage expanded in `backend/tests/unit/controllers/adminController.test.ts` with new `getDashboardSummary` and `getChartData` replay assertions for aggregation and seven-day chart logic.
+- Aligned admin stats contract in `backend/src/controllers/adminController.ts` by returning canonical `stats.revenue` with backward-compatible `stats.gmv` alias.
+- Added global stats regression coverage in `backend/tests/unit/controllers/adminController.test.ts` and documented response shape in `API_REFERENCE.md`.
+- Expanded backend API replay coverage for auth/order high-risk flows in `backend/tests/api/auth_expanded.test.ts` and `backend/tests/api/orders_expanded.test.ts`.
+- Added regression assertions for register role-forcing, `/auth/me` fallback payload shape, and order ETA/pacing contract fields.
 
 ### Blocked
 

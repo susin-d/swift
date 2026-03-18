@@ -18,7 +18,7 @@ class VendorApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Swift Vendor',
+      title: 'Vendor Swift',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
