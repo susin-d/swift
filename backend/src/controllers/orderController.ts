@@ -215,9 +215,8 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         ? `${Math.floor(100000 + Math.random() * 900000)}`
         : null;
 
-    const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
+    const orderInsertPayloads: Record<string, unknown>[] = [
+        {
             user_id: user.sub,
             vendor_id,
             total_amount: finalTotal,
@@ -236,11 +235,43 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
             class_start_at: class_start_at || null,
             class_end_at: class_end_at || null,
             handoff_code: handoffCode,
-        })
-        .select()
-        .single();
+        },
+        {
+            user_id: user.sub,
+            vendor_id,
+            total_amount: finalTotal,
+            scheduled_for: scheduledForIso,
+            status: 'pending',
+            delivery_mode: deliveryMode,
+        },
+        {
+            user_id: user.sub,
+            vendor_id,
+            total_amount: finalTotal,
+            status: 'pending',
+        },
+    ];
 
-    if (orderError) throw orderError;
+    let order: any = null;
+    let orderError: any = null;
+
+    for (const payload of orderInsertPayloads) {
+        const inserted = await supabase
+            .from('orders')
+            .insert(payload)
+            .select()
+            .single();
+
+        if (!inserted.error && inserted.data) {
+            order = inserted.data;
+            orderError = null;
+            break;
+        }
+
+        orderError = inserted.error;
+    }
+
+    if (orderError || !order) throw orderError ?? new Error('Unable to create order');
 
     const orderItemsLegacy = items.map((item: any) => ({
         order_id: order.id,
@@ -269,16 +300,24 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
     if (itemsInsert.error) throw itemsInsert.error;
 
     if (promoId) {
-        await supabase.from('promotion_redemptions').insert({
+        const redemptionInsert = await supabase.from('promotion_redemptions').insert({
             promo_id: promoId,
             user_id: user.sub,
             order_id: order.id,
         });
 
-        await supabase
+        if (redemptionInsert.error) {
+            request.log.warn({ err: redemptionInsert.error, orderId: order.id }, 'orders.create: promo redemption insert failed');
+        }
+
+        const promoUsageUpdate = await supabase
             .from('promotions')
             .update({ usage_count: (promoResult?.promo?.usage_count ?? 0) + 1 })
             .eq('id', promoId);
+
+        if (promoUsageUpdate.error) {
+            request.log.warn({ err: promoUsageUpdate.error, orderId: order.id }, 'orders.create: promo usage update failed');
+        }
     }
 
     const compactId = order.id.substring(0, 8).toUpperCase();

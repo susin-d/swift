@@ -756,8 +756,14 @@ export const getAdminAuditLogs = async (request: FastifyRequest, reply: FastifyR
             meta: buildPaginationMeta(page, limit, total),
         });
     } catch (err: any) {
-        console.error('getAdminAuditLogs error:', err);
-        throw err;
+        request.log.warn({ err }, 'admin.audit: failed to load audit logs; returning empty list');
+        return reply.send({
+            logs: [],
+            page,
+            limit,
+            total: 0,
+            meta: buildPaginationMeta(page, limit, 0),
+        });
     }
 };
 
