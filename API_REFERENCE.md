@@ -13,9 +13,9 @@ Returns versioned contract metadata for high-traffic endpoints and the shared er
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s8.3",
+    "version": "2026.03.s11.1",
     "generatedAt": "2026-03-15T18:00:00.000Z",
-    "totalEndpoints": 24,
+    "totalEndpoints": 41,
     "errorEnvelope": {
       "description": "Standardized error envelope for non-2xx responses.",
       "fields": [
@@ -40,8 +40,8 @@ Returns chronological, versioned contract changes for consumer compatibility che
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s8.3",
-    "count": 12,
+    "version": "2026.03.s11.1",
+    "count": 26,
     "changes": [
       {
         "id": "chg-2026-03-15-01",
@@ -58,7 +58,7 @@ Returns feature flags for staged contract-rollout adoption across app consumers.
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s8.3",
+    "version": "2026.03.s11.1",
     "count": 11,
     "flags": [
       {
@@ -233,11 +233,13 @@ Place a new food order.
 - **Request Body**:
   ```json
   {
-    "vendor_id": "uuid-string-here",
-    "total_amount": 150.00,
+    "vendor_id": "uuid",
+    "total_amount": 150.0,
+    "promo_code": "SAVE10",
+    "scheduled_for": "2026-03-19T18:30:00.000Z",
     "items": [
       {
-        "id": "menu-item-uuid",
+        "id": "uuid",
         "quantity": 2,
         "price": 75.00
       }
@@ -246,6 +248,9 @@ Place a new food order.
   ```
   Notes:
   - `items[]` accepts either legacy fields (`id`, `price`) or compatibility aliases (`menu_item_id`, `unit_price`).
+  - `promo_code` and `scheduled_for` are optional.
+  - `delivery_mode`, `delivery_building_id`, `delivery_room`, `delivery_zone_id`, and `quiet_mode` are optional for class delivery.
+  - Response also includes delivery-to-class fields (delivery_mode, delivery_building_id, delivery_room, delivery_zone_id, quiet_mode, handoff_code, handoff_status, handoff_proof_url, class_start_at, class_end_at) when provided.
 - **Response** `201 Created`:
   ```json
   {
@@ -253,6 +258,9 @@ Place a new food order.
     "user_id": "uuid",
     "vendor_id": "uuid",
     "total_amount": 150.0,
+    "discount_amount": 15.0,
+    "promo_code": "SAVE10",
+    "scheduled_for": "2026-03-19T18:30:00.000Z",
     "status": "pending",
     "eta": {
       "min_minutes": 14,
@@ -274,6 +282,9 @@ Fetch orders for the authenticated user.
        "id": "uuid",
        "status": "preparing",
        "total_amount": 150.00,
+       "discount_amount": 15.0,
+       "promo_code": "SAVE10",
+       "scheduled_for": "2026-03-19T18:30:00.000Z",
        "vendors": { "name": "Canteen A" },
        "eta": {
          "min_minutes": 6,
@@ -284,6 +295,25 @@ Fetch orders for the authenticated user.
   ]
   ```
 
+### `PATCH /orders/:id/cancel`
+
+Cancel an order before it reaches the kitchen.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Notes**:
+  - Only orders in `pending` or `accepted` status can be cancelled by the customer.
+- **Response** `200 OK`:
+  ```json
+  {
+    "id": "uuid",
+    "status": "cancelled",
+    "eta": {
+      "min_minutes": 0,
+      "max_minutes": 0,
+      "confidence": "low"
+    }
+  }
+  ```
+
 ### `PATCH /orders/:id/status`
 Update order status (Vendor only).
 - **Headers**: `Authorization: Bearer <JWT>`
@@ -291,6 +321,205 @@ Update order status (Vendor only).
   ```json
   { "status": "preparing" }
   ```
+
+
+### `GET /orders/slots`
+Fetch available delivery windows for scheduling.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Response** `200 OK`:
+  ```json
+  {
+    "days": 3,
+    "slot_minutes": 30,
+    "slots": [
+      {
+        "starts_at": "2026-03-19T18:00:00.000Z",
+        "ends_at": "2026-03-19T18:30:00.000Z",
+        "label": "06:00 PM - 06:30 PM",
+        "day_label": "Wed, Mar 19"
+      }
+    ]
+  }
+  ```
+
+
+## Notifications
+
+### `GET /notifications`
+Fetch notifications for the authenticated user/vendor/admin.
+- **Headers**: `Authorization: Bearer <JWT>`
+- When push credentials are configured, newly created notifications are also fanned out via FCM/APNS to registered device tokens.
+- **Response** `200 OK`:
+  ```json
+  [
+    {
+      "id": "uuid",
+      "title": "Order status updated",
+      "body": "Order #1A2B3C4D is now PREPARING",
+      "type": "order_status",
+      "metadata": { "order_id": "uuid", "status": "preparing" },
+      "is_read": false,
+      "created_at": "2026-03-19T12:00:00.000Z"
+    }
+  ]
+  ```
+
+### `PATCH /notifications/:id/read`
+Mark a notification as read.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Response** `200 OK`:
+  ```json
+  {
+    "id": "uuid",
+    "is_read": true
+  }
+  ```
+
+### `POST /notifications/device`
+Register a device token for push notifications.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "token": "device_token", "platform": "android" }
+  ```
+- **Response** `201 Created`:
+  ```json
+  { "id": "uuid", "token": "device_token" }
+  ```
+
+### `DELETE /notifications/device`
+Remove a device token.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "token": "device_token" }
+  ```
+- **Response** `200 OK`:
+  ```json
+  { "success": true }
+  ```
+
+## Promotions
+
+### `GET /promos/active`
+Fetch active promo codes for authenticated users.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Response** `200 OK`:
+  ```json
+  [
+    {
+      "id": "uuid",
+      "code": "SAVE10",
+      "discount_type": "percent",
+      "discount_value": 10,
+      "min_order_amount": 100,
+      "is_active": true
+    }
+  ]
+  ```
+
+### `POST /promos/validate`
+Validate a promo code against an order total.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "code": "SAVE10", "order_total": 200 }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "promo_id": "uuid",
+    "code": "SAVE10",
+    "discount_amount": 20,
+    "final_amount": 180
+  }
+  ```
+
+### `GET /admin/promos`
+Fetch all promo codes (Admin only).
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /admin/promos`
+Create a promo code (Admin only).
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "code": "SAVE10",
+    "discount_type": "percent",
+    "discount_value": 10,
+    "min_order_amount": 100,
+    "usage_limit": 500
+  }
+  ```
+
+### `PATCH /admin/promos/:id`
+Update a promo code (Admin only).
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "is_active": false }
+  ```
+
+
+## Campus Delivery
+
+### `GET /public/buildings`
+List active campus buildings.
+
+### `GET /public/zones`
+List active delivery zones.
+- Optional query params:
+  - `building_id`: filter zones by building
+
+
+### `GET /admin/campus/buildings`
+Admin list of campus buildings.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /admin/campus/buildings`
+Create a campus building (Admin only).
+
+### `PATCH /admin/campus/buildings/:id`
+Update a campus building (Admin only).
+
+### `GET /admin/campus/zones`
+Admin list of delivery zones.
+
+### `POST /admin/campus/zones`
+Create a delivery zone (Admin only).
+
+### `PATCH /admin/campus/zones/:id`
+Update a delivery zone (Admin only).
+
+### `GET /class-sessions`
+List the authenticated user's class sessions.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /class-sessions`
+Create a class session.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "building_id": "uuid", "room": "B-201", "starts_at": "2026-03-19T09:00:00.000Z", "ends_at": "2026-03-19T10:00:00.000Z" }
+  ```
+
+### `PATCH /class-sessions/:id`
+Update a class session.
+
+### `DELETE /class-sessions/:id`
+Delete a class session.
+
+
+### `PATCH /orders/:id/handoff`
+Update class handoff status (Vendor only).
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "status": "arrived_class", "proof_url": "https://..." }
+  ```
+  - `proof_url` is required when `status` is `delivered` or `failed`.
+  - If the order has a `delivery_zone_id` with GeoJSON, handoff updates to `arrived_class` or `delivered` validate the latest courier location inside the zone.
 
 ## Vendor Operations
 
@@ -309,6 +538,9 @@ Fetch orders for the authenticated vendor.
       "id": "uuid",
       "status": "preparing",
       "total_amount": 220.0,
+      "discount_amount": 15.0,
+      "promo_code": "SAVE10",
+      "scheduled_for": "2026-03-19T18:30:00.000Z",
       "eta": {
         "min_minutes": 6,
         "max_minutes": 14,
@@ -409,12 +641,13 @@ Update the delivery location.
 - Customer mutations now require a `user` role token and return `403 Forbidden` for vendor/admin principals:
   - `POST /orders`
   - `GET /orders/me`
+  - `PATCH /orders/:id/cancel`
   - `GET|POST|DELETE|PATCH /addresses`
   - `POST /payments/create-order`
   - `POST /payments/verify`
   - `POST /reviews`
 - Delivery write access now matches the documented operational scope: `POST /delivery/location` requires vendor/admin role, while `GET /delivery/:orderId/location` remains authenticated.
-- The contracts feed reflects this as registry version `2026.03.s8.3`, changelog count `12`, and feature-flag count `11`.
+- The contracts feed reflects this as registry version `2026.03.s11.1`, changelog count `26`, and feature-flag count `11`.
 
 ## Admin Management
 
@@ -425,6 +658,9 @@ Get global platform statistics.
 
 ### `GET /admin/charts`
 Fetch analytical chart data.
+
+### `GET /admin/finance/payouts/export`
+Download payout summary as CSV.
 
 ### `GET /admin/vendors/pending`
 List vendors awaiting approval.

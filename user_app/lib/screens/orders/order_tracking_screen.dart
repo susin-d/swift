@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
+import '../../models/delivery_location.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/delivery_provider.dart';
 import '../../widgets/loading_widget.dart';
 import '../../models/order_model.dart';
 
@@ -25,14 +29,14 @@ class OrderTrackingScreen extends ConsumerWidget {
         ),
       ),
       body: orderStream.when(
-        data: (order) => _buildTrackingContent(context, order),
+        data: (order) => _buildTrackingContent(context, ref, order),
         loading: () => const LoadingWidget(),
         error: (e, _) => Center(child: Text('Error tracking order: $e')),
       ),
     );
   }
 
-  Widget _buildTrackingContent(BuildContext context, OrderModel order) {
+  Widget _buildTrackingContent(BuildContext context, WidgetRef ref, OrderModel order) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -66,7 +70,9 @@ class OrderTrackingScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           _buildEtaTrustCard(order),
-          const SizedBox(height: 60),
+          const SizedBox(height: 28),
+          _buildLiveMapSection(context, ref, order),
+          const SizedBox(height: 48),
           
           // Stepper-like visualization
           _buildStatusStep(context, 'Order Placed', 'We have received your order.', order.status.index >= 0),
@@ -75,6 +81,16 @@ class OrderTrackingScreen extends ConsumerWidget {
           _buildStatusStep(context, 'Completed', 'Enjoy your meal!', order.status.index >= 4),
           
           const SizedBox(height: 60),
+          if (_canCancel(order))
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmCancel(context, ref, order),
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancel Order'),
+              ),
+            ),
+          if (_canCancel(order)) const SizedBox(height: 40),
           
           // Order Details Card
           Container(
@@ -93,7 +109,44 @@ class OrderTrackingScreen extends ConsumerWidget {
                     Text('#${order.id.substring(0, 8).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.w900)),
                   ],
                 ),
-                const Divider(height: 32),
+                
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Scheduled', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    Text(
+                      order.scheduledFor == null
+                          ? 'ASAP'
+                          : '${order.scheduledFor!.toLocal()}'.split('.').first,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+                if (order.deliveryMode == 'class') ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Class delivery', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                      Text(
+                        '${order.deliveryBuildingName ?? 'Building'}${order.deliveryRoom == null ? '' : ' • ${order.deliveryRoom}'}',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  if (order.handoffCode != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Handoff code', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                        Text(order.handoffCode!, style: const TextStyle(fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ],
+                ],
+const Divider(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -107,6 +160,233 @@ class OrderTrackingScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  bool _canCancel(OrderModel order) {
+    return order.status == OrderStatus.pending || order.status == OrderStatus.accepted;
+  }
+
+  Future<void> _confirmCancel(BuildContext context, WidgetRef ref, OrderModel order) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel order'),
+        content: const Text('Cancel this order before it reaches the kitchen?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Keep order')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Cancel order')),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    try {
+      await ref.read(orderServiceProvider).cancelOrder(order.id);
+      if (!context.mounted) return;
+      ref.invalidate(userOrdersProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order cancelled.')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cancel failed: $e'), backgroundColor: AppColors.error),
+      );
+    }
+  }
+
+  Widget _buildLiveMapSection(BuildContext context, WidgetRef ref, OrderModel order) {
+    final locationAsync = ref.watch(deliveryLocationProvider(order.id));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Live Courier Tracking',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        locationAsync.when(
+          data: (location) {
+            if (location == null) {
+              return _buildMapPlaceholder();
+            }
+            return _buildMapCard(location);
+          },
+          loading: () => _buildMapLoading(),
+          error: (e, _) => _buildMapError(e),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapCard(DeliveryLocation location) {
+    final point = LatLng(location.lat, location.lng);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: point,
+                initialZoom: 15,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.campusfood.mobile',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: point,
+                      width: 46,
+                      height: 46,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.delivery_dining_rounded, color: Colors.white, size: 24),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _formatUpdatedAt(location.updatedAt),
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapPlaceholder() {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.location_searching_rounded, size: 32, color: AppColors.textMuted),
+          SizedBox(height: 12),
+          Text(
+            'Waiting for courier location',
+            style: TextStyle(fontWeight: FontWeight.w800),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Live tracking begins once delivery is in motion.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapLoading() {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Loading live courier location...',
+            style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapError(Object error) {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off_rounded, size: 32, color: AppColors.textMuted),
+          const SizedBox(height: 12),
+          const Text(
+            'Unable to load courier location',
+            style: TextStyle(fontWeight: FontWeight.w800),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            error.toString(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatUpdatedAt(DateTime? updatedAt) {
+    if (updatedAt == null) {
+      return 'Updated just now';
+    }
+
+    final diff = DateTime.now().difference(updatedAt);
+    if (diff.inSeconds < 60) {
+      return 'Updated just now';
+    }
+    if (diff.inMinutes < 60) {
+      return 'Updated ${diff.inMinutes} min ago';
+    }
+    if (diff.inHours < 24) {
+      return 'Updated ${diff.inHours} hr ago';
+    }
+    final days = diff.inDays;
+    return 'Updated ${days}d ago';
   }
 
   Widget _buildEtaTrustCard(OrderModel order) {

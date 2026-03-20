@@ -15,6 +15,21 @@ class OrderModel {
   final String vendorId;
   final String? vendorName;
   final double totalAmount;
+  final double discountAmount;
+  final String? promoCode;
+  final DateTime? scheduledFor;
+  final String? deliveryMode;
+  final String? deliveryBuildingId;
+  final String? deliveryBuildingName;
+  final String? deliveryRoom;
+  final String? deliveryZoneId;
+  final bool quietMode;
+  final String? handoffCode;
+  final String? handoffStatus;
+  final String? deliveryInstructions;
+  final String? deliveryLocationLabel;
+  final DateTime? classStartAt;
+  final DateTime? classEndAt;
   final OrderStatus status;
   final List<OrderItemModel> items;
   final DateTime createdAt;
@@ -26,6 +41,21 @@ class OrderModel {
     required this.vendorId,
     this.vendorName,
     required this.totalAmount,
+    this.discountAmount = 0,
+    this.promoCode,
+    this.scheduledFor,
+    this.deliveryMode,
+    this.deliveryBuildingId,
+    this.deliveryBuildingName,
+    this.deliveryRoom,
+    this.deliveryZoneId,
+    this.quietMode = false,
+    this.handoffCode,
+    this.handoffStatus,
+    this.deliveryInstructions,
+    this.deliveryLocationLabel,
+    this.classStartAt,
+    this.classEndAt,
     required this.status,
     required this.items,
     required this.createdAt,
@@ -39,6 +69,21 @@ class OrderModel {
       vendorId: json['vendor_id'],
       vendorName: json['vendors']?['name'],
       totalAmount: (json['total_amount'] ?? 0.0).toDouble(),
+      discountAmount: (json['discount_amount'] ?? 0.0).toDouble(),
+      promoCode: json['promo_code']?.toString(),
+      scheduledFor: json['scheduled_for'] != null ? DateTime.parse(json['scheduled_for']) : null,
+      deliveryMode: json['delivery_mode']?.toString(),
+      deliveryBuildingId: json['delivery_building_id']?.toString(),
+      deliveryBuildingName: json['campus_buildings']?['name']?.toString(),
+      deliveryRoom: json['delivery_room']?.toString(),
+      deliveryZoneId: json['delivery_zone_id']?.toString(),
+      quietMode: json['quiet_mode'] == true,
+      handoffCode: json['handoff_code']?.toString(),
+      handoffStatus: json['handoff_status']?.toString(),
+      deliveryInstructions: json['delivery_instructions']?.toString(),
+      deliveryLocationLabel: json['delivery_location_label']?.toString(),
+      classStartAt: json['class_start_at'] != null ? DateTime.parse(json['class_start_at']) : null,
+      classEndAt: json['class_end_at'] != null ? DateTime.parse(json['class_end_at']) : null,
       status: _statusFromString(json['status']),
       items: (json['order_items'] as List?)
               ?.map((i) => OrderItemModel.fromJson(i))

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/models/admin_order.dart';
 import '../providers/orders_provider.dart';
 import '../widgets/order_detail_drawer.dart';
+import '../../../../shared/widgets/reason_capture_dialog.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -105,7 +106,7 @@ class _OrderRow extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Order ${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
+                      'Order ${order.id.substring(0, order.id.length > 8 - 8 : order.id.length)}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -130,7 +131,7 @@ class _OrderRow extends ConsumerWidget {
               Text('${order.vendorName} • ${order.userName}', style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 6),
               Text(
-                '${order.itemCount} items • ${_currency(order.totalAmount)} • ${_date(order.createdAt)}',
+                '${order.itemCount} items - ${_currency(order.totalAmount)} - ${_date(order.createdAt)} - ${_schedule(order.scheduledFor)}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -157,21 +158,16 @@ class _OrderRow extends ConsumerWidget {
   }
 
   Future<void> _cancelOrder(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancel order'),
-        content: Text('Cancel order ${order.id}? This action cannot be undone from this screen.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('No')),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Cancel order')),
-        ],
-      ),
+    final reason = await ReasonCaptureDialog.show(
+      context,
+      title: 'Cancel order',
+      actionLabel: 'Cancel order',
+      warningText: 'Provide a reason for cancelling order ${order.id}. This will be logged.',
     );
 
-    if (confirmed != true || !context.mounted) return;
+    if (reason == null || !context.mounted) return;
 
-    final error = await ref.read(ordersProvider.notifier).cancelOrder(order.id);
+    final error = await ref.read(ordersProvider.notifier).cancelOrder(order.id, reason: reason);
     if (!context.mounted) return;
 
     Navigator.of(context).pop();
@@ -179,7 +175,7 @@ class _OrderRow extends ConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error ?? 'Order cancelled successfully.'),
-        backgroundColor: error == null ? null : const Color(0xFFB91C1C),
+        backgroundColor: error == null - null : const Color(0xFFB91C1C),
       ),
     );
   }
@@ -300,4 +296,9 @@ String _currency(double value) {
 String _date(DateTime? dateTime) {
   if (dateTime == null) return 'Unknown time';
   return DateFormat('dd MMM, hh:mm a').format(dateTime);
+}
+
+String _schedule(DateTime? scheduledFor) {
+  if (scheduledFor == null) return 'ASAP';
+  return DateFormat('dd MMM, hh:mm a').format(scheduledFor);
 }

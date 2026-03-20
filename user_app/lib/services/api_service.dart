@@ -164,10 +164,10 @@ class ApiService {
     }
   }
 
-  Future<Response> delete(String path, {String? cancelKey}) async {
+  Future<Response> delete(String path, {dynamic data, String? cancelKey}) async {
     final cancelToken = _prepareCancelToken(cancelKey);
     try {
-      return await _dio.delete(path, cancelToken: cancelToken);
+      return await _dio.delete(path, data: data, cancelToken: cancelToken);
     } on DioException catch (e) {
       throw _mapError(e, 'Failed to delete data');
     } finally {

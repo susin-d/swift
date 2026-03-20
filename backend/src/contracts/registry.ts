@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s8.3';
+export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.2';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -74,6 +74,17 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
             fields: [
                 { name: 'vendor_id', type: 'string(uuid)', required: true, description: 'Vendor receiving the order.' },
                 { name: 'total_amount', type: 'number', required: true, description: 'Aggregate payable total.' },
+                { name: 'promo_code', type: 'string', required: false, description: 'Optional promo code to apply.' },
+                { name: 'scheduled_for', type: 'string(datetime)', required: false, description: 'Optional scheduled fulfillment timestamp.' },
+                { name: 'delivery_mode', type: 'string', required: false, description: 'Delivery mode: standard|class.' },
+                { name: 'delivery_building_id', type: 'string(uuid)', required: false, description: 'Campus building id for class delivery.' },
+                { name: 'delivery_room', type: 'string', required: false, description: 'Room or classroom label.' },
+                { name: 'delivery_zone_id', type: 'string(uuid)', required: false, description: 'Delivery zone id when provided.' },
+                { name: 'quiet_mode', type: 'boolean', required: false, description: 'Quiet delivery preferences (no calls).'} ,
+                { name: 'delivery_instructions', type: 'string', required: false, description: 'Delivery instructions for class handoff.' },
+                { name: 'delivery_location_label', type: 'string', required: false, description: 'Delivery location label.' },
+                { name: 'class_start_at', type: 'string(datetime)', required: false, description: 'Class start timestamp.' },
+                { name: 'class_end_at', type: 'string(datetime)', required: false, description: 'Class end timestamp.' },
                 { name: 'items', type: 'array<object>', required: true, description: 'Order line items with id/menu_item_id, quantity, and price/unit_price.' }
             ]
         },
@@ -84,6 +95,21 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'user_id', type: 'string(uuid)', required: true, description: 'Customer ID.' },
                 { name: 'vendor_id', type: 'string(uuid)', required: true, description: 'Vendor ID.' },
                 { name: 'status', type: 'string', required: true, description: 'Order lifecycle status.' },
+                { name: 'discount_amount', type: 'number', required: false, description: 'Applied promo discount amount.' },
+                { name: 'promo_code', type: 'string', required: false, description: 'Applied promo code.' },
+                { name: 'scheduled_for', type: 'string(datetime)', required: false, description: 'Scheduled fulfillment time.' },
+                { name: 'delivery_mode', type: 'string', required: false, description: 'Delivery mode: standard|class.' },
+                { name: 'delivery_building_id', type: 'string(uuid)', required: false, description: 'Campus building id for class delivery.' },
+                { name: 'delivery_room', type: 'string', required: false, description: 'Room or classroom label.' },
+                { name: 'delivery_zone_id', type: 'string(uuid)', required: false, description: 'Delivery zone id when provided.' },
+                { name: 'quiet_mode', type: 'boolean', required: false, description: 'Quiet delivery preferences (no calls).'} ,
+                { name: 'delivery_instructions', type: 'string', required: false, description: 'Delivery instructions for class handoff.' },
+                { name: 'delivery_location_label', type: 'string', required: false, description: 'Delivery location label.' },
+                { name: 'handoff_code', type: 'string', required: false, description: 'Generated handoff code for class delivery.' },
+                { name: 'handoff_status', type: 'string', required: false, description: 'Handoff status state.' },
+                { name: 'handoff_proof_url', type: 'string', required: false, description: 'Proof of delivery URL.' },
+                { name: 'class_start_at', type: 'string(datetime)', required: false, description: 'Class start timestamp.' },
+                { name: 'class_end_at', type: 'string(datetime)', required: false, description: 'Class end timestamp.' },
                 { name: 'eta.min_minutes', type: 'number', required: true, description: 'Estimated lower-bound arrival/prep minutes remaining.' },
                 { name: 'eta.max_minutes', type: 'number', required: true, description: 'Estimated upper-bound arrival/prep minutes remaining.' },
                 { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' }
@@ -102,6 +128,21 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: '[].id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
                 { name: '[].status', type: 'string', required: true, description: 'Current order status.' },
                 { name: '[].total_amount', type: 'number', required: true, description: 'Order total.' },
+                { name: '[].discount_amount', type: 'number', required: false, description: 'Applied promo discount.' },
+                { name: '[].promo_code', type: 'string', required: false, description: 'Applied promo code.' },
+                { name: '[].scheduled_for', type: 'string(datetime)', required: false, description: 'Scheduled fulfillment time.' },
+                { name: '[].delivery_mode', type: 'string', required: false, description: 'Delivery mode: standard|class.' },
+                { name: '[].delivery_building_id', type: 'string(uuid)', required: false, description: 'Campus building id for class delivery.' },
+                { name: '[].delivery_room', type: 'string', required: false, description: 'Room or classroom label.' },
+                { name: '[].delivery_zone_id', type: 'string(uuid)', required: false, description: 'Delivery zone id when provided.' },
+                { name: '[].quiet_mode', type: 'boolean', required: false, description: 'Quiet delivery preferences (no calls).'} ,
+                { name: '[].delivery_instructions', type: 'string', required: false, description: 'Delivery instructions for class handoff.' },
+                { name: '[].delivery_location_label', type: 'string', required: false, description: 'Delivery location label.' },
+                { name: '[].handoff_code', type: 'string', required: false, description: 'Handoff code for class delivery.' },
+                { name: '[].handoff_status', type: 'string', required: false, description: 'Handoff status state.' },
+                { name: '[].handoff_proof_url', type: 'string', required: false, description: 'Proof of delivery URL.' },
+                { name: '[].class_start_at', type: 'string(datetime)', required: false, description: 'Class start timestamp.' },
+                { name: '[].class_end_at', type: 'string(datetime)', required: false, description: 'Class end timestamp.' },
                 { name: '[].eta.min_minutes', type: 'number', required: true, description: 'Estimated lower-bound prep/delivery minutes remaining.' },
                 { name: '[].eta.max_minutes', type: 'number', required: true, description: 'Estimated upper-bound prep/delivery minutes remaining.' },
                 { name: '[].pacing.elapsed_minutes', type: 'number', required: true, description: 'Elapsed time since order creation in minutes.' },
@@ -163,9 +204,41 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: '[].id', type: 'string(uuid)', required: true, description: 'Order id.' },
                 { name: '[].status', type: 'string', required: true, description: 'Order status.' },
                 { name: '[].total_amount', type: 'number', required: true, description: 'Order total.' },
+                { name: '[].discount_amount', type: 'number', required: false, description: 'Applied promo discount.' },
+                { name: '[].promo_code', type: 'string', required: false, description: 'Applied promo code.' },
+                { name: '[].scheduled_for', type: 'string(datetime)', required: false, description: 'Scheduled fulfillment time.' },
+                { name: '[].delivery_mode', type: 'string', required: false, description: 'Delivery mode: standard|class.' },
+                { name: '[].delivery_building_id', type: 'string(uuid)', required: false, description: 'Campus building id for class delivery.' },
+                { name: '[].delivery_room', type: 'string', required: false, description: 'Room or classroom label.' },
+                { name: '[].delivery_zone_id', type: 'string(uuid)', required: false, description: 'Delivery zone id when provided.' },
+                { name: '[].quiet_mode', type: 'boolean', required: false, description: 'Quiet delivery preferences (no calls).'} ,
+                { name: '[].delivery_instructions', type: 'string', required: false, description: 'Delivery instructions for class handoff.' },
+                { name: '[].delivery_location_label', type: 'string', required: false, description: 'Delivery location label.' },
+                { name: '[].handoff_code', type: 'string', required: false, description: 'Handoff code for class delivery.' },
+                { name: '[].handoff_status', type: 'string', required: false, description: 'Handoff status state.' },
+                { name: '[].handoff_proof_url', type: 'string', required: false, description: 'Proof of delivery URL.' },
+                { name: '[].class_start_at', type: 'string(datetime)', required: false, description: 'Class start timestamp.' },
+                { name: '[].class_end_at', type: 'string(datetime)', required: false, description: 'Class end timestamp.' },
                 { name: '[].eta.min_minutes', type: 'number', required: true, description: 'Estimated lower-bound minutes remaining.' },
                 { name: '[].eta.max_minutes', type: 'number', required: true, description: 'Estimated upper-bound minutes remaining.' },
                 { name: '[].eta.confidence', type: 'string', required: true, description: 'Confidence grade for ETA estimate.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.cancel',
+        method: 'PATCH',
+        path: '/api/v1/orders/:id/cancel',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Cancel an order before preparation begins.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order id.' },
+                { name: 'status', type: 'string', required: true, description: 'Updated status (cancelled).' },
+                { name: 'eta.min_minutes', type: 'number', required: true, description: 'Lower-bound minutes remaining.' },
+                { name: 'eta.max_minutes', type: 'number', required: true, description: 'Upper-bound minutes remaining.' },
+                { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade for ETA estimate.' }
             ]
         }
     },
@@ -208,8 +281,12 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
         response: {
             description: 'Global search payload across menus and vendors.',
             fields: [
-                { name: 'vendors', type: 'array<object>', required: false, description: 'Matched vendors.' },
-                { name: 'items', type: 'array<object>', required: false, description: 'Matched menu items.' }
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Menu item id.' },
+                { name: '[].name', type: 'string', required: true, description: 'Menu item name.' },
+                { name: '[].description', type: 'string', required: false, description: 'Menu item description.' },
+                { name: '[].price', type: 'number', required: true, description: 'Menu item price.' },
+                { name: '[].vendor.id', type: 'string(uuid)', required: false, description: 'Vendor id.' },
+                { name: '[].vendor.name', type: 'string', required: false, description: 'Vendor name.' }
             ]
         }
     },
@@ -294,6 +371,19 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
             description: 'Cancellation confirmation message.',
             fields: [
                 { name: 'message', type: 'string', required: true, description: 'Success message.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.finance.payouts.export',
+        method: 'GET',
+        path: '/api/v1/admin/finance/payouts/export',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'CSV export payload for vendor payouts.',
+            fields: [
+                { name: 'csv', type: 'string', required: true, description: 'CSV text body.' }
             ]
         }
     },
@@ -421,6 +511,297 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'meta.totalPages', type: 'number', required: true, description: 'Total page count.' },
                 { name: 'meta.hasNextPage', type: 'boolean', required: true, description: 'Whether next page exists.' },
                 { name: 'meta.hasPreviousPage', type: 'boolean', required: true, description: 'Whether previous page exists.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.slots.get',
+        method: 'GET',
+        path: '/api/v1/orders/slots',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Available delivery time slots for scheduled orders.',
+            fields: [
+                { name: 'days', type: 'number', required: true, description: 'Days of slots returned.' },
+                { name: 'slot_minutes', type: 'number', required: true, description: 'Slot size in minutes.' },
+                { name: 'slots', type: 'array<object>', required: true, description: 'Slot list with start/end timestamps.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.handoff.update',
+        method: 'PATCH',
+        path: '/api/v1/orders/:id/handoff',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update handoff status for class delivery. Proof URL is required for delivered/failed states and may be geofence-validated.',
+            fields: [
+                { name: 'status', type: 'string', required: true, description: 'Handoff status: pending|arrived_building|arrived_class|delivered|failed.' },
+                { name: 'proof_url', type: 'string', required: false, description: 'Proof URL (required for delivered/failed).' }
+            ]
+        },
+        response: {
+            description: 'Updated order record with handoff status.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order id.' },
+                { name: 'handoff_status', type: 'string', required: true, description: 'Updated handoff status.' }
+            ]
+        }
+    },
+    {
+        id: 'notifications.list',
+        method: 'GET',
+        path: '/api/v1/notifications',
+        owner: 'shared',
+        auth: 'authenticated',
+        response: {
+            description: 'Notification feed for the authenticated principal.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Notification id.' },
+                { name: '[].title', type: 'string', required: true, description: 'Notification title.' },
+                { name: '[].body', type: 'string', required: true, description: 'Notification body.' },
+                { name: '[].type', type: 'string', required: false, description: 'Notification type tag.' },
+                { name: '[].metadata', type: 'object', required: false, description: 'Metadata payload.' },
+                { name: '[].is_read', type: 'boolean', required: true, description: 'Read state.' }
+            ]
+        }
+    },
+    {
+        id: 'notifications.read',
+        method: 'PATCH',
+        path: '/api/v1/notifications/:id/read',
+        owner: 'shared',
+        auth: 'authenticated',
+        response: {
+            description: 'Mark notification as read.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Notification id.' },
+                { name: 'is_read', type: 'boolean', required: true, description: 'Updated read flag.' }
+            ]
+        }
+    },
+    {
+        id: 'notifications.device.register',
+        method: 'POST',
+        path: '/api/v1/notifications/device',
+        owner: 'shared',
+        auth: 'authenticated',
+        request: {
+            description: 'Register a device token for push delivery.',
+            fields: [
+                { name: 'token', type: 'string', required: true, description: 'Device token string.' },
+                { name: 'platform', type: 'string', required: false, description: 'Platform label.' }
+            ]
+        },
+        response: {
+            description: 'Device token registration record.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Device token id.' },
+                { name: 'token', type: 'string', required: true, description: 'Registered token.' }
+            ]
+        }
+    },
+    {
+        id: 'notifications.device.remove',
+        method: 'DELETE',
+        path: '/api/v1/notifications/device',
+        owner: 'shared',
+        auth: 'authenticated',
+        request: {
+            description: 'Remove a device token.',
+            fields: [
+                { name: 'token', type: 'string', required: true, description: 'Device token string.' }
+            ]
+        },
+        response: {
+            description: 'Removal acknowledgement.',
+            fields: [
+                { name: 'success', type: 'boolean', required: true, description: 'Removal success flag.' }
+            ]
+        }
+    },
+    {
+        id: 'promos.active.list',
+        method: 'GET',
+        path: '/api/v1/promos/active',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Active promo codes available to users.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Promo id.' },
+                { name: '[].code', type: 'string', required: true, description: 'Promo code.' },
+                { name: '[].discount_type', type: 'string', required: true, description: 'Discount type.' },
+                { name: '[].discount_value', type: 'number', required: true, description: 'Discount value.' }
+            ]
+        }
+    },
+    {
+        id: 'promos.validate',
+        method: 'POST',
+        path: '/api/v1/promos/validate',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Validate promo code against order total.',
+            fields: [
+                { name: 'code', type: 'string', required: true, description: 'Promo code.' },
+                { name: 'order_total', type: 'number', required: true, description: 'Current order total.' }
+            ]
+        },
+        response: {
+            description: 'Validated promo response.',
+            fields: [
+                { name: 'promo_id', type: 'string(uuid)', required: true, description: 'Promo id.' },
+                { name: 'discount_amount', type: 'number', required: true, description: 'Discount amount.' },
+                { name: 'final_amount', type: 'number', required: true, description: 'Total after discount.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.promos.list',
+        method: 'GET',
+        path: '/api/v1/admin/promos',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Admin promo listing.',
+            fields: [
+                { name: '[]', type: 'array<object>', required: true, description: 'Promo records.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.promos.create',
+        method: 'POST',
+        path: '/api/v1/admin/promos',
+        owner: 'admin_app',
+        auth: 'admin',
+        request: {
+            description: 'Create a promo code.',
+            fields: [
+                { name: 'code', type: 'string', required: true, description: 'Promo code.' },
+                { name: 'discount_type', type: 'string', required: true, description: 'Discount type.' },
+                { name: 'discount_value', type: 'number', required: true, description: 'Discount value.' }
+            ]
+        },
+        response: {
+            description: 'Promo record.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Promo id.' },
+                { name: 'code', type: 'string', required: true, description: 'Promo code.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.promos.update',
+        method: 'PATCH',
+        path: '/api/v1/admin/promos/:id',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Updated promo record.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Promo id.' },
+                { name: 'is_active', type: 'boolean', required: false, description: 'Active state.' }
+            ]
+        }
+    },
+    {
+        id: 'campus.buildings.public',
+        method: 'GET',
+        path: '/api/v1/public/buildings',
+        owner: 'user_app',
+        auth: 'public',
+        response: {
+            description: 'Public list of active campus buildings.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Building id.' },
+                { name: '[].name', type: 'string', required: true, description: 'Building name.' },
+                { name: '[].latitude', type: 'number', required: false, description: 'Latitude.' },
+                { name: '[].longitude', type: 'number', required: false, description: 'Longitude.' }
+            ]
+        }
+    },
+    {
+        id: 'campus.zones.public',
+        method: 'GET',
+        path: '/api/v1/public/zones',
+        owner: 'user_app',
+        auth: 'public',
+        response: {
+            description: 'Public list of active delivery zones.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Zone id.' },
+                { name: '[].name', type: 'string', required: true, description: 'Zone name.' },
+                { name: '[].building_id', type: 'string(uuid)', required: false, description: 'Associated building.' }
+            ]
+        }
+    },
+    {
+        id: 'class.sessions.list',
+        method: 'GET',
+        path: '/api/v1/class-sessions',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'List of saved class sessions for a user.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Session id.' },
+                { name: '[].building_id', type: 'string(uuid)', required: true, description: 'Building id.' },
+                { name: '[].room', type: 'string', required: true, description: 'Room label.' },
+                { name: '[].starts_at', type: 'string(datetime)', required: false, description: 'Start time.' },
+                { name: '[].ends_at', type: 'string(datetime)', required: false, description: 'End time.' }
+            ]
+        }
+    },
+    {
+        id: 'class.sessions.create',
+        method: 'POST',
+        path: '/api/v1/class-sessions',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Create a class session.',
+            fields: [
+                { name: 'building_id', type: 'string(uuid)', required: true, description: 'Building id.' },
+                { name: 'room', type: 'string', required: true, description: 'Room label.' },
+                { name: 'starts_at', type: 'string(datetime)', required: false, description: 'Start time.' },
+                { name: 'ends_at', type: 'string(datetime)', required: false, description: 'End time.' }
+            ]
+        },
+        response: {
+            description: 'Created class session.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Session id.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.campus.buildings.list',
+        method: 'GET',
+        path: '/api/v1/admin/campus/buildings',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Admin list of campus buildings.',
+            fields: [
+                { name: '[]', type: 'array<object>', required: true, description: 'Building records.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.campus.zones.list',
+        method: 'GET',
+        path: '/api/v1/admin/campus/zones',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Admin list of delivery zones.',
+            fields: [
+                { name: '[]', type: 'array<object>', required: true, description: 'Zone records.' }
             ]
         }
     },

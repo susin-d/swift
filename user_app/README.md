@@ -5,8 +5,15 @@ Flutter client for end-user food discovery, ordering, and delivery tracking in t
 ## Core Features
 
 - Discovery feed with category and mood-driven browse interactions
+- Search for dishes and vendors
 - Vendor catalog, menu browsing, and cart/checkout flow
-- Order timeline and user order history
+- Address book and delivery selection
+- Payment selection (pay now or pay on pickup)
+- Promo code validation and scheduled delivery time selection
+- Order timeline, cancellation, and user order history
+- Favorites and notifications feed
+- Reviews and ratings
+- Live courier tracking map with delivery location polling
 - Shared contracts feed support (registry, changelog, flags)
 
 ## Sprint 5 Home Experience (Current)
@@ -32,6 +39,9 @@ flutter analyze
 flutter test
 flutter run
 ```
+
+Payment configuration:
+- Razorpay key can be injected at build time: `--dart-define=RAZORPAY_KEY_ID=your_key_here`
 
 ## Monorepo Verification Policy
 

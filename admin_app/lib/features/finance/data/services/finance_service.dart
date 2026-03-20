@@ -50,4 +50,19 @@ class FinanceService {
       );
     }
   }
+
+  Future<String> exportPayoutsCsv() async {
+    try {
+      final response = await _dio.get<String>(
+        '/admin/finance/payouts/export',
+        options: Options(responseType: ResponseType.plain),
+      );
+      return response.data ?? '';
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to export payouts',
+      );
+    }
+  }
 }

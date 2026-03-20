@@ -12,6 +12,141 @@ export type ContractChange = {
 
 export const CONTRACT_CHANGELOG: ContractChange[] = [
     {
+        id: 'chg-2026-03-19-29',
+        version: '2026.03.s11.2',
+        timestamp: '2026-03-19T14:10:00.000Z',
+        changeType: 'updated',
+        endpointId: 'orders.handoff.update',
+        summary: 'Handoff updates now enforce proof for delivered/failed states and may validate geofence alignment.',
+        consumers: ['vendor_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-28',
+        version: '2026.03.s11.1',
+        timestamp: '2026-03-19T13:30:00.000Z',
+        changeType: 'added',
+        endpointId: 'orders.handoff.update',
+        summary: 'Added vendor handoff status update endpoint for class delivery workflows.',
+        consumers: ['vendor_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-27',
+        version: '2026.03.s11.0',
+        timestamp: '2026-03-19T13:10:00.000Z',
+        changeType: 'added',
+        endpointId: 'campus.buildings.public',
+        summary: 'Added campus buildings and delivery zones endpoints for delivery-to-class flows.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-26',
+        version: '2026.03.s11.0',
+        timestamp: '2026-03-19T13:05:00.000Z',
+        changeType: 'added',
+        endpointId: 'class.sessions.list',
+        summary: 'Added class session CRUD endpoints for user schedules.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-25',
+        version: '2026.03.s11.0',
+        timestamp: '2026-03-19T13:00:00.000Z',
+        changeType: 'updated',
+        endpointId: 'orders.create',
+        summary: 'Order create now supports delivery-to-class metadata and handoff fields.',
+        consumers: ['user_app', 'vendor_app', 'admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-24',
+        version: '2026.03.s11.0',
+        timestamp: '2026-03-19T12:55:00.000Z',
+        changeType: 'updated',
+        endpointId: 'orders.my.list',
+        summary: 'Order list payloads now include delivery-to-class fields.',
+        consumers: ['user_app', 'vendor_app', 'admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-21',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:30:00.000Z',
+        changeType: 'updated',
+        endpointId: 'vendor.orders.list',
+        summary: 'Vendor order queue now includes scheduled fulfillment and promo discount fields.',
+        consumers: ['vendor_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-20',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:25:00.000Z',
+        changeType: 'updated',
+        endpointId: 'orders.my.list',
+        summary: 'User order list now returns promo and scheduling fields.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-19',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:20:00.000Z',
+        changeType: 'updated',
+        endpointId: 'orders.create',
+        summary: 'Order create now accepts promo_code and scheduled_for and returns discount fields.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-18',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:15:00.000Z',
+        changeType: 'added',
+        endpointId: 'promos.validate',
+        summary: 'Added promo validation and admin promo management endpoints.',
+        consumers: ['user_app', 'admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-17',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:10:00.000Z',
+        changeType: 'added',
+        endpointId: 'notifications.list',
+        summary: 'Added notification feed, read, and device token registration endpoints.',
+        consumers: ['user_app', 'vendor_app', 'admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-16',
+        version: '2026.03.s10.0',
+        timestamp: '2026-03-19T12:05:00.000Z',
+        changeType: 'added',
+        endpointId: 'orders.slots.get',
+        summary: 'Added scheduled order slot discovery endpoint.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-15',
+        version: '2026.03.s9.0',
+        timestamp: '2026-03-19T10:10:00.000Z',
+        changeType: 'updated',
+        endpointId: 'public.search.global',
+        summary: 'Aligned search contract response to menu item list with embedded vendor info.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-14',
+        version: '2026.03.s9.0',
+        timestamp: '2026-03-19T10:00:00.000Z',
+        changeType: 'added',
+        endpointId: 'orders.cancel',
+        summary: 'Added customer order cancellation endpoint for pending/accepted orders.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-03-19-13',
+        version: '2026.03.s9.0',
+        timestamp: '2026-03-19T09:45:00.000Z',
+        changeType: 'added',
+        endpointId: 'admin.finance.payouts.export',
+        summary: 'Added CSV export endpoint for admin payout reporting.',
+        consumers: ['admin_app', 'shared']
+    },
+    {
         id: 'chg-2026-03-15-12',
         version: '2026.03.s8.3',
         timestamp: '2026-03-15T21:00:00.000Z',

@@ -71,6 +71,10 @@ class ProfileScreen extends ConsumerWidget {
 
             // Menu Items
             _buildProfileItem(context, 'Order History', Icons.history_rounded, () => context.push('/order-history')),
+            _buildProfileItem(context, 'Saved Addresses', Icons.location_on_rounded, () => context.push('/addresses')),
+            _buildProfileItem(context, 'Favorites', Icons.favorite_rounded, () => context.push('/favorites')),
+            _buildProfileItem(context, 'Class Schedule', Icons.school_rounded, () => context.push('/profile/classes')),
+            _buildProfileItem(context, 'Edit Profile', Icons.edit_rounded, () => context.push('/profile/edit')),
             _buildProfileItem(context, 'Help & Support', Icons.help_outline_rounded, () => context.push('/support')),
             _buildProfileItem(context, 'Terms of Service', Icons.gavel_rounded, () => context.push('/legal')),
             _buildProfileItem(context, 'Privacy Policy', Icons.privacy_tip_rounded, () => context.push('/privacy')),

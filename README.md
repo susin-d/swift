@@ -3,9 +3,9 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 
 ## 🌟 Platform Components
 
-1. **User App (Flutter)**: Allows students and staff to browse vendors, order food, and track deliveries in real-time.
-2. **Vendor App (Flutter)**: Vendor operations app for queue triage, prep-time pacing, and live order handling.
-3. **Admin App (Flutter)**: Governance control panel for moderation, audits, settings safety, and finance visibility.
+1. **User App (Flutter)**: Allows students and staff to search vendors, manage addresses, apply promo codes, schedule orders, pay for orders, and track deliveries in real-time with a live map.
+2. **Vendor App (Flutter)**: Vendor operations app for queue triage, prep-time pacing, menu CRUD, live order handling, courier location sharing, and notifications.
+3. **Admin App (Flutter)**: Governance control panel for moderation, audits, settings safety, finance visibility, and promo management.
 4. **Backend API (Node.js/Fastify)**: The central brain handling authentication, order processing, contracts, and RBAC security.
 5. **Database (Supabase PostgreSQL)**: A strictly secured database using Row Level Security (RLS) with Realtime support.
 
@@ -13,7 +13,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 
 - Completed: Sprint 1 through Sprint 8
 - Pending: Sprint 9 (Quality Engineering Expansion), Sprint 10 (Launch Readiness and Improvement Loop)
-- Sprint planning sources: `sprints_master.md` and `sprints_kanban.md`
+- Sprint planning sources: `FEATURES_AND_GAPS.md`, `admin_app/SPRINT_PLAN.md`, and `SITE_2_RUN_PLAN.md`
 - Legacy `sprints.md`: archived/removed
 
 ## 🚀 Getting Started
@@ -38,6 +38,11 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    # Add your Supabase keys to .env
    npm run dev
    ```
+
+   Push notifications (optional):
+   - `FCM_SERVER_KEY` to enable Firebase Cloud Messaging fanout.
+   - `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_PRIVATE_KEY` to enable APNS fanout.
+   - `APNS_ENV` set to `production` or `sandbox` (defaults to `sandbox`).
 
    Contract governance endpoints (Sprint 3+):
    - `GET /api/v1/contracts/registry` returns canonical request/response contract metadata and standardized error envelope details.
@@ -100,3 +105,11 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 
 ## 🤝 Contributing
 Please read the internal developer guides before pushing changes to the `main` branch. Ensure your code passes all lint checks.
+
+## 🌐 Website Planning
+- Website rollout is tracked in `SITE_2_RUN_PLAN.md`.
+- Run 1 covers foundation launch pages and baseline SEO/performance.
+- Run 2 covers lead capture integration, analytics, legal pages, and hardening.
+
+## 📌 Product Requirements
+- On-campus delivery to class scope and requirements live in `ON_CAMPUS_DELIVERY_REQUIREMENTS.md`.

@@ -53,9 +53,9 @@ class OrdersService {
     }
   }
 
-  Future<void> cancelOrder(String orderId) async {
+  Future<void> cancelOrder(String orderId, {required String reason}) async {
     try {
-      await _dio.patch('/admin/orders/$orderId/cancel');
+      await _dio.patch('/admin/orders/$orderId/cancel', data: {'reason': reason});
     } on DioException catch (e) {
       throw ApiException.fromDioException(
         e,

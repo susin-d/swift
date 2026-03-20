@@ -108,9 +108,9 @@ class OrdersNotifier extends AsyncNotifier<OrdersState> {
     ));
   }
 
-  Future<String?> cancelOrder(String orderId) async {
+  Future<String?> cancelOrder(String orderId, {required String reason}) async {
     try {
-      await OrdersService.instance.cancelOrder(orderId);
+      await OrdersService.instance.cancelOrder(orderId, reason: reason);
       await refresh();
       return null;
     } catch (e) {

@@ -22,6 +22,39 @@ CREATE TABLE IF NOT EXISTS vendors (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS campus_buildings (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  code TEXT,
+  name TEXT NOT NULL,
+  address TEXT,
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  delivery_notes TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS delivery_zones (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name TEXT NOT NULL,
+  building_id UUID REFERENCES public.campus_buildings(id) ON DELETE SET NULL,
+  geojson JSONB,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS class_sessions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  building_id UUID REFERENCES public.campus_buildings(id) ON DELETE SET NULL,
+  room TEXT,
+  course_label TEXT,
+  starts_at TIMESTAMP WITH TIME ZONE,
+  ends_at TIMESTAMP WITH TIME ZONE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS menus (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE,
@@ -39,14 +72,54 @@ CREATE TABLE IF NOT EXISTS menu_items (
   image_url TEXT
 );
 
+CREATE TABLE IF NOT EXISTS promotions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  description TEXT,
+  discount_type TEXT NOT NULL CHECK (discount_type IN ('percent', 'fixed')),
+  discount_value DECIMAL(10,2) NOT NULL,
+  min_order_amount DECIMAL(10,2) DEFAULT 0,
+  max_discount_amount DECIMAL(10,2),
+  starts_at TIMESTAMP WITH TIME ZONE,
+  ends_at TIMESTAMP WITH TIME ZONE,
+  is_active BOOLEAN DEFAULT true,
+  usage_limit INTEGER,
+  usage_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) NOT NULL,
   vendor_id UUID REFERENCES public.vendors(id) NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'preparing', 'ready', 'completed', 'cancelled')) DEFAULT 'pending',
+  delivery_mode TEXT NOT NULL CHECK (delivery_mode IN ('standard', 'class')) DEFAULT 'standard',
+  delivery_instructions TEXT,
+  delivery_location_label TEXT,
+  delivery_building_id UUID REFERENCES public.campus_buildings(id) ON DELETE SET NULL,
+  delivery_room TEXT,
+  delivery_zone_id UUID REFERENCES public.delivery_zones(id) ON DELETE SET NULL,
+  quiet_mode BOOLEAN DEFAULT false,
+  handoff_code TEXT,
+  handoff_status TEXT NOT NULL CHECK (handoff_status IN ('pending', 'arrived_building', 'arrived_class', 'delivered', 'failed')) DEFAULT 'pending',
+  handoff_proof_url TEXT,
+  class_start_at TIMESTAMP WITH TIME ZONE,
+  class_end_at TIMESTAMP WITH TIME ZONE,
+  scheduled_for TIMESTAMP WITH TIME ZONE,
   total_amount DECIMAL(10,2) NOT NULL,
+  discount_amount DECIMAL(10,2) DEFAULT 0,
+  promo_id UUID REFERENCES public.promotions(id),
+  promo_code TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS order_delivery_locations (
+  order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE PRIMARY KEY,
+  lat DECIMAL(10,7) NOT NULL,
+  lng DECIMAL(10,7) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
@@ -66,6 +139,14 @@ CREATE TABLE IF NOT EXISTS payments (
   provider_ref TEXT
 );
 
+CREATE TABLE IF NOT EXISTS promotion_redemptions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  promo_id UUID REFERENCES public.promotions(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES public.orders(id) ON DELETE SET NULL,
+  redeemed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS reviews (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
@@ -78,10 +159,24 @@ CREATE TABLE IF NOT EXISTS reviews (
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  audience TEXT NOT NULL CHECK (audience IN ('user', 'vendor', 'admin')) DEFAULT 'user',
+  type TEXT DEFAULT 'general',
   title TEXT NOT NULL,
   body TEXT NOT NULL,
+  metadata JSONB,
   is_read BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS device_tokens (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  audience TEXT NOT NULL CHECK (audience IN ('user', 'vendor', 'admin')) DEFAULT 'user',
+  token TEXT NOT NULL,
+  platform TEXT NOT NULL CHECK (platform IN ('ios', 'android', 'web', 'unknown')) DEFAULT 'unknown',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(user_id, token)
 );
 
 CREATE TABLE IF NOT EXISTS favorites (
@@ -112,11 +207,18 @@ ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_delivery_locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotion_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendor_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.campus_buildings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.class_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Drop policies if they exist so we can recreate them safely
 DO $$ DECLARE
@@ -160,3 +262,40 @@ CREATE POLICY "Vendors can view their orders" ON public.orders FOR SELECT USING 
 CREATE POLICY "Vendors can update their orders" ON public.orders FOR UPDATE USING (
   EXISTS (SELECT 1 FROM public.vendors WHERE vendors.id = orders.vendor_id AND vendors.owner_id = auth.uid())
 );
+
+CREATE POLICY "Vendors can upsert delivery locations" ON public.order_delivery_locations FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.orders
+    JOIN public.vendors ON vendors.id = orders.vendor_id
+    WHERE orders.id = order_delivery_locations.order_id AND vendors.owner_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Users can view delivery locations" ON public.order_delivery_locations FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM public.orders
+    WHERE orders.id = order_delivery_locations.order_id AND orders.user_id = auth.uid()
+  )
+);
+
+-- Campus buildings and zones
+CREATE POLICY "Public can view campus buildings" ON public.campus_buildings FOR SELECT USING (true);
+CREATE POLICY "Public can view delivery zones" ON public.delivery_zones FOR SELECT USING (true);
+
+-- Class sessions (user schedule)
+CREATE POLICY "Users can manage own class sessions" ON public.class_sessions FOR ALL USING (auth.uid() = user_id);
+
+-- Promotions
+CREATE POLICY "Public can view active promotions" ON public.promotions FOR SELECT USING (
+  is_active = true AND (starts_at IS NULL OR starts_at <= now()) AND (ends_at IS NULL OR ends_at >= now())
+);
+
+-- Notifications
+CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- Device tokens
+CREATE POLICY "Users can manage own device tokens" ON public.device_tokens FOR ALL USING (auth.uid() = user_id);
+
+-- Promotion redemptions
+CREATE POLICY "Users can view own promo redemptions" ON public.promotion_redemptions FOR SELECT USING (auth.uid() = user_id);

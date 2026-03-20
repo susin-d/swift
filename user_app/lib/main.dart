@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mobile_app/core/theme/app_theme.dart';
 import 'package:mobile_app/core/router/app_router.dart';
+import 'package:mobile_app/providers/auth_provider.dart';
+import 'package:mobile_app/services/device_token_service.dart';
+import 'package:mobile_app/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,13 +23,49 @@ void main() async {
   );
 }
 
-class CampusFoodApp extends ConsumerWidget {
+class CampusFoodApp extends ConsumerStatefulWidget {
   const CampusFoodApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CampusFoodApp> createState() => _CampusFoodAppState();
+}
+
+class _CampusFoodAppState extends ConsumerState<CampusFoodApp> {
+  bool _registeredToken = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listen(userProvider, (previous, next) async {
+      if (next != null && !_registeredToken) {
+        await _registerDeviceToken();
+      }
+      if (next == null) {
+        _registeredToken = false;
+      }
+    });
+  }
+
+  Future<void> _registerDeviceToken() async {
+    try {
+      final token = await DeviceTokenService().getOrCreateToken();
+      await NotificationService().registerDeviceToken(token, platform: _platformLabel());
+      if (mounted) {
+        setState(() => _registeredToken = true);
+      }
+    } catch (_) {}
+  }
+
+  String _platformLabel() {
+    if (defaultTargetPlatform == TargetPlatform.iOS) return 'ios';
+    if (defaultTargetPlatform == TargetPlatform.android) return 'android';
+    return 'unknown';
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    
+
     return MaterialApp.router(
       title: 'Swift',
       debugShowCheckedModeBanner: false,

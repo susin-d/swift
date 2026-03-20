@@ -18,6 +18,9 @@ class OrderDetailDrawer extends StatelessWidget {
     final date = order.createdAt == null
         ? 'N/A'
         : DateFormat('dd MMM yyyy, hh:mm a').format(order.createdAt!);
+    final scheduledLabel = order.scheduledFor == null
+        ? 'ASAP'
+        : DateFormat('dd MMM yyyy, hh:mm a').format(order.scheduledFor!);
 
     return Drawer(
       child: SafeArea(
@@ -34,7 +37,21 @@ class OrderDetailDrawer extends StatelessWidget {
               _KeyVal(label: 'Vendor', value: order.vendorName),
               _KeyVal(label: 'Customer', value: '${order.userName} (${order.userEmail})'),
               _KeyVal(label: 'Placed at', value: date),
+              _KeyVal(label: 'Scheduled', value: scheduledLabel),
+              if (order.deliveryMode == 'class') ...[
+                _KeyVal(
+                  label: 'Class delivery',
+                  value: '${order.deliveryBuildingName ?? 'Building'}${order.deliveryRoom == null ? '' : ' • ${order.deliveryRoom}'}',
+                ),
+                if (order.quietMode) _KeyVal(label: 'Quiet mode', value: 'Enabled'),
+                if (order.handoffCode != null) _KeyVal(label: 'Handoff code', value: order.handoffCode!),
+                if (order.handoffStatus != null) _KeyVal(label: 'Handoff status', value: order.handoffStatus!),
+              ],
               _KeyVal(label: 'Items', value: '${order.itemCount}'),
+              if (order.promoCode != null && order.promoCode!.isNotEmpty)
+                _KeyVal(label: 'Promo', value: order.promoCode!),
+              if (order.discountAmount > 0)
+                _KeyVal(label: 'Discount', value: _currency(order.discountAmount)),
               _KeyVal(label: 'Total', value: _currency(order.totalAmount)),
               const Spacer(),
               if (order.status != 'cancelled' && order.status != 'completed')

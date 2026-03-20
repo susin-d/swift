@@ -6,7 +6,11 @@ Flutter client for vendor operations in the Campus Pulse monorepo.
 
 - Vendor authentication and session handling
 - Live active-order dashboard and status updates
-- Menu management entry points
+- Live courier location sharing for delivery tracking
+- Menu category + item management (CRUD)
+- Vendor profile and open/close status management
+- Notifications inbox with device token registration
+- Scheduled order visibility in the queue
 - Productivity-focused queue interactions
 
 ## Sprint 6 Productivity Baseline (Current)

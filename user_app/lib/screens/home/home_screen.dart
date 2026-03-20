@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/vendor_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/favorites_provider.dart';
 import '../../models/order_model.dart';
 import '../../widgets/vendor_card.dart';
 import '../../widgets/shimmer_widgets.dart';
@@ -93,6 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final vendorsAsync = ref.watch(vendorsProvider);
     final userOrdersAsync = ref.watch(userOrdersProvider);
+    final favorites = ref.watch(favoritesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -149,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: IconButton(
-                                onPressed: () => context.push('/order-history'),
+                                onPressed: () => context.push('/notifications'),
                                 icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
                               ),
                             ),
@@ -157,31 +159,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 32),
                         // Search Bar Placeholder
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.search_rounded, color: AppColors.primary),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Search for a vendor or dish...',
-                                style: GoogleFonts.inter(
-                                  color: AppColors.textMuted,
-                                  fontWeight: FontWeight.w500,
+                        GestureDetector(
+                          onTap: () => context.push('/search'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.search_rounded, color: AppColors.primary),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Search for a vendor or dish...',
+                                  style: GoogleFonts.inter(
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 14),
@@ -298,6 +303,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             VendorCard(
                               vendor: vendor,
                               onTap: () => context.push('/vendor/${vendor.id}'),
+                              isFavorite: favorites.contains(vendor.id),
+                              onToggleFavorite: () => ref.read(favoritesProvider.notifier).toggle(vendor.id),
                             ),
                           );
                         },

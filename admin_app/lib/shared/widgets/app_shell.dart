@@ -440,8 +440,10 @@ const _navigationItems = <_NavItem>[
   _NavItem(icon: Icons.dashboard_rounded, label: 'Dashboard', route: '/dashboard'),
   _NavItem(icon: Icons.storefront_rounded, label: 'Vendors', route: '/vendors'),
   _NavItem(icon: Icons.receipt_long_rounded, label: 'Orders', route: '/orders'),
+  _NavItem(icon: Icons.location_city_rounded, label: 'Campus', route: '/campus'),
   _NavItem(icon: Icons.group_rounded, label: 'Users', route: '/users'),
   _NavItem(icon: Icons.payments_rounded, label: 'Finance', route: '/finance'),
+  _NavItem(icon: Icons.local_offer_rounded, label: 'Promos', route: '/promos'),
   _NavItem(icon: Icons.tune_rounded, label: 'Settings', route: '/settings'),
   _NavItem(icon: Icons.history_rounded, label: 'Audit Logs', route: '/audit'),
 ];

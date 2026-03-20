@@ -6,6 +6,8 @@ import 'package:vendor_app/features/dashboard/dashboard_screen.dart';
 import 'package:vendor_app/features/menu/menu_management_screen.dart';
 import 'package:vendor_app/features/legal/legal_screen.dart';
 import 'package:vendor_app/features/splash/splash_screen.dart';
+import 'package:vendor_app/features/profile/vendor_profile_screen.dart';
+import 'package:vendor_app/features/notifications/notifications_screen.dart';
 
 final routerProvider = Provider((ref) {
   final authState = ref.watch(authProvider);
@@ -51,6 +53,14 @@ final routerProvider = Provider((ref) {
       GoRoute(
         path: '/menu',
         builder: (context, state) => const MenuManagementScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const VendorProfileScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/login',

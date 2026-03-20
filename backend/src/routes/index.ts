@@ -11,6 +11,10 @@ import { publicRoutes } from './public';
 import { reviewRoutes } from './reviews';
 import { addressRoutes } from './addresses';
 import { contractsRoutes } from './contracts';
+import { notificationRoutes } from './notifications';
+import { promoRoutes } from './promos';
+import { campusRoutes } from './campus';
+import { classSessionRoutes } from './class-sessions';
 
 export const setupRoutes = (app: FastifyInstance) => {
     app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -26,4 +30,8 @@ export const setupRoutes = (app: FastifyInstance) => {
     app.register(reviewRoutes, { prefix: '/api/v1/reviews' });
     app.register(addressRoutes, { prefix: '/api/v1/addresses' });
     app.register(contractsRoutes, { prefix: '/api/v1/contracts' });
+    app.register(notificationRoutes, { prefix: '/api/v1/notifications' });
+    app.register(promoRoutes, { prefix: '/api/v1/promos' });
+    app.register(campusRoutes, { prefix: '/api/v1' });
+    app.register(classSessionRoutes, { prefix: '/api/v1/class-sessions' });
 };

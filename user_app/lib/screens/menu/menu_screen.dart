@@ -10,6 +10,7 @@ import '../../widgets/menu_item_card.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
 import '../../core/router/app_router.dart';
+import '../../services/review_service.dart';
 
 enum _MenuSort { recommended, priceLowToHigh }
 
@@ -251,6 +252,12 @@ class _VendorMenuScreenState extends ConsumerState<VendorMenuScreen> {
             ),
             error: (e, _) => SliverFillRemaining(child: Center(child: Text('Error: $e'))),
           ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: _VendorReviewSection(vendorId: widget.vendorId),
+            ),
+          ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),
@@ -376,6 +383,100 @@ class _NoMenuMatchCard extends StatelessWidget {
               style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VendorReviewSection extends StatefulWidget {
+  const _VendorReviewSection({required this.vendorId});
+
+  final String vendorId;
+
+  @override
+  State<_VendorReviewSection> createState() => _VendorReviewSectionState();
+}
+
+class _VendorReviewSectionState extends State<_VendorReviewSection> {
+  late Future<List<dynamic>> _reviewsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _reviewsFuture = ReviewService().getVendorReviews(widget.vendorId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<dynamic>>(
+      future: _reviewsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox.shrink();
+        }
+
+        if (snapshot.hasError) {
+          return const SizedBox.shrink();
+        }
+
+        final reviews = snapshot.data ?? [];
+        if (reviews.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final latest = reviews.take(3).toList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Recent Reviews',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 10),
+            ...latest.map((review) => _ReviewCard(review: review)),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard({required this.review});
+
+  final dynamic review;
+
+  @override
+  Widget build(BuildContext context) {
+    final rating = (review['rating'] as num?)?.toInt() ?? 0;
+    final comment = review['comment']?.toString() ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(5, (index) {
+              final filled = index < rating;
+              return Icon(
+                filled ? Icons.star_rounded : Icons.star_border_rounded,
+                color: Colors.amber,
+                size: 16,
+              );
+            }),
+          ),
+          if (comment.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(comment, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          ],
         ],
       ),
     );

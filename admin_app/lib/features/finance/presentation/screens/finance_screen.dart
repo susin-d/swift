@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/models/finance_summary.dart';
@@ -340,11 +341,7 @@ class _PayoutPanel extends StatelessWidget {
             Align(
               alignment: Alignment.centerRight,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('CSV export placeholder. Endpoint will be wired in next sprint.')),
-                  );
-                },
+                onPressed: () => _exportCsv(context),
                 icon: const Icon(Icons.file_download_outlined),
                 label: const Text('Export CSV'),
               ),
@@ -352,6 +349,46 @@ class _PayoutPanel extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+Future<void> _exportCsv(BuildContext context) async {
+  try {
+    final csv = await FinanceService.instance.exportPayoutsCsv();
+    if (!context.mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Payouts CSV'),
+        content: SizedBox(
+          width: 600,
+          child: SingleChildScrollView(
+            child: SelectableText(csv.isEmpty ? 'No data available.' : csv),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: csv.isEmpty
+                ? null
+                : () {
+                    Clipboard.setData(ClipboardData(text: csv));
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('CSV copied to clipboard')),
+                    );
+                  },
+            child: const Text('Copy CSV'),
+          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close')),
+        ],
+      ),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Export failed: $e')),
     );
   }
 }

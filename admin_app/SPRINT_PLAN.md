@@ -95,7 +95,7 @@ Matches the rest of the monorepo:
   - Delayed badge (red) if order age > SLA threshold
 - [ ] `features/orders/presentation/widgets/order_detail_drawer.dart`
   - Item list, totals, status timeline, vendor + user info
-  - Cancel action with confirm dialog
+  - Cancel action with reason capture dialog (audited)
 - [ ] Add Orders route to GoRouter shell
 
 ### Acceptance

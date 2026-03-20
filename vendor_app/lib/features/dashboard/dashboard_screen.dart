@@ -1,9 +1,15 @@
+﻿import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 import 'package:vendor_app/features/orders/orders_provider.dart';
+import 'package:vendor_app/features/orders/delivery_provider.dart';
+import 'package:vendor_app/features/orders/handoff_service.dart';
 import 'package:vendor_app/core/utils/app_animations.dart';
 import 'package:vendor_app/widgets/shimmer_widgets.dart';
 
@@ -19,8 +25,107 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _selectedPrepMins = 12;
   String _selectedQueueFilter = 'all';
   _QueueSort _queueSort = _QueueSort.readyFirst;
+  Timer? _trackingTimer;
+  String? _trackingOrderId;
+  bool _trackingBusy = false;
+  DateTime? _lastTrackingUpdate;
+  String? _trackingError;
 
   List<int> get _prepSuggestions => _rushModeEnabled ? const [6, 8, 10] : const [10, 12, 15];
+
+  @override
+  void dispose() {
+    _trackingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<bool> _ensureLocationPermission(BuildContext context) async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showTrackingSnack(context, 'Location services are disabled.');
+      return false;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      _showTrackingSnack(context, 'Location permission is required for live tracking.');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _sendTrackingPing(String orderId) async {
+    if (_trackingBusy) return;
+    setState(() => _trackingBusy = true);
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 8),
+      );
+
+      await ref.read(deliveryServiceProvider).updateLocation(
+        orderId: orderId,
+        lat: position.latitude,
+        lng: position.longitude,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _lastTrackingUpdate = DateTime.now();
+        _trackingError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _trackingError = e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _trackingBusy = false);
+      }
+    }
+  }
+
+  Future<void> _startLiveTracking(BuildContext context, String orderId) async {
+    if (orderId.isEmpty) return;
+    final permitted = await _ensureLocationPermission(context);
+    if (!permitted || !mounted) return;
+
+    _trackingTimer?.cancel();
+    setState(() {
+      _trackingOrderId = orderId;
+      _trackingError = null;
+    });
+
+    await _sendTrackingPing(orderId);
+    _trackingTimer = Timer.periodic(const Duration(seconds: 8), (_) => _sendTrackingPing(orderId));
+  }
+
+  void _stopLiveTracking() {
+    _trackingTimer?.cancel();
+    setState(() {
+      _trackingOrderId = null;
+      _lastTrackingUpdate = null;
+      _trackingError = null;
+    });
+  }
+
+  void _showTrackingSnack(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _formatTrackingUpdate(DateTime? updatedAt) {
+    if (updatedAt == null) return 'Updated just now';
+    final diff = DateTime.now().difference(updatedAt);
+    if (diff.inSeconds < 60) return 'Updated just now';
+    if (diff.inMinutes < 60) return 'Updated ${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return 'Updated ${diff.inHours} hr ago';
+    return 'Updated ${diff.inDays}d ago';
+  }
 
   String _normalizedStatus(dynamic order) {
     final status = (order['status'] as String? ?? '').toLowerCase();
@@ -160,7 +265,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Elapsed ${elapsedMinutes}m • Suggested prep ${recommendedPrepMinutes}m',
+                          'Elapsed ${elapsedMinutes}m - Suggested prep ${recommendedPrepMinutes}m',
                           style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -229,6 +334,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            onPressed: () => context.push('/notifications'),
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
+          IconButton(
             onPressed: () => context.push('/menu'),
             icon: const Icon(Icons.restaurant_menu),
           ),
@@ -250,6 +359,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               leading: const Icon(Icons.gavel_rounded),
               title: const Text('Terms of Service'),
               onTap: () => context.push('/legal'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.storefront_rounded),
+              title: const Text('Store Profile'),
+              onTap: () => context.push('/profile'),
             ),
             ListTile(
               leading: const Icon(Icons.privacy_tip_rounded),
@@ -296,7 +410,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Expanded(
                         child: AppAnimations.staggeredList(
                           1,
-                          _StatCard(title: 'Revenue Today', value: '₹${revenue.toInt()}', color: Colors.green),
+                          _StatCard(title: 'Revenue Today', value: 'Rs ${revenue.toInt()}', color: Colors.green),
                         ),
                       ),
                     ],
@@ -331,6 +445,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 data: (orders) {
                   final queueRails = _buildQueueRails(orders);
                   final visibleOrders = _applyQueueView(orders);
+                  final trackedOrderId = _trackingOrderId;
+
+                  if (trackedOrderId != null) {
+                    final tracked = orders.where((order) => (order['id'] ?? '') == trackedOrderId).toList();
+                    final trackedOrder = tracked.isEmpty ? null : tracked.first;
+                    final trackedStatus = trackedOrder == null ? null : _normalizedStatus(trackedOrder);
+                    final shouldStop = trackedOrder == null || trackedStatus == 'completed' || trackedStatus == 'hold';
+                    if (shouldStop) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          _stopLiveTracking();
+                        }
+                      });
+                    }
+                  }
 
                   if (orders.isEmpty) {
                     return Padding(
@@ -354,6 +483,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       const SizedBox(height: 14),
                       _buildGuardrailHint(),
                       const SizedBox(height: 14),
+                      _buildTrackingStrip(),
+                      const SizedBox(height: 14),
                       _buildQueueTriageRails(queueRails),
                       const SizedBox(height: 14),
                       _buildQueueToolbar(visibleOrders.length),
@@ -365,32 +496,52 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: visibleOrders.length,
-                          itemBuilder: (context, index) => AppAnimations.staggeredList(
-                            index + 2,
-                            _OrderListItem(
-                              index: index,
-                              order: visibleOrders[index],
-                              rushModeEnabled: _rushModeEnabled,
-                              selectedPrepMins: _selectedPrepMins,
-                              nextStatusFor: _nextStatus,
-                              onApplyStatus: (orderId, nextStatus, successLabel) =>
-                                  _applyOrderStatus(context, orderId, nextStatus, successLabel),
-                              onHoldAction: ({
-                                required orderId,
-                                required currentStatus,
-                                required compactId,
-                                required elapsedMinutes,
-                                required recommendedPrepMinutes,
-                              }) => _confirmHoldAction(
-                                context,
-                                orderId: orderId,
-                                currentStatus: currentStatus,
-                                compactId: compactId,
-                                elapsedMinutes: elapsedMinutes,
-                                recommendedPrepMinutes: recommendedPrepMinutes,
+                          itemBuilder: (context, index) {
+                            final order = visibleOrders[index];
+                            final orderId = (order['id'] ?? '').toString();
+                            final trackingActive = _trackingOrderId == orderId;
+                            final trackingLabel = trackingActive
+                                ? (_trackingError != null ? 'Last update failed' : _formatTrackingUpdate(_lastTrackingUpdate))
+                                : null;
+
+                            return AppAnimations.staggeredList(
+                              index + 2,
+                              _OrderListItem(
+                                index: index,
+                                order: order,
+                                rushModeEnabled: _rushModeEnabled,
+                                selectedPrepMins: _selectedPrepMins,
+                                nextStatusFor: _nextStatus,
+                                trackingActive: trackingActive,
+                                trackingBusy: trackingActive && _trackingBusy,
+                                trackingLabel: trackingLabel,
+                                onToggleTracking: () {
+                                  if (trackingActive) {
+                                    _stopLiveTracking();
+                                  } else {
+                                    _startLiveTracking(context, orderId);
+                                  }
+                                },
+                                onOpenDetails: () => _openOrderDetails(context, order),
+                                onApplyStatus: (orderId, nextStatus, successLabel) =>
+                                    _applyOrderStatus(context, orderId, nextStatus, successLabel),
+                                onHoldAction: ({
+                                  required orderId,
+                                  required currentStatus,
+                                  required compactId,
+                                  required elapsedMinutes,
+                                  required recommendedPrepMinutes,
+                                }) => _confirmHoldAction(
+                                  context,
+                                  orderId: orderId,
+                                  currentStatus: currentStatus,
+                                  compactId: compactId,
+                                  elapsedMinutes: elapsedMinutes,
+                                  recommendedPrepMinutes: recommendedPrepMinutes,
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                     ],
                   );
@@ -605,6 +756,59 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildTrackingStrip() {
+    final trackingOrderId = _trackingOrderId;
+    final trackingActive = trackingOrderId != null;
+    final label = trackingActive ? 'Live courier tracking active' : 'Live courier tracking is off';
+    final compactId = trackingOrderId == null
+        ? null
+        : trackingOrderId.substring(0, trackingOrderId.length > 8 ? 8 : trackingOrderId.length).toUpperCase();
+    final detail = _trackingError != null
+        ? 'Last update failed'
+        : _formatTrackingUpdate(_lastTrackingUpdate);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            trackingActive ? Icons.location_on_rounded : Icons.location_off_rounded,
+            color: trackingActive ? const Color(0xFF0D9488) : Colors.grey[600],
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  trackingActive
+                      ? 'Order #$compactId - $detail'
+                      : 'Start tracking from an active order card.',
+                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          if (trackingActive)
+            TextButton(
+              onPressed: _trackingBusy ? null : _stopLiveTracking,
+              child: const Text('Stop'),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildQueueToolbar(int visibleCount) {
     return Wrap(
       spacing: 8,
@@ -662,6 +866,133 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
+
+  Future<void> _openOrderDetails(BuildContext context, dynamic order) async {
+    final items = (order['order_items'] as List?) ?? const [];
+    final scheduledRaw = order['scheduled_for']?.toString();
+    final scheduledFor = scheduledRaw == null ? null : DateTime.tryParse(scheduledRaw);
+    final scheduledLabel = scheduledFor == null
+        ? null
+        : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
+    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
+    final buildingName = order['campus_buildings']?['name']?.toString();
+    final roomLabel = order['delivery_room']?.toString();
+
+    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
+    final buildingName = order['campus_buildings']?['name']?.toString();
+    final roomLabel = order['delivery_room']?.toString();
+    final handoffCode = order['handoff_code']?.toString();
+    final quietMode = order['quiet_mode'] == true;
+    final handoffStatus = order['handoff_status']?.toString() ?? 'pending';
+    final proofUrl = order['handoff_proof_url']?.toString();
+    final orderId = order['id']?.toString() ?? '';
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Order Details', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 12),
+                if (scheduledLabel != null) ...[
+                  Text('Scheduled for: $scheduledLabel', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                ],
+                if (deliveryMode == 'class') ...[
+                  Text(
+                    'Class delivery ${buildingName ?? ''}${roomLabel == null ? '' : ' - $roomLabel'}',
+                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  if (handoffCode != null) ...[
+                    const SizedBox(height: 6),
+                    Text('Handoff code: $handoffCode', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                  if (quietMode) ...[
+                    const SizedBox(height: 6),
+                    Text('Quiet mode enabled', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                  if (proofUrl != null && proofUrl.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text('Proof URL: $proofUrl', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildHandoffChip(context, orderId, 'arrived_building', handoffStatus == 'arrived_building'),
+                      _buildHandoffChip(context, orderId, 'arrived_class', handoffStatus == 'arrived_class'),
+                      _buildHandoffChip(
+                        context,
+                        orderId,
+                        'delivered',
+                        handoffStatus == 'delivered',
+                        requiresProof: true,
+                        existingProofUrl: proofUrl,
+                      ),
+                      _buildHandoffChip(
+                        context,
+                        orderId,
+                        'failed',
+                        handoffStatus == 'failed',
+                        requiresProof: true,
+                        existingProofUrl: proofUrl,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if (items.isEmpty)
+                  const Text('No items found for this order.')
+                else
+                  ...items.map((item) {
+                    final name = item['menu_items']?['name'] ?? 'Item';
+                    final qty = item['quantity'] ?? 1;
+                    final price = item['unit_price'] ?? 0;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: Text('$name x$qty')),
+                          Text('â‚¹${price.toString()}'),
+                        ],
+                      ),
+                    );
+                  }),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total', style: TextStyle(fontWeight: FontWeight.w700)),
+                    Text('â‚¹${order['total_amount'] ?? 0}', style: const TextStyle(fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 enum _QueueSort { readyFirst, newest, highestValue }
@@ -714,6 +1045,11 @@ class _OrderListItem extends ConsumerWidget {
   final bool rushModeEnabled;
   final int selectedPrepMins;
   final String Function(String) nextStatusFor;
+  final bool trackingActive;
+  final bool trackingBusy;
+  final String? trackingLabel;
+  final VoidCallback onToggleTracking;
+  final VoidCallback onOpenDetails;
   final Future<void> Function(String orderId, String nextStatus, String successLabel) onApplyStatus;
   final Future<void> Function({
     required String orderId,
@@ -729,6 +1065,11 @@ class _OrderListItem extends ConsumerWidget {
     required this.rushModeEnabled,
     required this.selectedPrepMins,
     required this.nextStatusFor,
+    required this.trackingActive,
+    required this.trackingBusy,
+    required this.trackingLabel,
+    required this.onToggleTracking,
+    required this.onOpenDetails,
     required this.onApplyStatus,
     required this.onHoldAction,
   });
@@ -747,10 +1088,16 @@ class _OrderListItem extends ConsumerWidget {
     final currentStatus = (order['status'] as String? ?? '').toLowerCase();
     final nextStatus = nextStatusFor(currentStatus);
     final compactId = orderId.substring(0, orderId.length > 8 ? 8 : orderId.length).toUpperCase();
+    final canTrack = currentStatus != 'completed' && currentStatus != 'cancelled';
     final pacing = (order['pacing'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
     final slaRisk = (pacing['sla_risk'] ?? 'low').toString();
     final recommendedPrepMinutes = pacing['recommended_prep_minutes'] ?? selectedPrepMins;
     final elapsedMinutes = pacing['elapsed_minutes'] ?? 0;
+    final scheduledRaw = order['scheduled_for']?.toString();
+    final scheduledFor = scheduledRaw == null ? null : DateTime.tryParse(scheduledRaw);
+    final scheduledLabel = scheduledFor == null
+        ? null
+        : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
     final riskColor = switch (slaRisk) {
       'high' => Colors.red.shade400,
       'medium' => Colors.orange.shade400,
@@ -812,15 +1159,18 @@ class _OrderListItem extends ConsumerWidget {
         }
         return false;
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
-        ),
-        child: Row(
+      child: InkWell(
+        onTap: onOpenDetails,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
+          ),
+          child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
@@ -832,9 +1182,23 @@ class _OrderListItem extends ConsumerWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '${order['status'].toString().toUpperCase()} • ₹${order['total_amount']}',
+                    '${order['status'].toString().toUpperCase()} - Rs ${order['total_amount']}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
                   ),
+                  if (scheduledLabel != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Scheduled: $scheduledLabel',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                  if (deliveryMode == 'class') ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Class delivery ${buildingName ?? ''}${roomLabel == null ? '' : ' - $roomLabel'}',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     rushModeEnabled
@@ -866,6 +1230,28 @@ class _OrderListItem extends ConsumerWidget {
                         'Suggested ${recommendedPrepMinutes}m',
                         style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: canTrack ? onToggleTracking : null,
+                        icon: Icon(
+                          trackingActive ? Icons.location_off_rounded : Icons.location_on_rounded,
+                          size: 16,
+                        ),
+                        label: Text(trackingActive ? 'Stop live' : 'Start live'),
+                      ),
+                      const SizedBox(width: 10),
+                      if (trackingActive)
+                        Expanded(
+                          child: Text(
+                            trackingBusy ? 'Updating location...' : (trackingLabel ?? 'Live tracking'),
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -946,3 +1332,78 @@ class _MiniPacingStat extends StatelessWidget {
     );
   }
 }
+
+Widget _buildHandoffChip(
+  BuildContext context,
+  String orderId,
+  String status,
+  bool active, {
+  bool requiresProof = false,
+  String? existingProofUrl,
+}) {
+  final label = status.replaceAll('_', ' ').toUpperCase();
+  return ChoiceChip(
+    selected: active,
+    label: Text(label, style: const TextStyle(fontSize: 11)),
+    onSelected: (value) async {
+      if (orderId.isEmpty) return;
+      try {
+        String? proofUrl = existingProofUrl;
+        if (requiresProof) {
+          proofUrl = await _requestProofUrl(context, existingProofUrl);
+          if (proofUrl == null || proofUrl.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Proof URL is required for this handoff status.')),
+            );
+            return;
+          }
+        }
+
+        await HandoffService().updateHandoff(
+          orderId,
+          status,
+          proofUrl: proofUrl?.trim().isEmpty == true ? null : proofUrl?.trim(),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Handoff updated: $label')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update handoff: $e')),
+        );
+      }
+    },
+  );
+}
+
+Future<String?> _requestProofUrl(BuildContext context, String? existing) async {
+  final controller = TextEditingController(text: existing ?? '');
+
+  return showDialog<String?>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        title: const Text('Add proof URL'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Proof URL',
+            hintText: 'https://...',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(null),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+

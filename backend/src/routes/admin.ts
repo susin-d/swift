@@ -11,6 +11,7 @@ import {
     getChartData,
     getDashboardSummary,
     getFinancePayouts,
+    exportFinancePayouts,
     getFinanceSummary,
     getGlobalStats,
     getPendingVendors,
@@ -19,6 +20,7 @@ import {
     updateAdminUserRole,
     updateUserRole,
 } from '../controllers/adminController';
+import { createPromo, getAdminPromos, updatePromo } from '../controllers/promoController';
 import { requireAdmin } from '../middleware/rbac';
 
 export const adminRoutes = async (app: FastifyInstance) => {
@@ -30,6 +32,10 @@ export const adminRoutes = async (app: FastifyInstance) => {
     app.get('/charts', getChartData);
     app.get('/finance/summary', getFinanceSummary);
     app.get('/finance/payouts', getFinancePayouts);
+    app.get('/finance/payouts/export', exportFinancePayouts);
+    app.get('/promos', getAdminPromos);
+    app.post('/promos', createPromo);
+    app.patch('/promos/:id', updatePromo);
     app.get('/audit', getAdminAuditLogs);
     app.get('/settings', getAdminSettings);
     app.post('/settings', updateAdminSettings);

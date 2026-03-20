@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { supabase } from '../services/supabase';
+import { createNotification } from '../services/notificationService';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination';
 
 type AdminSettings = {
@@ -238,11 +239,11 @@ export const getAdminOrders = async (request: FastifyRequest, reply: FastifyRepl
         const { count, error: countError } = await countQuery;
         if (countError) throw countError;
 
-        let ordersQuery = supabase
-            .from('orders')
-            .select('*, users(name, email), vendors(name), order_items(quantity, unit_price)')
-            .order('created_at', { ascending: false })
-            .range(from, to);
+          let ordersQuery = supabase
+              .from('orders')
+              .select('*, users(name, email), vendors(name), campus_buildings(name), order_items(quantity, unit_price)')
+              .order('created_at', { ascending: false })
+              .range(from, to);
 
         if (status) {
             ordersQuery = ordersQuery.eq('status', status);
@@ -276,18 +277,32 @@ export const cancelAdminOrder = async (request: FastifyRequest, reply: FastifyRe
         throw err;
     }
 
-    try {
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-            .eq('id', id);
+      try {
+          const { data: order, error } = await supabase
+              .from('orders')
+              .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+              .eq('id', id)
+              .select()
+              .single();
 
-        if (error) throw error;
+          if (error) throw error;
 
-        await logAdminAction(request, 'cancel_order', id, reason.trim());
+          await logAdminAction(request, 'cancel_order', id, reason.trim());
 
-        return reply.send({ message: `Order ${id} cancelled successfully` });
-    } catch (err: any) {
+          if (order?.user_id) {
+              const compactId = id.substring(0, 8).toUpperCase();
+              await createNotification({
+                  userId: order.user_id,
+                  audience: 'user',
+                  type: 'order_cancelled',
+                  title: 'Order cancelled by admin',
+                  body: `Order #${compactId} was cancelled by support`,
+                  metadata: { order_id: id, reason: reason.trim() },
+              });
+          }
+
+          return reply.send({ message: `Order ${id} cancelled successfully` });
+      } catch (err: any) {
         console.error('cancelAdminOrder error:', err);
         throw err;
     }
@@ -373,6 +388,61 @@ export const getFinancePayouts = async (request: FastifyRequest, reply: FastifyR
         return reply.send({ payouts });
     } catch (err: any) {
         console.error('getFinancePayouts error:', err);
+        throw err;
+    }
+};
+
+export const exportFinancePayouts = async (_request: FastifyRequest, reply: FastifyReply) => {
+    try {
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select('vendor_id, total_amount, status, vendors(name)')
+            .eq('status', 'completed');
+
+        if (error) throw error;
+
+        const grouped = new Map<string, { vendor_id: string; vendor_name: string; total_revenue: number; total_orders: number; status: string }>();
+
+        for (const order of orders ?? []) {
+            const o: any = order;
+            const vendorId = o.vendor_id as string;
+            const vendorName = o.vendors?.name ?? 'Unknown vendor';
+            const amount = Number(o.total_amount) || 0;
+
+            if (!grouped.has(vendorId)) {
+                grouped.set(vendorId, {
+                    vendor_id: vendorId,
+                    vendor_name: vendorName,
+                    total_revenue: 0,
+                    total_orders: 0,
+                    status: 'pending',
+                });
+            }
+
+            const entry = grouped.get(vendorId)!;
+            entry.total_orders += 1;
+            entry.total_revenue += amount;
+        }
+
+        const payouts = Array.from(grouped.values()).sort((a, b) => b.total_revenue - a.total_revenue);
+        const header = 'vendor_id,vendor_name,total_revenue,total_orders,status';
+        const lines = payouts.map((p) =>
+            [
+                p.vendor_id,
+                `"${p.vendor_name.replace(/"/g, '""')}"`,
+                p.total_revenue.toFixed(2),
+                p.total_orders,
+                p.status,
+            ].join(',')
+        );
+        const csv = [header, ...lines].join('\n');
+
+        return reply
+            .header('Content-Type', 'text/csv')
+            .header('Content-Disposition', 'attachment; filename="payouts.csv"')
+            .send(csv);
+    } catch (err: any) {
+        console.error('exportFinancePayouts error:', err);
         throw err;
     }
 };

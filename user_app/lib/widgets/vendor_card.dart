@@ -7,11 +7,15 @@ import 'package:google_fonts/google_fonts.dart';
 class VendorCard extends StatelessWidget {
   final VendorModel vendor;
   final VoidCallback onTap;
+  final bool isFavorite;
+  final VoidCallback onToggleFavorite;
 
   const VendorCard({
     super.key,
     required this.vendor,
     required this.onTap,
+    required this.isFavorite,
+    required this.onToggleFavorite,
   });
 
   @override
@@ -113,7 +117,14 @@ class VendorCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.favorite_rounded, color: AppColors.error, size: 24),
+                      IconButton(
+                        onPressed: onToggleFavorite,
+                        icon: Icon(
+                          isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          color: isFavorite ? AppColors.error : AppColors.textMuted,
+                          size: 24,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

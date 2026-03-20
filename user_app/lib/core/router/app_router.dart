@@ -12,6 +12,12 @@ import '../../screens/profile/profile_screen.dart';
 import '../../screens/legal/legal_screen.dart';
 import '../../screens/support/support_screen.dart';
 import '../../screens/splash/splash_screen.dart';
+import '../../screens/search/search_screen.dart';
+import '../../screens/address/address_book_screen.dart';
+import '../../screens/notifications/notifications_screen.dart';
+import '../../screens/favorites/favorites_screen.dart';
+import '../../screens/profile/edit_profile_screen.dart';
+import '../../screens/profile/class_schedule_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = ref.watch(authRefreshListenableProvider);
@@ -41,6 +47,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => VendorMenuScreen(vendorId: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
         path: '/cart',
         builder: (context, state) => const CartScreen(),
       ),
@@ -59,6 +69,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/support',
         builder: (context, state) => const SupportScreen(),
+      ),
+      GoRoute(
+        path: '/addresses',
+        builder: (context, state) => const AddressBookScreen(),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/favorites',
+        builder: (context, state) => const FavoritesScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/classes',
+        builder: (context, state) => const ClassScheduleScreen(),
       ),
       GoRoute(
         path: '/legal',

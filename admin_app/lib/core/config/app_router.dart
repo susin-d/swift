@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../features/audit/presentation/screens/audit_logs_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/campus/presentation/screens/campus_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/finance/presentation/screens/finance_screen.dart';
 import '../../features/orders/presentation/screens/orders_screen.dart';
+import '../../features/promos/presentation/screens/promos_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../../features/vendors/presentation/screens/vendors_screen.dart';
@@ -73,12 +75,20 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const OrdersScreen(),
           ),
           GoRoute(
+            path: '/campus',
+            builder: (_, __) => const CampusScreen(),
+          ),
+          GoRoute(
             path: '/users',
             builder: (_, __) => const UsersScreen(),
           ),
           GoRoute(
             path: '/finance',
             builder: (_, __) => const FinanceScreen(),
+          ),
+          GoRoute(
+            path: '/promos',
+            builder: (_, __) => const PromosScreen(),
           ),
           GoRoute(
             path: '/settings',
@@ -97,10 +107,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 int _indexForPath(String path) {
   if (path.startsWith('/vendors')) return 1;
   if (path.startsWith('/orders')) return 2;
-  if (path.startsWith('/users')) return 3;
-  if (path.startsWith('/finance')) return 4;
-  if (path.startsWith('/settings')) return 5;
-  if (path.startsWith('/audit')) return 6;
+  if (path.startsWith('/campus')) return 3;
+  if (path.startsWith('/users')) return 4;
+  if (path.startsWith('/finance')) return 5;
+  if (path.startsWith('/promos')) return 6;
+  if (path.startsWith('/settings')) return 7;
+  if (path.startsWith('/audit')) return 8;
   return 0;
 }
 
@@ -108,18 +120,22 @@ String _titleForIndex(int i) => const [
       'Dashboard',
       'Vendors',
       'Orders',
+      'Campus',
       'Users',
       'Finance',
-  'Settings',
-  'Audit Logs',
+      'Promos',
+      'Settings',
+      'Audit Logs',
     ][i];
 
 String _subtitleForIndex(int i) => const [
       'Platform health, vendor quality, and revenue in one place.',
       'Manage vendor accounts and approve new applications.',
       'Monitor live orders and resolve escalations.',
+      'Buildings, zones, and campus delivery controls.',
       'Manage user accounts, roles, and access.',
       'Revenue, payouts, and financial reporting.',
-  'Commission, delivery fee, and platform controls.',
-  'Read-only timeline of administrator actions.',
+      'Launch and manage promo campaigns.',
+      'Commission, delivery fee, and platform controls.',
+      'Read-only timeline of administrator actions.',
     ][i];
