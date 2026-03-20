@@ -6,6 +6,14 @@ This document outlines the core RESTful endpoints exposed by the Swift backend.
 
 **Base URL (Local Development)**: `http://localhost:3000/api/v1`
 
+## Health Check
+
+### `GET /health`
+Primary backend health endpoint for local/server deployments.
+
+### `GET /api/health`
+Deployment-compatible health alias for serverless/API-gateway setups that preserve the `/api` prefix in forwarded paths.
+
 ## Contract Registry
 
 Canonical source-of-truth endpoint for API request/response contracts consumed by backend, user_app, vendor_app, and admin_app.
@@ -100,14 +108,23 @@ Admin list endpoints now follow a shared pagination envelope with metadata for p
 ### `GET /admin/orders`
 Returns paginated orders and metadata.
 
+Implementation note:
+- If optional join relations are unavailable in a deployment schema, the endpoint falls back to a reduced order shape instead of returning `500`.
+
 ### `GET /admin/users`
 Returns paginated users and metadata.
 
 ### `GET /admin/audit`
 Returns paginated admin audit logs and metadata. Each entry includes a `reason` field for sensitive actions.
 
+Implementation note:
+- If `admin_logs` is unavailable in a deployment schema, the endpoint returns an empty paginated result (`logs: []`) instead of `500`.
+
 ### `GET /admin/vendors/pending`
 Returns paginated pending vendors and metadata.
+
+Implementation note:
+- If owner joins or status-filter support are unavailable in a deployment schema, the endpoint degrades safely with an empty paginated result.
 
 ### `GET /admin/stats`
 Returns top-level admin metrics.
@@ -205,6 +222,9 @@ Returns backend-ranked food item recommendations for the home feed.
     }
   ]
   ```
+
+Implementation note:
+- If recommendation dependencies are unavailable (for example, relation drift or missing supporting tables), the endpoint returns `200` with an empty array fallback.
 
 All endpoints under `/auth` manage session handling.
 
@@ -428,6 +448,9 @@ Register a device token for push notifications.
   { "id": "uuid", "token": "device_token" }
   ```
 
+Implementation note:
+- In deployments where device token persistence is denied by policy/RLS, this endpoint may return a noop success payload (`{ "success": true }`) to avoid blocking app flows.
+
 ### `DELETE /notifications/device`
 Remove a device token.
 - **Headers**: `Authorization: Bearer <JWT>`
@@ -466,6 +489,7 @@ Validate a promo code against an order total.
   ```json
   { "code": "SAVE10", "order_total": 200 }
   ```
+- Compatibility: `order_amount` is also accepted as a legacy alias for `order_total`.
 - **Response** `200 OK`:
   ```json
   {
@@ -571,6 +595,9 @@ Fetch authenticated vendor's profile.
 
 ### `GET /vendor-ops/orders`
 Fetch orders for the authenticated vendor.
+
+Implementation note:
+- If optional joined relations are unavailable in a deployment schema, the endpoint falls back to plain order rows rather than returning `500`.
 
 - **Response** `200 OK`:
   ```json

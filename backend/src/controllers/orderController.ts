@@ -242,18 +242,31 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
 
     if (orderError) throw orderError;
 
-    const orderItems = items.map((item: any) => ({
+    const orderItemsLegacy = items.map((item: any) => ({
         order_id: order.id,
         item_id: item.id || item.menu_item_id,
         quantity: item.quantity,
-        unit_price: item.price || item.unit_price
+        unit_price: item.price || item.unit_price,
     }));
 
-    const { error: itemsError } = await supabase
+    let itemsInsert = await supabase
         .from('order_items')
-        .insert(orderItems);
+        .insert(orderItemsLegacy);
 
-    if (itemsError) throw itemsError;
+    if (itemsInsert.error) {
+        const orderItemsModern = items.map((item: any) => ({
+            order_id: order.id,
+            menu_item_id: item.id || item.menu_item_id,
+            quantity: item.quantity,
+            unit_price: item.price || item.unit_price,
+        }));
+
+        itemsInsert = await supabase
+            .from('order_items')
+            .insert(orderItemsModern);
+    }
+
+    if (itemsInsert.error) throw itemsInsert.error;
 
     if (promoId) {
         await supabase.from('promotion_redemptions').insert({
@@ -327,7 +340,6 @@ export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) 
     let queryError: any = withCampus.error;
 
     if (queryError) {
-        // Backward compatibility: older DBs may not expose campus_buildings relation.
         const withoutCampus = await supabase
             .from('orders')
             .select('*, vendors(name), order_items(*, menu_items(name))')
@@ -336,6 +348,17 @@ export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) 
 
         ordersData = withoutCampus.data as any[] | null;
         queryError = withoutCampus.error;
+
+        if (queryError) {
+            const plainOrders = await supabase
+                .from('orders')
+                .select('*')
+                .eq('user_id', user.sub)
+                .order('created_at', { ascending: false });
+
+            ordersData = plainOrders.data as any[] | null;
+            queryError = plainOrders.error;
+        }
     }
 
     if (queryError) throw queryError;
@@ -618,6 +641,16 @@ export const getVendorOrders = async (request: FastifyRequest, reply: FastifyRep
             .order('created_at', { ascending: false });
         data = withoutCampus.data as any[] | null;
         error = withoutCampus.error;
+
+        if (error) {
+            const plainOrders = await supabase
+                .from('orders')
+                .select('*')
+                .eq('vendor_id', vendor.id)
+                .order('created_at', { ascending: false });
+            data = plainOrders.data as any[] | null;
+            error = plainOrders.error;
+        }
     }
 
     if (error) throw error;

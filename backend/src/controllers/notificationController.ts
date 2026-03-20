@@ -77,7 +77,10 @@ export const registerDeviceToken = async (request: FastifyRequest, reply: Fastif
             return reply.code(201).send({ success: true });
         }
         return reply.code(201).send(data);
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.statusCode && error.statusCode < 500) {
+            throw error;
+        }
         request.log.warn({ err: error }, 'notifications: unexpected error on register; returning success noop');
         return reply.code(201).send({ success: true });
     }

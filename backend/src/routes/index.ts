@@ -18,6 +18,7 @@ import { classSessionRoutes } from './class-sessions';
 
 export const setupRoutes = (app: FastifyInstance) => {
     app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+    app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
     app.register(authRoutes, { prefix: '/api/v1/auth' });
     app.register(adminRoutes, { prefix: '/api/v1/admin' });

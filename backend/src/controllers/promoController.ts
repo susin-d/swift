@@ -17,8 +17,8 @@ export const getActivePromos = async (_request: FastifyRequest, reply: FastifyRe
 };
 
 export const validatePromoCode = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { code, order_total } = request.body as any;
-    const total = Number(order_total || 0);
+    const { code, order_total, order_amount } = request.body as any;
+    const total = Number(order_total || order_amount || 0);
     if (!code || total <= 0) {
         const err = new Error('Promo code and order_total are required') as any;
         err.statusCode = 400;

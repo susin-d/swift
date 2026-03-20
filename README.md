@@ -76,6 +76,8 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    Live API smoke test:
    - Run `cd backend && npm run test:api:live` to execute a live deployment API sweep.
    - JSON response reports are written to `backend/reports/live-api-responses-latest.json` and timestamped files under `backend/reports/`.
+   - Health checks are exposed as both `/health` and `/api/health` for compatibility with local and serverless path routing.
+   - Several read/list APIs now degrade to safe empty or reduced-shape responses when optional DB relations are unavailable, reducing live `500` risk.
 
 3. **Vendor App**
    ```bash

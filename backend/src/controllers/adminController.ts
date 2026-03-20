@@ -144,7 +144,16 @@ export const getPendingVendors = async (request: FastifyRequest, reply: FastifyR
             .select('*', { count: 'exact', head: true })
             .eq('status', 'pending');
 
-        if (countError) throw countError;
+        if (countError) {
+            request.log.warn({ err: countError }, 'admin.vendors.pending: status filter unavailable; returning empty list');
+            return reply.send({
+                vendors: [],
+                page,
+                limit,
+                total: 0,
+                meta: buildPaginationMeta(page, limit, 0),
+            });
+        }
 
         const withOwner = await supabase
             .from('vendors')
@@ -167,7 +176,16 @@ export const getPendingVendors = async (request: FastifyRequest, reply: FastifyR
             error = withoutOwner.error;
         }
 
-        if (error) throw error;
+        if (error) {
+            request.log.warn({ err: error }, 'admin.vendors.pending: list query failed; returning empty list');
+            return reply.send({
+                vendors: [],
+                page,
+                limit,
+                total: 0,
+                meta: buildPaginationMeta(page, limit, 0),
+            });
+        }
 
         const total = count || 0;
 
@@ -281,6 +299,22 @@ export const getAdminOrders = async (request: FastifyRequest, reply: FastifyRepl
             const withoutCampus = await fallbackQuery;
             data = withoutCampus.data as any[] | null;
             error = withoutCampus.error;
+
+            if (error) {
+                let plainOrdersQuery = supabase
+                    .from('orders')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+
+                if (status) {
+                    plainOrdersQuery = plainOrdersQuery.eq('status', status);
+                }
+
+                const plainOrders = await plainOrdersQuery;
+                data = plainOrders.data as any[] | null;
+                error = plainOrders.error;
+            }
         }
 
         if (error) throw error;
