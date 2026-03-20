@@ -7,7 +7,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
--- 1) SCHEMA ALIGNMENT (orders / order_items / admin_logs / reviews)
+-- 1) SCHEMA ALIGNMENT (orders / order_items / admin_logs / reviews / user_addresses)
 -- ============================================================================
 
 -- Orders: delivery-to-class + promo + handoff columns expected by backend
@@ -85,6 +85,51 @@ CREATE TABLE IF NOT EXISTS public.reviews (
   comment TEXT
 );
 
+-- Address book table required by /api/v1/addresses endpoints
+CREATE TABLE IF NOT EXISTS public.user_addresses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  address_line TEXT NOT NULL,
+  is_default BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Keep updated_at fresh on user_addresses updates.
+CREATE OR REPLACE FUNCTION public.update_user_address_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_user_addresses_timestamp ON public.user_addresses;
+CREATE TRIGGER update_user_addresses_timestamp
+BEFORE UPDATE ON public.user_addresses
+FOR EACH ROW
+EXECUTE PROCEDURE public.update_user_address_timestamp();
+
+-- Enforce a single default address per user.
+CREATE OR REPLACE FUNCTION public.ensure_single_default_address()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.is_default THEN
+    UPDATE public.user_addresses
+    SET is_default = false
+    WHERE user_id = NEW.user_id AND id != NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS single_default_address_trigger ON public.user_addresses;
+CREATE TRIGGER single_default_address_trigger
+BEFORE INSERT OR UPDATE ON public.user_addresses
+FOR EACH ROW
+EXECUTE PROCEDURE public.ensure_single_default_address();
+
 -- ============================================================================
 -- 2) RLS / POLICY HARDENING
 -- ============================================================================
@@ -94,6 +139,7 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotion_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_addresses ENABLE ROW LEVEL SECURITY;
 
 -- orders policies
 DROP POLICY IF EXISTS "Users can insert own orders" ON public.orders;
@@ -195,6 +241,14 @@ ON public.reviews
 FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
+-- user_addresses policies
+DROP POLICY IF EXISTS "Users can manage their own addresses" ON public.user_addresses;
+CREATE POLICY "Users can manage their own addresses"
+ON public.user_addresses
+FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
 -- admin_logs read policy for authenticated admins through app role checks
 DROP POLICY IF EXISTS "Authenticated can read admin logs" ON public.admin_logs;
 CREATE POLICY "Authenticated can read admin logs"
@@ -214,6 +268,7 @@ REVOKE ALL PRIVILEGES ON public.order_items FROM anon, authenticated;
 REVOKE ALL PRIVILEGES ON public.promotion_redemptions FROM anon, authenticated;
 REVOKE ALL PRIVILEGES ON public.reviews FROM anon, authenticated;
 REVOKE ALL PRIVILEGES ON public.admin_logs FROM anon, authenticated;
+REVOKE ALL PRIVILEGES ON public.user_addresses FROM anon, authenticated;
 
 GRANT SELECT ON public.reviews TO anon, authenticated;
 GRANT SELECT ON public.orders TO authenticated;
@@ -222,6 +277,7 @@ GRANT SELECT ON public.order_items TO authenticated;
 GRANT INSERT ON public.order_items TO authenticated;
 GRANT SELECT, INSERT ON public.promotion_redemptions TO authenticated;
 GRANT SELECT ON public.admin_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_addresses TO authenticated;
 
 COMMIT;
 
@@ -239,6 +295,7 @@ WHERE table_schema = 'public'
     ))
     OR (table_name = 'order_items' AND column_name IN ('item_id','menu_item_id','unit_price','price'))
     OR (table_name = 'admin_logs' AND column_name IN ('reason'))
+    OR (table_name = 'user_addresses' AND column_name IN ('user_id','label','address_line','is_default'))
   )
 ORDER BY table_name, column_name;
 
@@ -246,20 +303,20 @@ ORDER BY table_name, column_name;
 SELECT schemaname, tablename, rowsecurity
 FROM pg_tables
 WHERE schemaname = 'public'
-  AND tablename IN ('orders','order_items','promotion_redemptions','reviews','admin_logs')
+  AND tablename IN ('orders','order_items','promotion_redemptions','reviews','admin_logs','user_addresses')
 ORDER BY tablename;
 
 -- Policies
 SELECT tablename, policyname, cmd
 FROM pg_policies
 WHERE schemaname = 'public'
-  AND tablename IN ('orders','order_items','promotion_redemptions','reviews','admin_logs')
+  AND tablename IN ('orders','order_items','promotion_redemptions','reviews','admin_logs','user_addresses')
 ORDER BY tablename, policyname;
 
 -- Grants
 SELECT table_name, grantee, privilege_type
 FROM information_schema.role_table_grants
 WHERE table_schema = 'public'
-  AND table_name IN ('orders','order_items','promotion_redemptions','reviews','admin_logs')
+  AND table_name IN ('orders','order_items','promotion_redemptions','reviews','admin_logs','user_addresses')
   AND grantee IN ('anon','authenticated')
 ORDER BY table_name, grantee, privilege_type;

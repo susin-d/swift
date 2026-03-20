@@ -79,6 +79,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - Health checks are exposed as both `/health` and `/api/health` for compatibility with local and serverless path routing.
    - Several read/list APIs now degrade to safe empty or reduced-shape responses when optional DB relations are unavailable, reducing live `500` risk.
    - If production schema drift is detected, run `backend/scripts/live_contract_hardening.sql` in Supabase SQL Editor to align orders, reviews, admin_logs, and RLS policies with the current API contract.
+   - For launch readiness, run `backend/scripts/final_launch_db_fix.sql` to align orders plus address-book schema (`user_addresses`) and policies used by `/api/v1/addresses` save flows.
 
 3. **Vendor App**
    ```bash

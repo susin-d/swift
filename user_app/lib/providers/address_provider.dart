@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/address_model.dart';
+import '../services/api_exception.dart';
 import '../services/address_service.dart';
 
 final addressServiceProvider = Provider((ref) => AddressService());
@@ -22,6 +23,13 @@ class AddressesNotifier extends StateNotifier<AsyncValue<List<AddressModel>>> {
       final data = await _service.getAddresses();
       final addresses = data.map((json) => AddressModel.fromJson((json as Map).cast<String, dynamic>())).toList();
       state = AsyncValue.data(addresses);
+    } on ApiException catch (e, st) {
+      // Keep checkout/address flows usable during temporary backend outages.
+      if (e.statusCode >= 500) {
+        state = const AsyncValue.data(<AddressModel>[]);
+        return;
+      }
+      state = AsyncValue.error(e, st);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -35,6 +43,12 @@ class AddressesNotifier extends StateNotifier<AsyncValue<List<AddressModel>>> {
     try {
       await _service.addAddress(label: label, addressLine: addressLine, isDefault: isDefault);
       await refresh();
+    } on ApiException catch (e, st) {
+      if (e.statusCode >= 500) {
+        // Preserve the existing state on temporary server failures.
+        return;
+      }
+      state = AsyncValue.error(e, st);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -44,6 +58,11 @@ class AddressesNotifier extends StateNotifier<AsyncValue<List<AddressModel>>> {
     try {
       await _service.deleteAddress(id);
       await refresh();
+    } on ApiException catch (e, st) {
+      if (e.statusCode >= 500) {
+        return;
+      }
+      state = AsyncValue.error(e, st);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -53,6 +72,11 @@ class AddressesNotifier extends StateNotifier<AsyncValue<List<AddressModel>>> {
     try {
       await _service.setDefault(id);
       await refresh();
+    } on ApiException catch (e, st) {
+      if (e.statusCode >= 500) {
+        return;
+      }
+      state = AsyncValue.error(e, st);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

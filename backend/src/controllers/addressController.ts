@@ -5,7 +5,10 @@ const isAddressTableMissing = (error: any) => {
     if (!error) return false;
     const code = String(error.code ?? '');
     const message = String(error.message ?? '').toLowerCase();
-    return code === 'PGRST205' || message.includes('user_addresses') && message.includes('schema cache');
+    return code === 'PGRST205'
+        || code === '42P01'
+        || (message.includes('user_addresses') && message.includes('schema cache'))
+        || (message.includes('relation') && message.includes('user_addresses') && message.includes('does not exist'));
 };
 
 export const getAddresses = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -35,6 +38,17 @@ export const addAddress = async (request: FastifyRequest, reply: FastifyReply) =
         const err = new Error('Label and address_line are required') as any;
         err.statusCode = 400;
         throw err;
+    }
+
+    if (is_default) {
+        const { error: clearDefaultError } = await supabase
+            .from('user_addresses')
+            .update({ is_default: false })
+            .eq('user_id', user.sub);
+
+        if (clearDefaultError && !isAddressTableMissing(clearDefaultError)) {
+            throw clearDefaultError;
+        }
     }
 
     const { data, error } = await supabase
@@ -83,6 +97,20 @@ export const deleteAddress = async (request: FastifyRequest, reply: FastifyReply
 export const setDefaultAddress = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
     const { id } = request.params as any;
+
+    const { error: clearDefaultError } = await supabase
+        .from('user_addresses')
+        .update({ is_default: false })
+        .eq('user_id', user.sub);
+
+    if (clearDefaultError) {
+        if (isAddressTableMissing(clearDefaultError)) {
+            const err = new Error('Address book is not configured yet') as any;
+            err.statusCode = 503;
+            throw err;
+        }
+        throw clearDefaultError;
+    }
 
     const { data, error } = await supabase
         .from('user_addresses')

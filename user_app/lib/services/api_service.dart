@@ -43,6 +43,8 @@ class ApiService {
             statusCode == 500 && path == '/public/recommendations';
         final isExpectedOrdersFallback =
             statusCode == 500 && path == '/orders/me';
+        final isExpectedAddressesFallback =
+          (statusCode == 500 || statusCode == 503) && path == '/addresses';
 
         if (isExpectedRecommendationsFallback) {
           _logger.w('FALLBACK[404] => PATH: $path');
@@ -50,6 +52,8 @@ class ApiService {
           _logger.w('FALLBACK[500] => PATH: $path');
         } else if (isExpectedOrdersFallback) {
           _logger.w('FALLBACK[500] => PATH: $path');
+        } else if (isExpectedAddressesFallback) {
+          _logger.w('FALLBACK[$statusCode] => PATH: $path');
         } else {
           _logger.e('ERROR[$statusCode] => PATH: $path');
         }

@@ -21,6 +21,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _selectedMood = 'All';
+  String? _selectedFeaturedItemId;
   bool _isReordering = false;
 
   static const List<_MoodChip> _moodChips = [
@@ -41,6 +42,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final combined = '$category $name $description $vendorName';
 
     return mood.keywords.any((keyword) => combined.contains(keyword));
+  }
+
+  RecommendedItem? _selectedFeaturedItem(List<RecommendedItem> filteredItems) {
+    if (filteredItems.isEmpty) return null;
+
+    if (_selectedFeaturedItemId == null) {
+      return filteredItems.first;
+    }
+
+    for (final item in filteredItems) {
+      if (item.id == _selectedFeaturedItemId) return item;
+    }
+
+    return filteredItems.first;
   }
 
   OrderModel? _latestOrder(List<OrderModel> orders) {
@@ -235,7 +250,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             mood.icon,
                             _selectedMood == mood.label,
                             index,
-                            onTap: () => setState(() => _selectedMood = mood.label),
+                            onTap: () => setState(() {
+                              _selectedMood = mood.label;
+                              _selectedFeaturedItemId = null;
+                            }),
                           );
                         }),
                       ),
@@ -285,39 +303,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // Recommended Food List
                 recommendedItemsAsync.when(
-                  data: (items) => SliverPadding(
-                    padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
-                          final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
-                          if (filteredItems.isEmpty) {
-                            return const _NoMoodMatchesCard();
-                          }
+                  data: (items) {
+                    final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
+                    final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
 
-                          final item = filteredItems[index];
-                          return AppAnimations.staggeredList(
-                            index,
+                    if (filteredItems.isEmpty) {
+                      return const SliverPadding(
+                        padding: EdgeInsets.only(left: 24, right: 24, bottom: 120),
+                        sliver: SliverToBoxAdapter(
+                          child: _NoMoodMatchesCard(),
+                        ),
+                      );
+                    }
+
+                    final selectedItem = _selectedFeaturedItem(filteredItems)!;
+
+                    return SliverPadding(
+                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate([
+                          _ItemTabsRow(
+                            items: filteredItems,
+                            selectedItemId: selectedItem.id,
+                            onSelect: (itemId) => setState(() => _selectedFeaturedItemId = itemId),
+                          ),
+                          const SizedBox(height: 14),
+                          AppAnimations.staggeredList(
+                            0,
                             _RecommendedFoodCard(
-                              item: item,
+                              item: selectedItem,
                               onTap: () {
-                                final vendorId = item.vendor?.id;
+                                final vendorId = selectedItem.vendor?.id;
                                 if (vendorId != null && vendorId.isNotEmpty) {
                                   context.push('/vendor/$vendorId');
                                 }
                               },
                             ),
-                          );
-                        },
-                        childCount: (() {
-                          final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
-                          final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
-                          return filteredItems.isEmpty ? 1 : filteredItems.length;
-                        })(),
+                          ),
+                        ]),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                   loading: () => SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverList(
@@ -639,6 +665,52 @@ class _NoMoodMatchesCard extends StatelessWidget {
           SizedBox(height: 4),
           Text('Try a different mood chip to see more options.'),
         ],
+      ),
+    );
+  }
+}
+
+class _ItemTabsRow extends StatelessWidget {
+  const _ItemTabsRow({
+    required this.items,
+    required this.selectedItemId,
+    required this.onSelect,
+  });
+
+  final List<RecommendedItem> items;
+  final String selectedItemId;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: items.map((item) {
+          final isSelected = item.id == selectedItemId;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(item.name),
+              selected: isSelected,
+              onSelected: (_) => onSelect(item.id),
+              selectedColor: AppColors.primary.withValues(alpha: 0.16),
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.45)
+                      : AppColors.border,
+                ),
+              ),
+              backgroundColor: Colors.white,
+            ),
+          );
+        }).toList(),
       ),
     );
   }

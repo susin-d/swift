@@ -46,6 +46,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _roomController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
   bool _quietMode = false;
+  final ScrollController _summaryScrollController = ScrollController();
 
   String _etaConfidenceLabel(int itemCount) {
     if (itemCount <= 2) return 'High confidence';
@@ -60,6 +61,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_summaryScrollController.hasClients) {
+        _summaryScrollController.jumpTo(0);
+      }
+    });
   }
 
   @override
@@ -68,6 +75,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     _promoController.dispose();
     _roomController.dispose();
     _instructionsController.dispose();
+    _summaryScrollController.dispose();
     super.dispose();
   }
 
@@ -153,7 +161,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final hasAddressError = addressesAsync.hasError;
     final canPlaceOrder = _deliverToClass ? hasAddress : (hasAddress || hasAddressError);
 
-    final maxSummaryHeight = MediaQuery.of(context).size.height * 0.62;
+    final maxSummaryHeight = MediaQuery.of(context).size.height * (_deliverToClass ? 0.74 : 0.70);
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxSummaryHeight),
@@ -173,6 +181,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
+            controller: _summaryScrollController,
+            physics: const ClampingScrollPhysics(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -407,7 +417,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
               Switch(
                 value: _deliverToClass,
-                onChanged: (value) => setState(() => _deliverToClass = value),
+                onChanged: (value) {
+                  setState(() => _deliverToClass = value);
+                  if (_summaryScrollController.hasClients) {
+                    _summaryScrollController.animateTo(
+                      0,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                },
               ),
             ],
           ),
