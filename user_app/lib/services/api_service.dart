@@ -39,11 +39,15 @@ class ApiService {
         final statusCode = e.response?.statusCode ?? 0;
         final isExpectedRecommendationsFallback =
             statusCode == 404 && path == '/public/recommendations';
+        final isExpectedRecommendationsServerFallback =
+            statusCode == 500 && path == '/public/recommendations';
         final isExpectedOrdersFallback =
             statusCode == 500 && path == '/orders/me';
 
         if (isExpectedRecommendationsFallback) {
           _logger.w('FALLBACK[404] => PATH: $path');
+        } else if (isExpectedRecommendationsServerFallback) {
+          _logger.w('FALLBACK[500] => PATH: $path');
         } else if (isExpectedOrdersFallback) {
           _logger.w('FALLBACK[500] => PATH: $path');
         } else {

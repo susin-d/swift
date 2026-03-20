@@ -59,11 +59,24 @@ export const createReview = async (request: FastifyRequest, reply: FastifyReply)
 export const getVendorReviews = async (request: FastifyRequest, reply: FastifyReply) => {
     const { vendorId } = request.params as any;
 
-    const { data, error } = await supabase
+    const withUsers = await supabase
         .from('reviews')
         .select('*, users(name)')
         .eq('vendor_id', vendorId)
         .order('created_at', { ascending: false });
+
+    let data = withUsers.data;
+    let error = withUsers.error;
+
+    if (error) {
+        const withoutUsers = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('vendor_id', vendorId)
+            .order('created_at', { ascending: false });
+        data = withoutUsers.data;
+        error = withoutUsers.error;
+    }
 
     if (error) throw error;
     return reply.send(data);

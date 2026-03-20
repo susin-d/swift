@@ -92,7 +92,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               children: [
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                     itemCount: cart.length,
                     itemBuilder: (context, index) {
                       final item = cart.values.toList()[index];
@@ -153,126 +153,134 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final hasAddressError = addressesAsync.hasError;
     final canPlaceOrder = _deliverToClass ? hasAddress : (hasAddress || hasAddressError);
 
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, -10),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildAddressRow(context, addressesAsync, defaultAddress, hasAddress),
-              const SizedBox(height: 12),
-              _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
-              const SizedBox(height: 12),
-              _buildScheduleRow(context),
-            const SizedBox(height: 12),
-            _buildPromoRow(context, subtotal),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Subtotal',
-                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  '\u20B9${subtotal.toInt()}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                ),
-              ],
-            ),
-            if (_discountAmount > 0) ...[
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Promo discount',
-                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    '-\u20B9${_discountAmount.toInt()}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 12),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Fee',
-                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  'FREE',
-                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Divider(color: AppColors.border),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
-                ),
-                Text(
-                  '\u20B9${finalTotal.toInt()}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'ETA ${_etaMin}-${_etaMax} min - ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
-                      style: const TextStyle(
-                        color: AppColors.info,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: canPlaceOrder ? () => _checkout(context) : null,
-                child: const Text('PLACE ORDER'),
-              ),
+    final maxSummaryHeight = MediaQuery.of(context).size.height * 0.62;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxSummaryHeight),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -10),
             ),
           ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildAddressRow(context, addressesAsync, defaultAddress, hasAddress),
+                const SizedBox(height: 12),
+                _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
+                const SizedBox(height: 12),
+                _buildScheduleRow(context),
+                const SizedBox(height: 12),
+                _buildPromoRow(context, subtotal),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Subtotal',
+                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      '\u20B9${subtotal.toInt()}',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                    ),
+                  ],
+                ),
+                if (_discountAmount > 0) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Promo discount',
+                        style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        '-\u20B9${_discountAmount.toInt()}',
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 12),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Fee',
+                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      'FREE',
+                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Divider(color: AppColors.border),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                    ),
+                    Text(
+                      '\u20B9${finalTotal.toInt()}',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'ETA $_etaMin-$_etaMax min - ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
+                          style: const TextStyle(
+                            color: AppColors.info,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: canPlaceOrder ? () => _checkout(context) : null,
+                    child: const Text('PLACE ORDER'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

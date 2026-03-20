@@ -9,7 +9,7 @@ class AdminTheme {
   static const _panel = Color(0xFF0E2322);
 
   static ThemeData get light {
-    final base = ThemeData(
+    final base = ThemeData( 
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: _primary,

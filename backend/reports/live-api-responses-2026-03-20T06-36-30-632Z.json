@@ -1,0 +1,4297 @@
+{
+  "generatedAt": "2026-03-20T06:36:30.631Z",
+  "startedAt": "2026-03-20T06:35:42.225Z",
+  "baseUrl": "https://swift-campus.vercel.app/api/v1",
+  "siteUrl": "https://swift-campus.vercel.app",
+  "timeoutMs": 20000,
+  "summary": {
+    "total": 44,
+    "passed": 31,
+    "failed": 13,
+    "passRate": 70.45
+  },
+  "context": {
+    "vendorId": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+    "menuItemId": "9028e52d-03f0-4ba9-9164-ea66c8d9b775"
+  },
+  "results": [
+    {
+      "id": "auth.login.user",
+      "role": "public",
+      "method": "POST",
+      "path": "/auth/session",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/session",
+      "status": 200,
+      "ok": true,
+      "durationMs": 0,
+      "responseBody": {
+        "user": {
+          "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+          "email": "demo.user@swift.com",
+          "role": "user"
+        },
+        "session": {
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwOGZjZmVhMS0yMGU4LTQ4MjItOWI4ZS0xYjlkNjVhODFkN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkyMTQ0LCJpYXQiOjE3NzM5ODg1NDQsImVtYWlsIjoiZGVtby51c2VyQHN3aWZ0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJEZW1vIFVzZXIiLCJyb2xlIjoidXNlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTg4NTQ0fV0sInNlc3Npb25faWQiOiI2Y2E2OTUyYy02ZDAwLTRhZjctOWQ3OS01OWNlOWE2N2E3YTYiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.83kt1ynyBH_OsYsCGLtoLjU5WIQGzT1uSXIg4DPWS3aY8ugMYfyxvGXCxgKt87Je9w45_ulpsqdTxA40vb9MgQ",
+          "token_type": "bearer",
+          "expires_in": 3600,
+          "expires_at": 1773992144,
+          "refresh_token": "2mrn4hi3gkzl",
+          "user": {
+            "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+            "aud": "authenticated",
+            "role": "authenticated",
+            "email": "demo.user@swift.com",
+            "email_confirmed_at": "2026-03-18T05:46:19.403929Z",
+            "phone": "",
+            "confirmed_at": "2026-03-18T05:46:19.403929Z",
+            "last_sign_in_at": "2026-03-20T06:35:44.553006795Z",
+            "app_metadata": {
+              "provider": "email",
+              "providers": [
+                "email"
+              ]
+            },
+            "user_metadata": {
+              "email_verified": true,
+              "name": "Demo User",
+              "role": "user"
+            },
+            "identities": [
+              {
+                "identity_id": "155492a4-6c33-4d17-a782-6baa7decaec2",
+                "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+                "user_id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+                "identity_data": {
+                  "email": "demo.user@swift.com",
+                  "email_verified": false,
+                  "phone_verified": false,
+                  "sub": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c"
+                },
+                "provider": "email",
+                "last_sign_in_at": "2026-03-18T05:46:19.380845Z",
+                "created_at": "2026-03-18T05:46:19.380902Z",
+                "updated_at": "2026-03-18T05:46:19.380902Z",
+                "email": "demo.user@swift.com"
+              }
+            ],
+            "created_at": "2026-03-18T05:46:19.361761Z",
+            "updated_at": "2026-03-20T06:35:44.592564Z",
+            "is_anonymous": false
+          },
+          "weak_password": null
+        }
+      }
+    },
+    {
+      "id": "auth.login.vendor",
+      "role": "public",
+      "method": "POST",
+      "path": "/auth/session",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/session",
+      "status": 200,
+      "ok": true,
+      "durationMs": 0,
+      "responseBody": {
+        "user": {
+          "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+          "email": "demo.vendor@swift.com",
+          "role": "vendor"
+        },
+        "session": {
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJlYmE1N2JmZi0zNDBmLTRhNmYtOWQ3OS1mYTBlNTE5ODZlMTQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkyMTQ2LCJpYXQiOjE3NzM5ODg1NDYsImVtYWlsIjoiZGVtby52ZW5kb3JAc3dpZnQuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkRlbW8gVmVuZG9yIiwicm9sZSI6InZlbmRvciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTg4NTQ2fV0sInNlc3Npb25faWQiOiJkMDYyODQxNS1iMTlkLTQ2OTYtOWNiMC02ODNjOTEwOTFlMmIiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.o8sX33VYDjiqD6lBK56KEbed8t7zlnplXg5kNCx8wlJ5N8JrDu4vTRQG7eicejqDV2-4yHOccbXEKwl-iZ1lBQ",
+          "token_type": "bearer",
+          "expires_in": 3600,
+          "expires_at": 1773992146,
+          "refresh_token": "qrk5g4pj5xz7",
+          "user": {
+            "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+            "aud": "authenticated",
+            "role": "authenticated",
+            "email": "demo.vendor@swift.com",
+            "email_confirmed_at": "2026-03-18T05:46:24.013494Z",
+            "phone": "",
+            "confirmed_at": "2026-03-18T05:46:24.013494Z",
+            "last_sign_in_at": "2026-03-20T06:35:46.355202198Z",
+            "app_metadata": {
+              "provider": "email",
+              "providers": [
+                "email"
+              ]
+            },
+            "user_metadata": {
+              "email_verified": true,
+              "name": "Demo Vendor",
+              "role": "vendor"
+            },
+            "identities": [
+              {
+                "identity_id": "c60ee69b-3627-4adc-b6b7-c327f5161b09",
+                "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+                "user_id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+                "identity_data": {
+                  "email": "demo.vendor@swift.com",
+                  "email_verified": false,
+                  "phone_verified": false,
+                  "sub": "eba57bff-340f-4a6f-9d79-fa0e51986e14"
+                },
+                "provider": "email",
+                "last_sign_in_at": "2026-03-18T05:46:24.008516Z",
+                "created_at": "2026-03-18T05:46:24.008573Z",
+                "updated_at": "2026-03-18T05:46:24.008573Z",
+                "email": "demo.vendor@swift.com"
+              }
+            ],
+            "created_at": "2026-03-18T05:46:23.996154Z",
+            "updated_at": "2026-03-20T06:35:46.362834Z",
+            "is_anonymous": false
+          },
+          "weak_password": null
+        }
+      }
+    },
+    {
+      "id": "auth.login.admin",
+      "role": "public",
+      "method": "POST",
+      "path": "/auth/session",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/session",
+      "status": 200,
+      "ok": true,
+      "durationMs": 0,
+      "responseBody": {
+        "user": {
+          "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+          "email": "demo.admin@swift.com",
+          "role": "admin"
+        },
+        "session": {
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNjBiNzk1ZC02NjU5LTQxZDEtOGUxNi03MDQ0NWY3ZDYxZDciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkyMTQ3LCJpYXQiOjE3NzM5ODg1NDcsImVtYWlsIjoiZGVtby5hZG1pbkBzd2lmdC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiRGVtbyBBZG1pbiIsInJvbGUiOiJhZG1pbiJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTg4NTQ3fV0sInNlc3Npb25faWQiOiJjN2ViNGEyOS1mNjhhLTRmMzYtOTAzMi1iNmY3ZTU1ODlhZDYiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ._hSQ3OX2OzslAfm9ntBx7XvcLrN12fHi_YaeHypdKWegMPN2MR4kM-Z9c_qN1QbaBDvwP6aUEs3GzgKIoRsXfg",
+          "token_type": "bearer",
+          "expires_in": 3600,
+          "expires_at": 1773992147,
+          "refresh_token": "z4hogcnwz4iy",
+          "user": {
+            "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+            "aud": "authenticated",
+            "role": "authenticated",
+            "email": "demo.admin@swift.com",
+            "email_confirmed_at": "2026-03-18T05:46:28.011916Z",
+            "phone": "",
+            "confirmed_at": "2026-03-18T05:46:28.011916Z",
+            "last_sign_in_at": "2026-03-20T06:35:47.48743304Z",
+            "app_metadata": {
+              "provider": "email",
+              "providers": [
+                "email"
+              ]
+            },
+            "user_metadata": {
+              "email_verified": true,
+              "name": "Demo Admin",
+              "role": "admin"
+            },
+            "identities": [
+              {
+                "identity_id": "76e08436-4d26-4a3e-ad7f-17e420523094",
+                "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+                "user_id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+                "identity_data": {
+                  "email": "demo.admin@swift.com",
+                  "email_verified": false,
+                  "phone_verified": false,
+                  "sub": "060b795d-6659-41d1-8e16-70445f7d61d7"
+                },
+                "provider": "email",
+                "last_sign_in_at": "2026-03-18T05:46:28.005203Z",
+                "created_at": "2026-03-18T05:46:28.006175Z",
+                "updated_at": "2026-03-18T05:46:28.006175Z",
+                "email": "demo.admin@swift.com"
+              }
+            ],
+            "created_at": "2026-03-18T05:46:27.997055Z",
+            "updated_at": "2026-03-20T06:35:47.493259Z",
+            "is_anonymous": false
+          },
+          "weak_password": null
+        }
+      }
+    },
+    {
+      "id": "health",
+      "role": "public",
+      "method": "GET",
+      "path": "/health",
+      "url": "https://swift-campus.vercel.app/api/v1/health",
+      "status": 404,
+      "ok": false,
+      "durationMs": 276,
+      "responseBody": {
+        "error": "NotFound",
+        "message": "Resource not found"
+      }
+    },
+    {
+      "id": "contracts.registry",
+      "role": "public",
+      "method": "GET",
+      "path": "/contracts/registry",
+      "url": "https://swift-campus.vercel.app/api/v1/contracts/registry",
+      "status": 200,
+      "ok": true,
+      "durationMs": 442,
+      "responseBody": {
+        "version": "2026.03.s11.3",
+        "generatedAt": "2026-03-20T06:35:48.884Z",
+        "totalEndpoints": 44,
+        "errorEnvelope": {
+          "description": "Standardized error envelope for non-2xx responses.",
+          "fields": [
+            {
+              "name": "error",
+              "type": "string",
+              "required": true,
+              "description": "Machine-readable error type."
+            },
+            {
+              "name": "message",
+              "type": "string",
+              "required": true,
+              "description": "Human-readable message."
+            }
+          ]
+        },
+        "endpoints": [
+          {
+            "id": "auth.session.create",
+            "method": "POST",
+            "path": "/api/v1/auth/session",
+            "owner": "shared",
+            "auth": "public",
+            "request": {
+              "description": "Authenticate a user and create a session token payload.",
+              "fields": [
+                {
+                  "name": "email",
+                  "type": "string",
+                  "required": true,
+                  "description": "User email address."
+                },
+                {
+                  "name": "password",
+                  "type": "string",
+                  "required": true,
+                  "description": "User password."
+                }
+              ]
+            },
+            "response": {
+              "description": "Authenticated user details and session object. Blocked or banned accounts are denied with 403 Forbidden.",
+              "fields": [
+                {
+                  "name": "user.id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Primary user identifier."
+                },
+                {
+                  "name": "user.email",
+                  "type": "string",
+                  "required": true,
+                  "description": "Authenticated email."
+                },
+                {
+                  "name": "user.role",
+                  "type": "string",
+                  "required": true,
+                  "description": "Resolved role from users table."
+                },
+                {
+                  "name": "session.access_token",
+                  "type": "string",
+                  "required": true,
+                  "description": "Supabase JWT token."
+                },
+                {
+                  "name": "session.expires_in",
+                  "type": "number",
+                  "required": true,
+                  "description": "Token expiration in seconds."
+                }
+              ]
+            }
+          },
+          {
+            "id": "auth.me.get",
+            "method": "GET",
+            "path": "/api/v1/auth/me",
+            "owner": "shared",
+            "auth": "authenticated",
+            "response": {
+              "description": "Current user profile with role-aware profile payload. Blocked or banned accounts are denied with 403 Forbidden.",
+              "fields": [
+                {
+                  "name": "user.id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Primary user identifier."
+                },
+                {
+                  "name": "user.email",
+                  "type": "string",
+                  "required": false,
+                  "description": "Account email if present."
+                },
+                {
+                  "name": "user.role",
+                  "type": "string",
+                  "required": true,
+                  "description": "Resolved role."
+                },
+                {
+                  "name": "user.profile",
+                  "type": "object",
+                  "required": true,
+                  "description": "Role specific profile object."
+                }
+              ]
+            }
+          },
+          {
+            "id": "orders.create",
+            "method": "POST",
+            "path": "/api/v1/orders",
+            "owner": "shared",
+            "auth": "user",
+            "request": {
+              "description": "Create an order with one or more line items.",
+              "fields": [
+                {
+                  "name": "vendor_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Vendor receiving the order."
+                },
+                {
+                  "name": "total_amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Aggregate payable total."
+                },
+                {
+                  "name": "promo_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Optional promo code to apply."
+                },
+                {
+                  "name": "scheduled_for",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Optional scheduled fulfillment timestamp."
+                },
+                {
+                  "name": "delivery_mode",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery mode: standard|class."
+                },
+                {
+                  "name": "delivery_building_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Campus building id for class delivery."
+                },
+                {
+                  "name": "delivery_room",
+                  "type": "string",
+                  "required": false,
+                  "description": "Room or classroom label."
+                },
+                {
+                  "name": "delivery_zone_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Delivery zone id when provided."
+                },
+                {
+                  "name": "quiet_mode",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Quiet delivery preferences (no calls)."
+                },
+                {
+                  "name": "delivery_instructions",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery instructions for class handoff."
+                },
+                {
+                  "name": "delivery_location_label",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery location label."
+                },
+                {
+                  "name": "class_start_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class start timestamp."
+                },
+                {
+                  "name": "class_end_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class end timestamp."
+                },
+                {
+                  "name": "items",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Order line items with id/menu_item_id, quantity, and price/unit_price."
+                }
+              ]
+            },
+            "response": {
+              "description": "Created order summary.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Order identifier."
+                },
+                {
+                  "name": "user_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Customer ID."
+                },
+                {
+                  "name": "vendor_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Vendor ID."
+                },
+                {
+                  "name": "status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Order lifecycle status."
+                },
+                {
+                  "name": "discount_amount",
+                  "type": "number",
+                  "required": false,
+                  "description": "Applied promo discount amount."
+                },
+                {
+                  "name": "promo_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Applied promo code."
+                },
+                {
+                  "name": "scheduled_for",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Scheduled fulfillment time."
+                },
+                {
+                  "name": "delivery_mode",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery mode: standard|class."
+                },
+                {
+                  "name": "delivery_building_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Campus building id for class delivery."
+                },
+                {
+                  "name": "delivery_room",
+                  "type": "string",
+                  "required": false,
+                  "description": "Room or classroom label."
+                },
+                {
+                  "name": "delivery_zone_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Delivery zone id when provided."
+                },
+                {
+                  "name": "quiet_mode",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Quiet delivery preferences (no calls)."
+                },
+                {
+                  "name": "delivery_instructions",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery instructions for class handoff."
+                },
+                {
+                  "name": "delivery_location_label",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery location label."
+                },
+                {
+                  "name": "handoff_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Generated handoff code for class delivery."
+                },
+                {
+                  "name": "handoff_status",
+                  "type": "string",
+                  "required": false,
+                  "description": "Handoff status state."
+                },
+                {
+                  "name": "handoff_proof_url",
+                  "type": "string",
+                  "required": false,
+                  "description": "Proof of delivery URL."
+                },
+                {
+                  "name": "class_start_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class start timestamp."
+                },
+                {
+                  "name": "class_end_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class end timestamp."
+                },
+                {
+                  "name": "eta.min_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated lower-bound arrival/prep minutes remaining."
+                },
+                {
+                  "name": "eta.max_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated upper-bound arrival/prep minutes remaining."
+                },
+                {
+                  "name": "eta.confidence",
+                  "type": "string",
+                  "required": true,
+                  "description": "Confidence grade: low|medium|high."
+                }
+              ]
+            }
+          },
+          {
+            "id": "vendor.orders.list",
+            "method": "GET",
+            "path": "/api/v1/vendor-ops/orders",
+            "owner": "vendor_app",
+            "auth": "vendor",
+            "response": {
+              "description": "Vendor order queue with customer and item summary fields.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Order identifier."
+                },
+                {
+                  "name": "[].status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Current order status."
+                },
+                {
+                  "name": "[].total_amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Order total."
+                },
+                {
+                  "name": "[].discount_amount",
+                  "type": "number",
+                  "required": false,
+                  "description": "Applied promo discount."
+                },
+                {
+                  "name": "[].promo_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Applied promo code."
+                },
+                {
+                  "name": "[].scheduled_for",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Scheduled fulfillment time."
+                },
+                {
+                  "name": "[].delivery_mode",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery mode: standard|class."
+                },
+                {
+                  "name": "[].delivery_building_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Campus building id for class delivery."
+                },
+                {
+                  "name": "[].delivery_room",
+                  "type": "string",
+                  "required": false,
+                  "description": "Room or classroom label."
+                },
+                {
+                  "name": "[].delivery_zone_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Delivery zone id when provided."
+                },
+                {
+                  "name": "[].quiet_mode",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Quiet delivery preferences (no calls)."
+                },
+                {
+                  "name": "[].delivery_instructions",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery instructions for class handoff."
+                },
+                {
+                  "name": "[].delivery_location_label",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery location label."
+                },
+                {
+                  "name": "[].handoff_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Handoff code for class delivery."
+                },
+                {
+                  "name": "[].handoff_status",
+                  "type": "string",
+                  "required": false,
+                  "description": "Handoff status state."
+                },
+                {
+                  "name": "[].handoff_proof_url",
+                  "type": "string",
+                  "required": false,
+                  "description": "Proof of delivery URL."
+                },
+                {
+                  "name": "[].class_start_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class start timestamp."
+                },
+                {
+                  "name": "[].class_end_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class end timestamp."
+                },
+                {
+                  "name": "[].eta.min_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated lower-bound prep/delivery minutes remaining."
+                },
+                {
+                  "name": "[].eta.max_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated upper-bound prep/delivery minutes remaining."
+                },
+                {
+                  "name": "[].pacing.elapsed_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Elapsed time since order creation in minutes."
+                },
+                {
+                  "name": "[].pacing.target_prep_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current prep target for this order."
+                },
+                {
+                  "name": "[].pacing.recommended_prep_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Suggested prep duration based on order size and value."
+                },
+                {
+                  "name": "[].pacing.sla_risk",
+                  "type": "string",
+                  "required": true,
+                  "description": "Pacing risk grade: low|medium|high."
+                },
+                {
+                  "name": "[].pacing.pace_label",
+                  "type": "string",
+                  "required": true,
+                  "description": "Readable pacing label such as on_track/watch/urgent."
+                },
+                {
+                  "name": "[].items",
+                  "type": "array<object>",
+                  "required": false,
+                  "description": "Line items when requested."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.stats.get",
+            "method": "GET",
+            "path": "/api/v1/admin/stats",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Platform-level summary metrics used by admin dashboard widgets.",
+              "fields": [
+                {
+                  "name": "users",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total customer count."
+                },
+                {
+                  "name": "vendors",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total vendors count."
+                },
+                {
+                  "name": "orders",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total orders count."
+                },
+                {
+                  "name": "revenue",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total processed revenue."
+                }
+              ]
+            }
+          },
+          {
+            "id": "auth.register.create",
+            "method": "POST",
+            "path": "/api/v1/auth/register",
+            "owner": "user_app",
+            "auth": "public",
+            "request": {
+              "description": "Register a new user account.",
+              "fields": [
+                {
+                  "name": "email",
+                  "type": "string",
+                  "required": true,
+                  "description": "User email address."
+                },
+                {
+                  "name": "password",
+                  "type": "string",
+                  "required": true,
+                  "description": "Account password."
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Display name."
+                }
+              ]
+            },
+            "response": {
+              "description": "Registration acknowledgement and user payload.",
+              "fields": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "required": true,
+                  "description": "Registration status."
+                },
+                {
+                  "name": "user.id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Registered user id."
+                }
+              ]
+            }
+          },
+          {
+            "id": "orders.my.list",
+            "method": "GET",
+            "path": "/api/v1/orders/me",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "List orders for the current authenticated customer user.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Order id."
+                },
+                {
+                  "name": "[].status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Order status."
+                },
+                {
+                  "name": "[].total_amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Order total."
+                },
+                {
+                  "name": "[].discount_amount",
+                  "type": "number",
+                  "required": false,
+                  "description": "Applied promo discount."
+                },
+                {
+                  "name": "[].promo_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Applied promo code."
+                },
+                {
+                  "name": "[].scheduled_for",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Scheduled fulfillment time."
+                },
+                {
+                  "name": "[].delivery_mode",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery mode: standard|class."
+                },
+                {
+                  "name": "[].delivery_building_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Campus building id for class delivery."
+                },
+                {
+                  "name": "[].delivery_room",
+                  "type": "string",
+                  "required": false,
+                  "description": "Room or classroom label."
+                },
+                {
+                  "name": "[].delivery_zone_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Delivery zone id when provided."
+                },
+                {
+                  "name": "[].quiet_mode",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Quiet delivery preferences (no calls)."
+                },
+                {
+                  "name": "[].delivery_instructions",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery instructions for class handoff."
+                },
+                {
+                  "name": "[].delivery_location_label",
+                  "type": "string",
+                  "required": false,
+                  "description": "Delivery location label."
+                },
+                {
+                  "name": "[].handoff_code",
+                  "type": "string",
+                  "required": false,
+                  "description": "Handoff code for class delivery."
+                },
+                {
+                  "name": "[].handoff_status",
+                  "type": "string",
+                  "required": false,
+                  "description": "Handoff status state."
+                },
+                {
+                  "name": "[].handoff_proof_url",
+                  "type": "string",
+                  "required": false,
+                  "description": "Proof of delivery URL."
+                },
+                {
+                  "name": "[].class_start_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class start timestamp."
+                },
+                {
+                  "name": "[].class_end_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Class end timestamp."
+                },
+                {
+                  "name": "[].eta.min_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated lower-bound minutes remaining."
+                },
+                {
+                  "name": "[].eta.max_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Estimated upper-bound minutes remaining."
+                },
+                {
+                  "name": "[].eta.confidence",
+                  "type": "string",
+                  "required": true,
+                  "description": "Confidence grade for ETA estimate."
+                }
+              ]
+            }
+          },
+          {
+            "id": "orders.cancel",
+            "method": "PATCH",
+            "path": "/api/v1/orders/:id/cancel",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "Cancel an order before preparation begins.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Order id."
+                },
+                {
+                  "name": "status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Updated status (cancelled)."
+                },
+                {
+                  "name": "eta.min_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Lower-bound minutes remaining."
+                },
+                {
+                  "name": "eta.max_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Upper-bound minutes remaining."
+                },
+                {
+                  "name": "eta.confidence",
+                  "type": "string",
+                  "required": true,
+                  "description": "Confidence grade for ETA estimate."
+                }
+              ]
+            }
+          },
+          {
+            "id": "menus.vendor.list",
+            "method": "GET",
+            "path": "/api/v1/menus/vendor/:vendorId",
+            "owner": "shared",
+            "auth": "public",
+            "response": {
+              "description": "Vendor menu categories and nested menu items.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Menu category id."
+                },
+                {
+                  "name": "[].category_name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Category name."
+                },
+                {
+                  "name": "[].menu_items",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Items under category."
+                }
+              ]
+            }
+          },
+          {
+            "id": "public.vendors.list",
+            "method": "GET",
+            "path": "/api/v1/public/vendors",
+            "owner": "user_app",
+            "auth": "public",
+            "response": {
+              "description": "List publicly visible vendors.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Vendor id."
+                },
+                {
+                  "name": "[].name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Vendor display name."
+                },
+                {
+                  "name": "[].is_open",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Current open status."
+                }
+              ]
+            }
+          },
+          {
+            "id": "public.search.global",
+            "method": "GET",
+            "path": "/api/v1/public/search",
+            "owner": "user_app",
+            "auth": "public",
+            "response": {
+              "description": "Global search payload across menus and vendors.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Menu item id."
+                },
+                {
+                  "name": "[].name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Menu item name."
+                },
+                {
+                  "name": "[].description",
+                  "type": "string",
+                  "required": false,
+                  "description": "Menu item description."
+                },
+                {
+                  "name": "[].price",
+                  "type": "number",
+                  "required": true,
+                  "description": "Menu item price."
+                },
+                {
+                  "name": "[].vendor.id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Vendor id."
+                },
+                {
+                  "name": "[].vendor.name",
+                  "type": "string",
+                  "required": false,
+                  "description": "Vendor name."
+                }
+              ]
+            }
+          },
+          {
+            "id": "public.recommendations.list",
+            "method": "GET",
+            "path": "/api/v1/public/recommendations",
+            "owner": "user_app",
+            "auth": "public",
+            "response": {
+              "description": "Backend-ranked recommended food items for home feed personalization.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Menu item id."
+                },
+                {
+                  "name": "[].name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Menu item name."
+                },
+                {
+                  "name": "[].description",
+                  "type": "string",
+                  "required": false,
+                  "description": "Menu item description."
+                },
+                {
+                  "name": "[].price",
+                  "type": "number",
+                  "required": true,
+                  "description": "Menu item price."
+                },
+                {
+                  "name": "[].category",
+                  "type": "string",
+                  "required": false,
+                  "description": "Menu category name."
+                },
+                {
+                  "name": "[].vendor.id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Vendor id."
+                },
+                {
+                  "name": "[].vendor.name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Vendor name."
+                },
+                {
+                  "name": "[].recommendation.score",
+                  "type": "number",
+                  "required": true,
+                  "description": "Recommendation score in range 0-1."
+                }
+              ]
+            }
+          },
+          {
+            "id": "vendor.profile.get",
+            "method": "GET",
+            "path": "/api/v1/vendor-ops/profile",
+            "owner": "vendor_app",
+            "auth": "vendor",
+            "response": {
+              "description": "Current vendor profile payload.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Vendor id."
+                },
+                {
+                  "name": "name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Vendor name."
+                },
+                {
+                  "name": "owner_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Owner id."
+                }
+              ]
+            }
+          },
+          {
+            "id": "vendor.stats.get",
+            "method": "GET",
+            "path": "/api/v1/vendor-ops/stats",
+            "owner": "vendor_app",
+            "auth": "vendor",
+            "response": {
+              "description": "Vendor dashboard metrics payload.",
+              "fields": [
+                {
+                  "name": "total_orders",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total orders count."
+                },
+                {
+                  "name": "pending_orders",
+                  "type": "number",
+                  "required": true,
+                  "description": "Pending orders count."
+                },
+                {
+                  "name": "revenue",
+                  "type": "number",
+                  "required": true,
+                  "description": "Revenue sum."
+                }
+              ]
+            }
+          },
+          {
+            "id": "addresses.list",
+            "method": "GET",
+            "path": "/api/v1/addresses",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "Customer saved addresses list.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Address id."
+                },
+                {
+                  "name": "[].label",
+                  "type": "string",
+                  "required": true,
+                  "description": "Address label."
+                },
+                {
+                  "name": "[].address_line",
+                  "type": "string",
+                  "required": true,
+                  "description": "Address body."
+                }
+              ]
+            }
+          },
+          {
+            "id": "payments.create_order",
+            "method": "POST",
+            "path": "/api/v1/payments/create-order",
+            "owner": "user_app",
+            "auth": "user",
+            "request": {
+              "description": "Create Razorpay order request.",
+              "fields": [
+                {
+                  "name": "amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Amount in paise."
+                }
+              ]
+            },
+            "response": {
+              "description": "Payment order payload.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string",
+                  "required": true,
+                  "description": "Razorpay order id."
+                },
+                {
+                  "name": "amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Order amount."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.order.cancel",
+            "method": "PATCH",
+            "path": "/api/v1/admin/orders/:id/cancel",
+            "owner": "admin_app",
+            "auth": "admin",
+            "request": {
+              "description": "Cancel an order on behalf of the platform. A reason is required and recorded in the audit log.",
+              "fields": [
+                {
+                  "name": "reason",
+                  "type": "string",
+                  "required": true,
+                  "description": "Justification for the cancellation (min 10 characters)."
+                }
+              ]
+            },
+            "response": {
+              "description": "Cancellation confirmation message.",
+              "fields": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "required": true,
+                  "description": "Success message."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.finance.payouts.export",
+            "method": "GET",
+            "path": "/api/v1/admin/finance/payouts/export",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "CSV export payload for vendor payouts.",
+              "fields": [
+                {
+                  "name": "csv",
+                  "type": "string",
+                  "required": true,
+                  "description": "CSV text body."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.orders.list",
+            "method": "GET",
+            "path": "/api/v1/admin/orders",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin paginated order listing.",
+              "fields": [
+                {
+                  "name": "orders",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Order collection."
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page number."
+                },
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page size used for query."
+                },
+                {
+                  "name": "total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total records."
+                },
+                {
+                  "name": "meta.page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page number."
+                },
+                {
+                  "name": "meta.limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page size."
+                },
+                {
+                  "name": "meta.total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total matching records."
+                },
+                {
+                  "name": "meta.totalPages",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total page count."
+                },
+                {
+                  "name": "meta.hasNextPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether next page exists."
+                },
+                {
+                  "name": "meta.hasPreviousPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether previous page exists."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.vendor.reject",
+            "method": "PATCH",
+            "path": "/api/v1/admin/vendors/:id/reject",
+            "owner": "admin_app",
+            "auth": "admin",
+            "request": {
+              "description": "Reject a pending vendor application. A reason is required and recorded in the audit log.",
+              "fields": [
+                {
+                  "name": "reason",
+                  "type": "string",
+                  "required": true,
+                  "description": "Justification for the rejection (min 10 characters)."
+                }
+              ]
+            },
+            "response": {
+              "description": "Rejection confirmation message.",
+              "fields": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "required": true,
+                  "description": "Success message."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.vendors.pending.list",
+            "method": "GET",
+            "path": "/api/v1/admin/vendors/pending",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin paginated pending vendor approvals list.",
+              "fields": [
+                {
+                  "name": "vendors",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Pending vendors collection."
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page number."
+                },
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page size used for query."
+                },
+                {
+                  "name": "total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total records."
+                },
+                {
+                  "name": "meta.page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page number."
+                },
+                {
+                  "name": "meta.limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page size."
+                },
+                {
+                  "name": "meta.total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total matching records."
+                },
+                {
+                  "name": "meta.totalPages",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total page count."
+                },
+                {
+                  "name": "meta.hasNextPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether next page exists."
+                },
+                {
+                  "name": "meta.hasPreviousPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether previous page exists."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.user.block",
+            "method": "PATCH",
+            "path": "/api/v1/admin/users/:id/block",
+            "owner": "admin_app",
+            "auth": "admin",
+            "request": {
+              "description": "Block or unblock a user account. When blocking, a reason is required and recorded in the audit log.",
+              "fields": [
+                {
+                  "name": "blocked",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "True to block, false to unblock."
+                },
+                {
+                  "name": "reason",
+                  "type": "string",
+                  "required": false,
+                  "description": "Required when blocked=true. Justification for the block (min 10 characters)."
+                }
+              ]
+            },
+            "response": {
+              "description": "Block status confirmation message.",
+              "fields": [
+                {
+                  "name": "message",
+                  "type": "string",
+                  "required": true,
+                  "description": "Success message."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.users.list",
+            "method": "GET",
+            "path": "/api/v1/admin/users",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin paginated user listing.",
+              "fields": [
+                {
+                  "name": "users",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Users collection."
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page number."
+                },
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page size used for query."
+                },
+                {
+                  "name": "total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total records."
+                },
+                {
+                  "name": "meta.page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page number."
+                },
+                {
+                  "name": "meta.limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page size."
+                },
+                {
+                  "name": "meta.total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total matching records."
+                },
+                {
+                  "name": "meta.totalPages",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total page count."
+                },
+                {
+                  "name": "meta.hasNextPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether next page exists."
+                },
+                {
+                  "name": "meta.hasPreviousPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether previous page exists."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.audit.list",
+            "method": "GET",
+            "path": "/api/v1/admin/audit",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin audit log feed. Each entry now includes a reason field for sensitive actions.",
+              "fields": [
+                {
+                  "name": "logs",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Audit rows."
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page number."
+                },
+                {
+                  "name": "limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Page size used for query."
+                },
+                {
+                  "name": "total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total records."
+                },
+                {
+                  "name": "meta.page",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page number."
+                },
+                {
+                  "name": "meta.limit",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current page size."
+                },
+                {
+                  "name": "meta.total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total matching records."
+                },
+                {
+                  "name": "meta.totalPages",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total page count."
+                },
+                {
+                  "name": "meta.hasNextPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether next page exists."
+                },
+                {
+                  "name": "meta.hasPreviousPage",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Whether previous page exists."
+                }
+              ]
+            }
+          },
+          {
+            "id": "orders.slots.get",
+            "method": "GET",
+            "path": "/api/v1/orders/slots",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "Available delivery time slots for scheduled orders.",
+              "fields": [
+                {
+                  "name": "days",
+                  "type": "number",
+                  "required": true,
+                  "description": "Days of slots returned."
+                },
+                {
+                  "name": "slot_minutes",
+                  "type": "number",
+                  "required": true,
+                  "description": "Slot size in minutes."
+                },
+                {
+                  "name": "slots",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Slot list with start/end timestamps."
+                }
+              ]
+            }
+          },
+          {
+            "id": "orders.handoff.update",
+            "method": "PATCH",
+            "path": "/api/v1/orders/:id/handoff",
+            "owner": "vendor_app",
+            "auth": "vendor",
+            "request": {
+              "description": "Update handoff status for class delivery. Proof URL is required for delivered/failed states and may be geofence-validated.",
+              "fields": [
+                {
+                  "name": "status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Handoff status: pending|arrived_building|arrived_class|delivered|failed."
+                },
+                {
+                  "name": "proof_url",
+                  "type": "string",
+                  "required": false,
+                  "description": "Proof URL (required for delivered/failed)."
+                }
+              ]
+            },
+            "response": {
+              "description": "Updated order record with handoff status.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Order id."
+                },
+                {
+                  "name": "handoff_status",
+                  "type": "string",
+                  "required": true,
+                  "description": "Updated handoff status."
+                }
+              ]
+            }
+          },
+          {
+            "id": "notifications.list",
+            "method": "GET",
+            "path": "/api/v1/notifications",
+            "owner": "shared",
+            "auth": "authenticated",
+            "response": {
+              "description": "Notification feed for the authenticated principal.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Notification id."
+                },
+                {
+                  "name": "[].title",
+                  "type": "string",
+                  "required": true,
+                  "description": "Notification title."
+                },
+                {
+                  "name": "[].body",
+                  "type": "string",
+                  "required": true,
+                  "description": "Notification body."
+                },
+                {
+                  "name": "[].type",
+                  "type": "string",
+                  "required": false,
+                  "description": "Notification type tag."
+                },
+                {
+                  "name": "[].metadata",
+                  "type": "object",
+                  "required": false,
+                  "description": "Metadata payload."
+                },
+                {
+                  "name": "[].is_read",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Read state."
+                }
+              ]
+            }
+          },
+          {
+            "id": "notifications.read",
+            "method": "PATCH",
+            "path": "/api/v1/notifications/:id/read",
+            "owner": "shared",
+            "auth": "authenticated",
+            "response": {
+              "description": "Mark notification as read.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Notification id."
+                },
+                {
+                  "name": "is_read",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Updated read flag."
+                }
+              ]
+            }
+          },
+          {
+            "id": "notifications.device.register",
+            "method": "POST",
+            "path": "/api/v1/notifications/device",
+            "owner": "shared",
+            "auth": "authenticated",
+            "request": {
+              "description": "Register a device token for push delivery.",
+              "fields": [
+                {
+                  "name": "token",
+                  "type": "string",
+                  "required": true,
+                  "description": "Device token string."
+                },
+                {
+                  "name": "platform",
+                  "type": "string",
+                  "required": false,
+                  "description": "Platform label."
+                }
+              ]
+            },
+            "response": {
+              "description": "Device token registration record.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Device token id."
+                },
+                {
+                  "name": "token",
+                  "type": "string",
+                  "required": true,
+                  "description": "Registered token."
+                }
+              ]
+            }
+          },
+          {
+            "id": "notifications.device.remove",
+            "method": "DELETE",
+            "path": "/api/v1/notifications/device",
+            "owner": "shared",
+            "auth": "authenticated",
+            "request": {
+              "description": "Remove a device token.",
+              "fields": [
+                {
+                  "name": "token",
+                  "type": "string",
+                  "required": true,
+                  "description": "Device token string."
+                }
+              ]
+            },
+            "response": {
+              "description": "Removal acknowledgement.",
+              "fields": [
+                {
+                  "name": "success",
+                  "type": "boolean",
+                  "required": true,
+                  "description": "Removal success flag."
+                }
+              ]
+            }
+          },
+          {
+            "id": "promos.active.list",
+            "method": "GET",
+            "path": "/api/v1/promos/active",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "Active promo codes available to users.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Promo id."
+                },
+                {
+                  "name": "[].code",
+                  "type": "string",
+                  "required": true,
+                  "description": "Promo code."
+                },
+                {
+                  "name": "[].discount_type",
+                  "type": "string",
+                  "required": true,
+                  "description": "Discount type."
+                },
+                {
+                  "name": "[].discount_value",
+                  "type": "number",
+                  "required": true,
+                  "description": "Discount value."
+                }
+              ]
+            }
+          },
+          {
+            "id": "promos.validate",
+            "method": "POST",
+            "path": "/api/v1/promos/validate",
+            "owner": "user_app",
+            "auth": "user",
+            "request": {
+              "description": "Validate promo code against order total.",
+              "fields": [
+                {
+                  "name": "code",
+                  "type": "string",
+                  "required": true,
+                  "description": "Promo code."
+                },
+                {
+                  "name": "order_total",
+                  "type": "number",
+                  "required": true,
+                  "description": "Current order total."
+                }
+              ]
+            },
+            "response": {
+              "description": "Validated promo response.",
+              "fields": [
+                {
+                  "name": "promo_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Promo id."
+                },
+                {
+                  "name": "discount_amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Discount amount."
+                },
+                {
+                  "name": "final_amount",
+                  "type": "number",
+                  "required": true,
+                  "description": "Total after discount."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.promos.list",
+            "method": "GET",
+            "path": "/api/v1/admin/promos",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin promo listing.",
+              "fields": [
+                {
+                  "name": "[]",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Promo records."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.promos.create",
+            "method": "POST",
+            "path": "/api/v1/admin/promos",
+            "owner": "admin_app",
+            "auth": "admin",
+            "request": {
+              "description": "Create a promo code.",
+              "fields": [
+                {
+                  "name": "code",
+                  "type": "string",
+                  "required": true,
+                  "description": "Promo code."
+                },
+                {
+                  "name": "discount_type",
+                  "type": "string",
+                  "required": true,
+                  "description": "Discount type."
+                },
+                {
+                  "name": "discount_value",
+                  "type": "number",
+                  "required": true,
+                  "description": "Discount value."
+                }
+              ]
+            },
+            "response": {
+              "description": "Promo record.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Promo id."
+                },
+                {
+                  "name": "code",
+                  "type": "string",
+                  "required": true,
+                  "description": "Promo code."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.promos.update",
+            "method": "PATCH",
+            "path": "/api/v1/admin/promos/:id",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Updated promo record.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Promo id."
+                },
+                {
+                  "name": "is_active",
+                  "type": "boolean",
+                  "required": false,
+                  "description": "Active state."
+                }
+              ]
+            }
+          },
+          {
+            "id": "campus.buildings.public",
+            "method": "GET",
+            "path": "/api/v1/public/buildings",
+            "owner": "user_app",
+            "auth": "public",
+            "response": {
+              "description": "Public list of active campus buildings.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Building id."
+                },
+                {
+                  "name": "[].name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Building name."
+                },
+                {
+                  "name": "[].latitude",
+                  "type": "number",
+                  "required": false,
+                  "description": "Latitude."
+                },
+                {
+                  "name": "[].longitude",
+                  "type": "number",
+                  "required": false,
+                  "description": "Longitude."
+                }
+              ]
+            }
+          },
+          {
+            "id": "campus.zones.public",
+            "method": "GET",
+            "path": "/api/v1/public/zones",
+            "owner": "user_app",
+            "auth": "public",
+            "response": {
+              "description": "Public list of active delivery zones.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Zone id."
+                },
+                {
+                  "name": "[].name",
+                  "type": "string",
+                  "required": true,
+                  "description": "Zone name."
+                },
+                {
+                  "name": "[].building_id",
+                  "type": "string(uuid)",
+                  "required": false,
+                  "description": "Associated building."
+                }
+              ]
+            }
+          },
+          {
+            "id": "class.sessions.list",
+            "method": "GET",
+            "path": "/api/v1/class-sessions",
+            "owner": "user_app",
+            "auth": "user",
+            "response": {
+              "description": "List of saved class sessions for a user.",
+              "fields": [
+                {
+                  "name": "[].id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Session id."
+                },
+                {
+                  "name": "[].building_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Building id."
+                },
+                {
+                  "name": "[].room",
+                  "type": "string",
+                  "required": true,
+                  "description": "Room label."
+                },
+                {
+                  "name": "[].starts_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Start time."
+                },
+                {
+                  "name": "[].ends_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "End time."
+                }
+              ]
+            }
+          },
+          {
+            "id": "class.sessions.create",
+            "method": "POST",
+            "path": "/api/v1/class-sessions",
+            "owner": "user_app",
+            "auth": "user",
+            "request": {
+              "description": "Create a class session.",
+              "fields": [
+                {
+                  "name": "building_id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Building id."
+                },
+                {
+                  "name": "room",
+                  "type": "string",
+                  "required": true,
+                  "description": "Room label."
+                },
+                {
+                  "name": "starts_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "Start time."
+                },
+                {
+                  "name": "ends_at",
+                  "type": "string(datetime)",
+                  "required": false,
+                  "description": "End time."
+                }
+              ]
+            },
+            "response": {
+              "description": "Created class session.",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "string(uuid)",
+                  "required": true,
+                  "description": "Session id."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.campus.buildings.list",
+            "method": "GET",
+            "path": "/api/v1/admin/campus/buildings",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin list of campus buildings.",
+              "fields": [
+                {
+                  "name": "[]",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Building records."
+                }
+              ]
+            }
+          },
+          {
+            "id": "admin.campus.zones.list",
+            "method": "GET",
+            "path": "/api/v1/admin/campus/zones",
+            "owner": "admin_app",
+            "auth": "admin",
+            "response": {
+              "description": "Admin list of delivery zones.",
+              "fields": [
+                {
+                  "name": "[]",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Zone records."
+                }
+              ]
+            }
+          },
+          {
+            "id": "contracts.registry.get",
+            "method": "GET",
+            "path": "/api/v1/contracts/registry",
+            "owner": "shared",
+            "auth": "public",
+            "response": {
+              "description": "Canonical contract registry payload.",
+              "fields": [
+                {
+                  "name": "version",
+                  "type": "string",
+                  "required": true,
+                  "description": "Registry version."
+                },
+                {
+                  "name": "endpoints",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Endpoint contract list."
+                }
+              ]
+            }
+          },
+          {
+            "id": "contracts.changelog.get",
+            "method": "GET",
+            "path": "/api/v1/contracts/changelog",
+            "owner": "shared",
+            "auth": "public",
+            "response": {
+              "description": "Versioned contract changelog feed.",
+              "fields": [
+                {
+                  "name": "version",
+                  "type": "string",
+                  "required": true,
+                  "description": "Current contract version."
+                },
+                {
+                  "name": "changes",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Chronological contract change list."
+                }
+              ]
+            }
+          },
+          {
+            "id": "contracts.flags.get",
+            "method": "GET",
+            "path": "/api/v1/contracts/flags",
+            "owner": "shared",
+            "auth": "public",
+            "response": {
+              "description": "Feature flags for staged contract adoption.",
+              "fields": [
+                {
+                  "name": "flags",
+                  "type": "array<object>",
+                  "required": true,
+                  "description": "Contract feature flags."
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "contracts.changelog",
+      "role": "public",
+      "method": "GET",
+      "path": "/contracts/changelog",
+      "url": "https://swift-campus.vercel.app/api/v1/contracts/changelog",
+      "status": 200,
+      "ok": true,
+      "durationMs": 396,
+      "responseBody": {
+        "version": "2026.03.s11.3",
+        "count": 28,
+        "changes": [
+          {
+            "id": "chg-2026-03-20-30",
+            "version": "2026.03.s11.3",
+            "timestamp": "2026-03-20T10:05:00.000Z",
+            "changeType": "added",
+            "endpointId": "public.recommendations.list",
+            "summary": "Added backend-ranked recommended food items endpoint for user home feed.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-29",
+            "version": "2026.03.s11.2",
+            "timestamp": "2026-03-19T14:10:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.handoff.update",
+            "summary": "Handoff updates now enforce proof for delivered/failed states and may validate geofence alignment.",
+            "consumers": [
+              "vendor_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-28",
+            "version": "2026.03.s11.1",
+            "timestamp": "2026-03-19T13:30:00.000Z",
+            "changeType": "added",
+            "endpointId": "orders.handoff.update",
+            "summary": "Added vendor handoff status update endpoint for class delivery workflows.",
+            "consumers": [
+              "vendor_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-27",
+            "version": "2026.03.s11.0",
+            "timestamp": "2026-03-19T13:10:00.000Z",
+            "changeType": "added",
+            "endpointId": "campus.buildings.public",
+            "summary": "Added campus buildings and delivery zones endpoints for delivery-to-class flows.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-26",
+            "version": "2026.03.s11.0",
+            "timestamp": "2026-03-19T13:05:00.000Z",
+            "changeType": "added",
+            "endpointId": "class.sessions.list",
+            "summary": "Added class session CRUD endpoints for user schedules.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-25",
+            "version": "2026.03.s11.0",
+            "timestamp": "2026-03-19T13:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.create",
+            "summary": "Order create now supports delivery-to-class metadata and handoff fields.",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-24",
+            "version": "2026.03.s11.0",
+            "timestamp": "2026-03-19T12:55:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.my.list",
+            "summary": "Order list payloads now include delivery-to-class fields.",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-21",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:30:00.000Z",
+            "changeType": "updated",
+            "endpointId": "vendor.orders.list",
+            "summary": "Vendor order queue now includes scheduled fulfillment and promo discount fields.",
+            "consumers": [
+              "vendor_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-20",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:25:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.my.list",
+            "summary": "User order list now returns promo and scheduling fields.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-19",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:20:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.create",
+            "summary": "Order create now accepts promo_code and scheduled_for and returns discount fields.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-18",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:15:00.000Z",
+            "changeType": "added",
+            "endpointId": "promos.validate",
+            "summary": "Added promo validation and admin promo management endpoints.",
+            "consumers": [
+              "user_app",
+              "admin_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-17",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:10:00.000Z",
+            "changeType": "added",
+            "endpointId": "notifications.list",
+            "summary": "Added notification feed, read, and device token registration endpoints.",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-16",
+            "version": "2026.03.s10.0",
+            "timestamp": "2026-03-19T12:05:00.000Z",
+            "changeType": "added",
+            "endpointId": "orders.slots.get",
+            "summary": "Added scheduled order slot discovery endpoint.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-15",
+            "version": "2026.03.s9.0",
+            "timestamp": "2026-03-19T10:10:00.000Z",
+            "changeType": "updated",
+            "endpointId": "public.search.global",
+            "summary": "Aligned search contract response to menu item list with embedded vendor info.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-14",
+            "version": "2026.03.s9.0",
+            "timestamp": "2026-03-19T10:00:00.000Z",
+            "changeType": "added",
+            "endpointId": "orders.cancel",
+            "summary": "Added customer order cancellation endpoint for pending/accepted orders.",
+            "consumers": [
+              "user_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-19-13",
+            "version": "2026.03.s9.0",
+            "timestamp": "2026-03-19T09:45:00.000Z",
+            "changeType": "added",
+            "endpointId": "admin.finance.payouts.export",
+            "summary": "Added CSV export endpoint for admin payout reporting.",
+            "consumers": [
+              "admin_app",
+              "shared"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-12",
+            "version": "2026.03.s8.3",
+            "timestamp": "2026-03-15T21:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.create",
+            "summary": "RBAC parity hardening now scopes customer mutations (orders, addresses, payments, reviews) to user-role tokens only, requires vendor/admin role for delivery location updates, and rejects non-vendor sessions during vendor_app restore/login.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-11",
+            "version": "2026.03.s8.2",
+            "timestamp": "2026-03-15T20:00:00.000Z",
+            "changeType": "added",
+            "endpointId": "admin.user.block",
+            "summary": "Sensitive admin actions (block user, reject vendor, cancel order) now require an explicit reason that is recorded in the audit log. Audit log response includes new reason field. Three new endpoint contracts registered: admin.user.block, admin.vendor.reject, admin.order.cancel.",
+            "consumers": [
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-10",
+            "version": "2026.03.s8.1",
+            "timestamp": "2026-03-15T18:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "auth.session.create",
+            "summary": "Auth middleware now enforces blocked/banned account denial with 403 and supports request-trace observability headers for admin consumers.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-09",
+            "version": "2026.03.s6.1",
+            "timestamp": "2026-03-15T15:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "vendor.orders.list",
+            "summary": "Vendor order queue now includes pacing metadata (elapsed/target/recommended prep minutes plus sla_risk and pace_label).",
+            "consumers": [
+              "shared",
+              "vendor_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-07",
+            "version": "2026.03.s5.1",
+            "timestamp": "2026-03-15T13:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.create",
+            "summary": "Order create response now includes ETA confidence envelope (eta.min_minutes/max_minutes/confidence).",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-08",
+            "version": "2026.03.s5.1",
+            "timestamp": "2026-03-15T13:10:00.000Z",
+            "changeType": "updated",
+            "endpointId": "orders.my.list",
+            "summary": "User order listing now includes ETA confidence envelope for trust-surface rendering in clients.",
+            "consumers": [
+              "shared",
+              "user_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-04",
+            "version": "2026.03.s4.1",
+            "timestamp": "2026-03-15T11:00:00.000Z",
+            "changeType": "updated",
+            "endpointId": "admin.orders.list",
+            "summary": "Standardized pagination metadata (meta.page/limit/total/totalPages/hasNextPage/hasPreviousPage) in admin list responses.",
+            "consumers": [
+              "shared",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-05",
+            "version": "2026.03.s4.1",
+            "timestamp": "2026-03-15T11:10:00.000Z",
+            "changeType": "added",
+            "endpointId": "admin.vendors.pending.list",
+            "summary": "Added pending vendors paginated response contract metadata.",
+            "consumers": [
+              "shared",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-06",
+            "version": "2026.03.s4.1",
+            "timestamp": "2026-03-15T11:20:00.000Z",
+            "changeType": "updated",
+            "endpointId": "contracts.flags.get",
+            "summary": "Introduced retry/backoff, request-cancellation, and contracts-feed caching rollout flags for app consumers.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-01",
+            "version": "2026.03.s3.2",
+            "timestamp": "2026-03-15T09:00:00.000Z",
+            "changeType": "added",
+            "endpointId": "contracts.flags.get",
+            "summary": "Added contracts feature-flags endpoint for staged rollout control.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-02",
+            "version": "2026.03.s3.2",
+            "timestamp": "2026-03-15T09:15:00.000Z",
+            "changeType": "added",
+            "endpointId": "contracts.changelog.get",
+            "summary": "Added changelog feed endpoint for consumer-side compatibility checks.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "id": "chg-2026-03-15-03",
+            "version": "2026.03.s3.2",
+            "timestamp": "2026-03-15T09:30:00.000Z",
+            "changeType": "updated",
+            "endpointId": "error.envelope.standard",
+            "summary": "Standardized error taxonomy mapping across 400/401/403/404/409/500 envelopes.",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "contracts.flags",
+      "role": "public",
+      "method": "GET",
+      "path": "/contracts/flags",
+      "url": "https://swift-campus.vercel.app/api/v1/contracts/flags",
+      "status": 200,
+      "ok": true,
+      "durationMs": 319,
+      "responseBody": {
+        "version": "2026.03.s11.3",
+        "count": 11,
+        "flags": [
+          {
+            "key": "security.blocked_session_enforcement.v1",
+            "enabled": true,
+            "description": "Enforces blocked/banned account denial at auth middleware and propagates request-trace metadata for admin observability.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "security.role_scope_enforcement.v1",
+            "enabled": true,
+            "description": "Enforces dedicated role scopes for customer mutations, vendor operational updates, and vendor_app session restoration/login flows.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "security.sensitive_action_reason.v1",
+            "enabled": true,
+            "description": "Requires admin operators to provide an explicit reason for sensitive actions (block user, reject vendor, cancel order) before they are executed and recorded in the audit log.",
+            "rollout": "global",
+            "consumers": [
+              "admin_app"
+            ]
+          },
+          {
+            "key": "vendor.pacing_assist.v1",
+            "enabled": true,
+            "description": "Enables pacing metadata on vendor order queue responses for prep-time assist and SLA risk surfaces.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "vendor_app"
+            ]
+          },
+          {
+            "key": "orders.eta_confidence.v1",
+            "enabled": true,
+            "description": "Enables ETA confidence envelope on order create/list responses for checkout and tracking trust surfaces.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "reliability.retry_backoff.v1",
+            "enabled": true,
+            "description": "Enables bounded retry with incremental backoff for retryable API failures in app consumers.",
+            "rollout": "global",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "reliability.request_cancellation.v1",
+            "enabled": true,
+            "description": "Enables in-flight request cancellation and GET dedupe for superseded client requests.",
+            "rollout": "global",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "contracts.feed_cache.v1",
+            "enabled": true,
+            "description": "Enables short-lived contracts feed caching for registry/changelog/flags reads.",
+            "rollout": "staged",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "contracts.registry.expanded",
+            "enabled": true,
+            "description": "Enables expanded endpoint coverage in contracts registry feed.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "contracts.error_taxonomy.v2",
+            "enabled": true,
+            "description": "Enforces standardized error taxonomy envelope in API responses.",
+            "rollout": "global",
+            "consumers": [
+              "shared",
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          },
+          {
+            "key": "contracts.consumer.assertions",
+            "enabled": true,
+            "description": "Allows consumers to execute strict DTO assertions using registry metadata.",
+            "rollout": "staged",
+            "consumers": [
+              "user_app",
+              "vendor_app",
+              "admin_app"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "public.vendors",
+      "role": "public",
+      "method": "GET",
+      "path": "/public/vendors",
+      "url": "https://swift-campus.vercel.app/api/v1/public/vendors",
+      "status": 200,
+      "ok": true,
+      "durationMs": 589,
+      "responseBody": [
+        {
+          "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "owner_id": "f9994a91-ca34-4f1f-8439-6b4c5268d26a",
+          "name": "Annapoorna Bhavan",
+          "description": "Traditional South Indian vegetarian breakfast and meals.",
+          "is_open": true,
+          "image_url": null,
+          "created_at": "2026-03-08T04:53:08.732784+00:00"
+        },
+        {
+          "id": "cf3aa289-0dc9-469b-812a-315cba07ea63",
+          "owner_id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+          "name": "Demo Vendor",
+          "description": "Demo vendor account",
+          "is_open": true,
+          "image_url": null,
+          "created_at": "2026-03-20T05:05:00.542136+00:00"
+        },
+        {
+          "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+          "owner_id": "18cbb3d3-5ef4-493f-9500-db8383263bb6",
+          "name": "Karaikudi Spice",
+          "description": "Authentic Chettinad non-vegetarian specialties.",
+          "is_open": true,
+          "image_url": null,
+          "created_at": "2026-03-08T04:53:09.094076+00:00"
+        },
+        {
+          "id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+          "owner_id": "8c921d6c-b035-4aee-b5f8-bf1e62445a54",
+          "name": "Madurai Bun Parotta",
+          "description": "Famous Madurai street food and parotta varieties.",
+          "is_open": true,
+          "image_url": null,
+          "created_at": "2026-03-08T04:53:09.456835+00:00"
+        }
+      ]
+    },
+    {
+      "id": "public.search",
+      "role": "public",
+      "method": "GET",
+      "path": "/public/search?q=rice",
+      "url": "https://swift-campus.vercel.app/api/v1/public/search?q=rice",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1164,
+      "responseBody": [
+        {
+          "id": "b37753aa-124a-44cb-9846-1faef8036407",
+          "name": "Egg Biryani",
+          "description": "Biryani rice served with boiled eggs.",
+          "price": 180,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_b37753aa.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        },
+        {
+          "id": "615eb639-3472-441f-9724-a0814e5791e7",
+          "name": "Prawn Biryani",
+          "description": "Aromatic rice with spiced prawns.",
+          "price": 380,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_615eb639.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        },
+        {
+          "id": "c904f0c7-ef63-4b14-9a44-4e1166f6e038",
+          "name": "Fish Biryani",
+          "description": "Delicate fish pieces layered with rice.",
+          "price": 350,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_c904f0c7.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        },
+        {
+          "id": "33ebe078-dddd-4c86-819b-ad415bb409d1",
+          "name": "Pongal",
+          "description": "Creamy rice and lentil mash tempered with pepper and cumin.",
+          "price": 70,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_33ebe078.jpg",
+          "vendor": {
+            "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+            "name": "Annapoorna Bhavan",
+            "image_url": null,
+            "description": "Traditional South Indian vegetarian breakfast and meals."
+          }
+        },
+        {
+          "id": "069a0d26-fe4c-4dd9-a1da-3c4054680b9f",
+          "name": "Appam with Coconut Milk",
+          "description": "Fermented rice pancakes with sweet coconut milk.",
+          "price": 80,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_069a0d26.jpg",
+          "vendor": {
+            "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+            "name": "Annapoorna Bhavan",
+            "image_url": null,
+            "description": "Traditional South Indian vegetarian breakfast and meals."
+          }
+        },
+        {
+          "id": "e4573c99-5dee-4008-9bc8-c5953012a6ed",
+          "name": "Ada Pradhaman",
+          "description": "Traditional kheer with rice flakes and jaggery.",
+          "price": 90,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_e4573c99.jpg",
+          "vendor": {
+            "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+            "name": "Annapoorna Bhavan",
+            "image_url": null,
+            "description": "Traditional South Indian vegetarian breakfast and meals."
+          }
+        },
+        {
+          "id": "eaaa9a40-2e7e-421d-8095-aa79417379ce",
+          "name": "Veg Biryani",
+          "description": "Fresh garden vegetables cooked with biryani rice.",
+          "price": 160,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_eaaa9a40.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        },
+        {
+          "id": "cd3cf701-b224-4eb5-8a17-520445568e69",
+          "name": "Jeera Rice",
+          "description": "Basmati rice tempered with cumin.",
+          "price": 140,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_cd3cf701.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        },
+        {
+          "id": "f5edf811-2ada-481a-9add-cfa45853db77",
+          "name": "Curd Rice",
+          "description": "Tempered yogurt rice with pomegranate.",
+          "price": 80,
+          "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_f5edf811.jpg",
+          "vendor": {
+            "id": "d4e5f2e5-e1a1-4fef-92e5-a821e44b45f7",
+            "name": "Karaikudi Spice",
+            "image_url": null,
+            "description": "Authentic Chettinad non-vegetarian specialties."
+          }
+        }
+      ]
+    },
+    {
+      "id": "public.recommendations",
+      "role": "public",
+      "method": "GET",
+      "path": "/public/recommendations?limit=10",
+      "url": "https://swift-campus.vercel.app/api/v1/public/recommendations?limit=10",
+      "status": 500,
+      "ok": false,
+      "durationMs": 921,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "public.buildings",
+      "role": "public",
+      "method": "GET",
+      "path": "/public/buildings",
+      "url": "https://swift-campus.vercel.app/api/v1/public/buildings",
+      "status": 401,
+      "ok": false,
+      "durationMs": 360,
+      "responseBody": {
+        "error": "Unauthorized",
+        "message": "Missing authorization header"
+      }
+    },
+    {
+      "id": "public.zones",
+      "role": "public",
+      "method": "GET",
+      "path": "/public/zones",
+      "url": "https://swift-campus.vercel.app/api/v1/public/zones",
+      "status": 401,
+      "ok": false,
+      "durationMs": 301,
+      "responseBody": {
+        "error": "Unauthorized",
+        "message": "Missing authorization header"
+      }
+    },
+    {
+      "id": "auth.me.user",
+      "role": "user",
+      "method": "GET",
+      "path": "/auth/me",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/me",
+      "status": 200,
+      "ok": true,
+      "durationMs": 876,
+      "responseBody": {
+        "user": {
+          "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+          "email": "demo.user@swift.com",
+          "role": "user",
+          "name": "demo.user",
+          "profile": {}
+        }
+      }
+    },
+    {
+      "id": "auth.me.vendor",
+      "role": "vendor",
+      "method": "GET",
+      "path": "/auth/me",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/me",
+      "status": 200,
+      "ok": true,
+      "durationMs": 873,
+      "responseBody": {
+        "user": {
+          "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+          "email": "demo.vendor@swift.com",
+          "role": "vendor",
+          "name": "demo.vendor",
+          "profile": {}
+        }
+      }
+    },
+    {
+      "id": "auth.me.admin",
+      "role": "admin",
+      "method": "GET",
+      "path": "/auth/me",
+      "url": "https://swift-campus.vercel.app/api/v1/auth/me",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1326,
+      "responseBody": {
+        "user": {
+          "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+          "role": "admin",
+          "name": "Demo Admin",
+          "email": "demo.admin@swift.com",
+          "phone": null,
+          "campus_id": null,
+          "created_at": "2026-03-18T05:46:29.022091+00:00",
+          "profile": {}
+        }
+      }
+    },
+    {
+      "id": "orders.slots",
+      "role": "user",
+      "method": "GET",
+      "path": "/orders/slots",
+      "url": "https://swift-campus.vercel.app/api/v1/orders/slots",
+      "status": 200,
+      "ok": true,
+      "durationMs": 642,
+      "responseBody": {
+        "days": 3,
+        "slot_minutes": 30,
+        "slots": [
+          {
+            "starts_at": "2026-03-20T10:00:00.000Z",
+            "ends_at": "2026-03-20T10:30:00.000Z",
+            "label": "10:00 AM - 10:30 AM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T10:30:00.000Z",
+            "ends_at": "2026-03-20T11:00:00.000Z",
+            "label": "10:30 AM - 11:00 AM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T11:00:00.000Z",
+            "ends_at": "2026-03-20T11:30:00.000Z",
+            "label": "11:00 AM - 11:30 AM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T11:30:00.000Z",
+            "ends_at": "2026-03-20T12:00:00.000Z",
+            "label": "11:30 AM - 12:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T12:00:00.000Z",
+            "ends_at": "2026-03-20T12:30:00.000Z",
+            "label": "12:00 PM - 12:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T12:30:00.000Z",
+            "ends_at": "2026-03-20T13:00:00.000Z",
+            "label": "12:30 PM - 01:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T13:00:00.000Z",
+            "ends_at": "2026-03-20T13:30:00.000Z",
+            "label": "01:00 PM - 01:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T13:30:00.000Z",
+            "ends_at": "2026-03-20T14:00:00.000Z",
+            "label": "01:30 PM - 02:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T14:00:00.000Z",
+            "ends_at": "2026-03-20T14:30:00.000Z",
+            "label": "02:00 PM - 02:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T14:30:00.000Z",
+            "ends_at": "2026-03-20T15:00:00.000Z",
+            "label": "02:30 PM - 03:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T15:00:00.000Z",
+            "ends_at": "2026-03-20T15:30:00.000Z",
+            "label": "03:00 PM - 03:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T15:30:00.000Z",
+            "ends_at": "2026-03-20T16:00:00.000Z",
+            "label": "03:30 PM - 04:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T16:00:00.000Z",
+            "ends_at": "2026-03-20T16:30:00.000Z",
+            "label": "04:00 PM - 04:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T16:30:00.000Z",
+            "ends_at": "2026-03-20T17:00:00.000Z",
+            "label": "04:30 PM - 05:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T17:00:00.000Z",
+            "ends_at": "2026-03-20T17:30:00.000Z",
+            "label": "05:00 PM - 05:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T17:30:00.000Z",
+            "ends_at": "2026-03-20T18:00:00.000Z",
+            "label": "05:30 PM - 06:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T18:00:00.000Z",
+            "ends_at": "2026-03-20T18:30:00.000Z",
+            "label": "06:00 PM - 06:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T18:30:00.000Z",
+            "ends_at": "2026-03-20T19:00:00.000Z",
+            "label": "06:30 PM - 07:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T19:00:00.000Z",
+            "ends_at": "2026-03-20T19:30:00.000Z",
+            "label": "07:00 PM - 07:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T19:30:00.000Z",
+            "ends_at": "2026-03-20T20:00:00.000Z",
+            "label": "07:30 PM - 08:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T20:00:00.000Z",
+            "ends_at": "2026-03-20T20:30:00.000Z",
+            "label": "08:00 PM - 08:30 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-20T20:30:00.000Z",
+            "ends_at": "2026-03-20T21:00:00.000Z",
+            "label": "08:30 PM - 09:00 PM",
+            "day_label": "Fri, Mar 20"
+          },
+          {
+            "starts_at": "2026-03-21T10:00:00.000Z",
+            "ends_at": "2026-03-21T10:30:00.000Z",
+            "label": "10:00 AM - 10:30 AM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T10:30:00.000Z",
+            "ends_at": "2026-03-21T11:00:00.000Z",
+            "label": "10:30 AM - 11:00 AM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T11:00:00.000Z",
+            "ends_at": "2026-03-21T11:30:00.000Z",
+            "label": "11:00 AM - 11:30 AM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T11:30:00.000Z",
+            "ends_at": "2026-03-21T12:00:00.000Z",
+            "label": "11:30 AM - 12:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T12:00:00.000Z",
+            "ends_at": "2026-03-21T12:30:00.000Z",
+            "label": "12:00 PM - 12:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T12:30:00.000Z",
+            "ends_at": "2026-03-21T13:00:00.000Z",
+            "label": "12:30 PM - 01:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T13:00:00.000Z",
+            "ends_at": "2026-03-21T13:30:00.000Z",
+            "label": "01:00 PM - 01:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T13:30:00.000Z",
+            "ends_at": "2026-03-21T14:00:00.000Z",
+            "label": "01:30 PM - 02:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T14:00:00.000Z",
+            "ends_at": "2026-03-21T14:30:00.000Z",
+            "label": "02:00 PM - 02:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T14:30:00.000Z",
+            "ends_at": "2026-03-21T15:00:00.000Z",
+            "label": "02:30 PM - 03:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T15:00:00.000Z",
+            "ends_at": "2026-03-21T15:30:00.000Z",
+            "label": "03:00 PM - 03:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T15:30:00.000Z",
+            "ends_at": "2026-03-21T16:00:00.000Z",
+            "label": "03:30 PM - 04:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T16:00:00.000Z",
+            "ends_at": "2026-03-21T16:30:00.000Z",
+            "label": "04:00 PM - 04:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T16:30:00.000Z",
+            "ends_at": "2026-03-21T17:00:00.000Z",
+            "label": "04:30 PM - 05:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T17:00:00.000Z",
+            "ends_at": "2026-03-21T17:30:00.000Z",
+            "label": "05:00 PM - 05:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T17:30:00.000Z",
+            "ends_at": "2026-03-21T18:00:00.000Z",
+            "label": "05:30 PM - 06:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T18:00:00.000Z",
+            "ends_at": "2026-03-21T18:30:00.000Z",
+            "label": "06:00 PM - 06:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T18:30:00.000Z",
+            "ends_at": "2026-03-21T19:00:00.000Z",
+            "label": "06:30 PM - 07:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T19:00:00.000Z",
+            "ends_at": "2026-03-21T19:30:00.000Z",
+            "label": "07:00 PM - 07:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T19:30:00.000Z",
+            "ends_at": "2026-03-21T20:00:00.000Z",
+            "label": "07:30 PM - 08:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T20:00:00.000Z",
+            "ends_at": "2026-03-21T20:30:00.000Z",
+            "label": "08:00 PM - 08:30 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-21T20:30:00.000Z",
+            "ends_at": "2026-03-21T21:00:00.000Z",
+            "label": "08:30 PM - 09:00 PM",
+            "day_label": "Sat, Mar 21"
+          },
+          {
+            "starts_at": "2026-03-22T10:00:00.000Z",
+            "ends_at": "2026-03-22T10:30:00.000Z",
+            "label": "10:00 AM - 10:30 AM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T10:30:00.000Z",
+            "ends_at": "2026-03-22T11:00:00.000Z",
+            "label": "10:30 AM - 11:00 AM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T11:00:00.000Z",
+            "ends_at": "2026-03-22T11:30:00.000Z",
+            "label": "11:00 AM - 11:30 AM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T11:30:00.000Z",
+            "ends_at": "2026-03-22T12:00:00.000Z",
+            "label": "11:30 AM - 12:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T12:00:00.000Z",
+            "ends_at": "2026-03-22T12:30:00.000Z",
+            "label": "12:00 PM - 12:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T12:30:00.000Z",
+            "ends_at": "2026-03-22T13:00:00.000Z",
+            "label": "12:30 PM - 01:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T13:00:00.000Z",
+            "ends_at": "2026-03-22T13:30:00.000Z",
+            "label": "01:00 PM - 01:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T13:30:00.000Z",
+            "ends_at": "2026-03-22T14:00:00.000Z",
+            "label": "01:30 PM - 02:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T14:00:00.000Z",
+            "ends_at": "2026-03-22T14:30:00.000Z",
+            "label": "02:00 PM - 02:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T14:30:00.000Z",
+            "ends_at": "2026-03-22T15:00:00.000Z",
+            "label": "02:30 PM - 03:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T15:00:00.000Z",
+            "ends_at": "2026-03-22T15:30:00.000Z",
+            "label": "03:00 PM - 03:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T15:30:00.000Z",
+            "ends_at": "2026-03-22T16:00:00.000Z",
+            "label": "03:30 PM - 04:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T16:00:00.000Z",
+            "ends_at": "2026-03-22T16:30:00.000Z",
+            "label": "04:00 PM - 04:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T16:30:00.000Z",
+            "ends_at": "2026-03-22T17:00:00.000Z",
+            "label": "04:30 PM - 05:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T17:00:00.000Z",
+            "ends_at": "2026-03-22T17:30:00.000Z",
+            "label": "05:00 PM - 05:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T17:30:00.000Z",
+            "ends_at": "2026-03-22T18:00:00.000Z",
+            "label": "05:30 PM - 06:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T18:00:00.000Z",
+            "ends_at": "2026-03-22T18:30:00.000Z",
+            "label": "06:00 PM - 06:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T18:30:00.000Z",
+            "ends_at": "2026-03-22T19:00:00.000Z",
+            "label": "06:30 PM - 07:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T19:00:00.000Z",
+            "ends_at": "2026-03-22T19:30:00.000Z",
+            "label": "07:00 PM - 07:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T19:30:00.000Z",
+            "ends_at": "2026-03-22T20:00:00.000Z",
+            "label": "07:30 PM - 08:00 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T20:00:00.000Z",
+            "ends_at": "2026-03-22T20:30:00.000Z",
+            "label": "08:00 PM - 08:30 PM",
+            "day_label": "Sun, Mar 22"
+          },
+          {
+            "starts_at": "2026-03-22T20:30:00.000Z",
+            "ends_at": "2026-03-22T21:00:00.000Z",
+            "label": "08:30 PM - 09:00 PM",
+            "day_label": "Sun, Mar 22"
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders.me",
+      "role": "user",
+      "method": "GET",
+      "path": "/orders/me",
+      "url": "https://swift-campus.vercel.app/api/v1/orders/me",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1130,
+      "responseBody": []
+    },
+    {
+      "id": "addresses.list",
+      "role": "user",
+      "method": "GET",
+      "path": "/addresses",
+      "url": "https://swift-campus.vercel.app/api/v1/addresses",
+      "status": 200,
+      "ok": true,
+      "durationMs": 869,
+      "responseBody": []
+    },
+    {
+      "id": "notifications.list",
+      "role": "user",
+      "method": "GET",
+      "path": "/notifications",
+      "url": "https://swift-campus.vercel.app/api/v1/notifications",
+      "status": 500,
+      "ok": false,
+      "durationMs": 861,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "promos.active",
+      "role": "user",
+      "method": "GET",
+      "path": "/promos/active",
+      "url": "https://swift-campus.vercel.app/api/v1/promos/active",
+      "status": 200,
+      "ok": true,
+      "durationMs": 848,
+      "responseBody": []
+    },
+    {
+      "id": "class-sessions.list",
+      "role": "user",
+      "method": "GET",
+      "path": "/class-sessions",
+      "url": "https://swift-campus.vercel.app/api/v1/class-sessions",
+      "status": 200,
+      "ok": true,
+      "durationMs": 829,
+      "responseBody": []
+    },
+    {
+      "id": "vendor-ops.profile",
+      "role": "vendor",
+      "method": "GET",
+      "path": "/vendor-ops/profile",
+      "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/profile",
+      "status": 200,
+      "ok": true,
+      "durationMs": 835,
+      "responseBody": {
+        "vendor": {
+          "id": "cf3aa289-0dc9-469b-812a-315cba07ea63",
+          "owner_id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+          "name": "Demo Vendor",
+          "description": "Demo vendor account",
+          "is_open": true,
+          "image_url": null,
+          "created_at": "2026-03-20T05:05:00.542136+00:00"
+        }
+      }
+    },
+    {
+      "id": "vendor-ops.menu",
+      "role": "vendor",
+      "method": "GET",
+      "path": "/vendor-ops/menu",
+      "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/menu",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1685,
+      "responseBody": {
+        "items": [],
+        "categories": []
+      }
+    },
+    {
+      "id": "vendor-ops.orders",
+      "role": "vendor",
+      "method": "GET",
+      "path": "/vendor-ops/orders",
+      "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/orders",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1517,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "vendor-ops.stats",
+      "role": "vendor",
+      "method": "GET",
+      "path": "/vendor-ops/stats",
+      "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/stats",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1180,
+      "responseBody": {
+        "stats": {
+          "totalOrders": 0,
+          "completedOrders": 0,
+          "gmv": 0
+        }
+      }
+    },
+    {
+      "id": "admin.stats",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/stats",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/stats",
+      "status": 200,
+      "ok": true,
+      "durationMs": 2544,
+      "responseBody": {
+        "stats": {
+          "users": 1,
+          "vendors": 4,
+          "orders": 0,
+          "revenue": 0,
+          "gmv": 0
+        }
+      }
+    },
+    {
+      "id": "admin.dashboard.summary",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/dashboard/summary",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/dashboard/summary",
+      "status": 200,
+      "ok": true,
+      "durationMs": 2322,
+      "responseBody": {
+        "summary": {
+          "total_users": 1,
+          "total_vendors": 4,
+          "active_orders": 0,
+          "completed_orders": 0,
+          "revenue": 0
+        }
+      }
+    },
+    {
+      "id": "admin.charts",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/charts",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/charts",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1846,
+      "responseBody": {
+        "chartData": [
+          {
+            "name": "Sat",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Sun",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Mon",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Tue",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Wed",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Thu",
+            "orders": 0,
+            "revenue": 0
+          },
+          {
+            "name": "Fri",
+            "orders": 0,
+            "revenue": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "admin.finance.summary",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/finance/summary",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/finance/summary",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1047,
+      "responseBody": {
+        "summary": {
+          "today_revenue": 0,
+          "week_revenue": 0,
+          "month_revenue": 0,
+          "total_revenue": 0
+        }
+      }
+    },
+    {
+      "id": "admin.finance.payouts",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/finance/payouts",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/finance/payouts",
+      "status": 200,
+      "ok": true,
+      "durationMs": 969,
+      "responseBody": {
+        "payouts": []
+      }
+    },
+    {
+      "id": "admin.promos",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/promos",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/promos",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1749,
+      "responseBody": []
+    },
+    {
+      "id": "admin.audit",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/audit",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/audit",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1308,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "admin.settings",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/settings",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/settings",
+      "status": 200,
+      "ok": true,
+      "durationMs": 688,
+      "responseBody": {
+        "settings": {
+          "commission_rate": 12,
+          "delivery_fee": 25
+        }
+      }
+    },
+    {
+      "id": "admin.orders",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/orders",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/orders",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1227,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "admin.users",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/users",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/users",
+      "status": 200,
+      "ok": true,
+      "durationMs": 2276,
+      "responseBody": {
+        "users": [
+          {
+            "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
+            "name": "Demo Admin",
+            "email": "demo.admin@swift.com",
+            "role": "admin",
+            "created_at": "2026-03-18T05:46:29.022091+00:00",
+            "blocked": false
+          }
+        ],
+        "page": 1,
+        "limit": 20,
+        "total": 1,
+        "meta": {
+          "page": 1,
+          "limit": 20,
+          "total": 1,
+          "totalPages": 1,
+          "hasNextPage": false,
+          "hasPreviousPage": false
+        }
+      }
+    },
+    {
+      "id": "admin.vendors.pending",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/vendors/pending",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/vendors/pending",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1332,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "admin.campus.buildings",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/campus/buildings",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/campus/buildings",
+      "status": 200,
+      "ok": true,
+      "durationMs": 835,
+      "responseBody": []
+    },
+    {
+      "id": "admin.campus.zones",
+      "role": "admin",
+      "method": "GET",
+      "path": "/admin/campus/zones",
+      "url": "https://swift-campus.vercel.app/api/v1/admin/campus/zones",
+      "status": 200,
+      "ok": true,
+      "durationMs": 905,
+      "responseBody": []
+    },
+    {
+      "id": "menus.vendor",
+      "role": "public",
+      "method": "GET",
+      "path": "/menus/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
+      "url": "https://swift-campus.vercel.app/api/v1/menus/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
+      "status": 200,
+      "ok": true,
+      "durationMs": 887,
+      "responseBody": [
+        {
+          "id": "dd170254-120f-48c8-8b4c-7149239971e6",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Breakfast",
+          "sort_order": 0,
+          "menu_items": [
+            {
+              "id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+              "name": "Medhu Vada",
+              "price": 40,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9028e52d.jpg",
+              "description": "Golden crispy lentil donuts served with chutney.",
+              "is_available": true
+            },
+            {
+              "id": "b10ca07b-b9bb-404b-9f61-2b7b5b4f0405",
+              "name": "Ghee Roast Dosa",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_b10ca07b.jpg",
+              "description": "Crispy thin dosa roasted with pure cow ghee.",
+              "is_available": true
+            },
+            {
+              "id": "33ebe078-dddd-4c86-819b-ad415bb409d1",
+              "name": "Pongal",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_33ebe078.jpg",
+              "description": "Creamy rice and lentil mash tempered with pepper and cumin.",
+              "is_available": true
+            },
+            {
+              "id": "3077675a-1279-4be4-af0c-d2fca9e4e155",
+              "name": "Podi Idli",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3077675a.jpg",
+              "description": "Mini idlis tossed in spicy lentil powder.",
+              "is_available": true
+            },
+            {
+              "id": "73f48225-8da8-4334-929d-423b6f5324c7",
+              "name": "Onion Uthappam",
+              "price": 85,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_73f48225.jpg",
+              "description": "Thick pancake topped with fresh onions and green chilies.",
+              "is_available": true
+            },
+            {
+              "id": "ae1f3121-0729-431f-ad28-824f7fa79a1b",
+              "name": "Poori Masala",
+              "price": 75,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_ae1f3121.jpg",
+              "description": "Fluffy deep-fried pooris served with potato masala.",
+              "is_available": true
+            },
+            {
+              "id": "89c5aff3-9401-4727-b300-6976c39678dd",
+              "name": "Rava Dosa",
+              "price": 95,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_89c5aff3.jpg",
+              "description": "Lacy, crispy semolina dosa with peppercorns.",
+              "is_available": true
+            },
+            {
+              "id": "27901b09-15d2-4c5e-9866-cd55cf7f5974",
+              "name": "Masala Dosa",
+              "price": 100,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_27901b09.jpg",
+              "description": "Classic dosa stuffed with spiced potato filling.",
+              "is_available": true
+            },
+            {
+              "id": "069a0d26-fe4c-4dd9-a1da-3c4054680b9f",
+              "name": "Appam with Coconut Milk",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_069a0d26.jpg",
+              "description": "Fermented rice pancakes with sweet coconut milk.",
+              "is_available": true
+            },
+            {
+              "id": "5e858c5f-5109-4e98-8a8b-f212bccefca5",
+              "name": "Vada Sambar",
+              "price": 50,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5e858c5f.jpg",
+              "description": "Crispy vada dipped in hot aromatic sambar.",
+              "is_available": true
+            },
+            {
+              "id": "e4573c99-5dee-4008-9bc8-c5953012a6ed",
+              "name": "Ada Pradhaman",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_e4573c99.jpg",
+              "description": "Traditional kheer with rice flakes and jaggery.",
+              "is_available": true
+            },
+            {
+              "id": "5f072af6-b179-43d0-b0ee-f74b2c273e61",
+              "name": "Kuzhi Paniyaram",
+              "price": 75,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_5f072af6.jpg",
+              "description": "Small steamed and fried dumplings.",
+              "is_available": true
+            },
+            {
+              "id": "4c4491ec-64e6-4a43-8a4c-be35112c8a7f",
+              "name": "Pineapple Sheera",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4491ec.jpg",
+              "description": "Sweet semolina pudding with pineapple chunks.",
+              "is_available": true
+            },
+            {
+              "id": "4c4aef8e-4ece-4cdd-b813-bb509758eb20",
+              "name": "Filter Coffee",
+              "price": 30,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4c4aef8e.jpg",
+              "description": "Authentic South Indian decoction coffee.",
+              "is_available": true
+            },
+            {
+              "id": "4e990af7-6799-4a73-b8c5-6944d0d04851",
+              "name": "Badam Milk",
+              "price": 50,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_4e990af7.jpg",
+              "description": "Hot milk with almond paste and saffron.",
+              "is_available": true
+            },
+            {
+              "id": "8e72f5aa-a8b6-4b53-897d-48f8b5614b0b",
+              "name": "Mini Tiffin",
+              "price": 150,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_8e72f5aa.jpg",
+              "description": "Assorted breakfast sampler platter.",
+              "is_available": true
+            },
+            {
+              "id": "f452f83d-ad23-42b4-94a0-6843feb91c09",
+              "name": "Set Dosa",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_f452f83d.jpg",
+              "description": "Spongy dosa served in a set of three.",
+              "is_available": true
+            },
+            {
+              "id": "9428b4c7-1d5f-49ef-b26d-57c063e1a76d",
+              "name": "Sambar Idli",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_9428b4c7.jpg",
+              "description": "Pair of soft idlis soaked in traditional sambar.",
+              "is_available": true
+            },
+            {
+              "id": "a336637e-1eee-42c3-8130-afb8d7ec8d81",
+              "name": "Pesarattu",
+              "price": 110,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_a336637e.jpg",
+              "description": "Green gram crepe from Andhra origin.",
+              "is_available": true
+            },
+            {
+              "id": "94b66c56-cf22-4733-9dd3-1dfc8dd9d25f",
+              "name": "Upma",
+              "price": 60,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_94b66c56.jpg",
+              "description": "Savory semolina porridge with vegetables.",
+              "is_available": true
+            },
+            {
+              "id": "3599cc3e-e0e6-45b3-a972-0786a12a2e3e",
+              "name": "Idiyappam",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_3599cc3e.jpg",
+              "description": "String hoppers served with coconut milk.",
+              "is_available": true
+            },
+            {
+              "id": "060d0d46-09e4-40ba-aac9-3642a696a961",
+              "name": "Wheat Parotta",
+              "price": 80,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_060d0d46.jpg",
+              "description": "Healthier whole wheat version of parotta.",
+              "is_available": true
+            },
+            {
+              "id": "bb68a408-e411-46a4-89ea-f9ac306798e0",
+              "name": "Adai Avial",
+              "price": 120,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_bb68a408.jpg",
+              "description": "Multi-lentil crepe with mixed vegetable stew.",
+              "is_available": true
+            },
+            {
+              "id": "360316ba-c1d1-4c49-89c7-a65d9f894c98",
+              "name": "Kal Dosa",
+              "price": 70,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_360316ba.jpg",
+              "description": "Traditional soft handmade dosa.",
+              "is_available": true
+            },
+            {
+              "id": "11e46e7d-1d1e-4db7-815b-22e8152bec14",
+              "name": "Ragi Dosa",
+              "price": 90,
+              "menu_id": "dd170254-120f-48c8-8b4c-7149239971e6",
+              "image_url": "https://ncknhkowypkjvzleyaar.supabase.co/storage/v1/object/public/campus-food/rectified/item_11e46e7d.jpg",
+              "description": "Nutritious finger millet crepe.",
+              "is_available": true
+            }
+          ]
+        },
+        {
+          "id": "d50d10e6-99e7-47d3-91a7-0adb0a7d9ff6",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Quick Bites",
+          "sort_order": 1,
+          "menu_items": []
+        },
+        {
+          "id": "efb11425-cbba-4484-95af-b5f22f713f7c",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Main Course",
+          "sort_order": 2,
+          "menu_items": []
+        },
+        {
+          "id": "f6f4fcc5-1e15-4561-9ab4-5806665f22df",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "category_name": "Beverages",
+          "sort_order": 3,
+          "menu_items": []
+        }
+      ]
+    },
+    {
+      "id": "reviews.vendor",
+      "role": "public",
+      "method": "GET",
+      "path": "/reviews/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
+      "url": "https://swift-campus.vercel.app/api/v1/reviews/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
+      "status": 500,
+      "ok": false,
+      "durationMs": 694,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "orders.create",
+      "role": "user",
+      "method": "POST",
+      "path": "/orders",
+      "url": "https://swift-campus.vercel.app/api/v1/orders",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1103,
+      "requestBody": {
+        "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+        "total_amount": 100,
+        "items": [
+          {
+            "id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+            "quantity": 1,
+            "price": 100
+          }
+        ]
+      },
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
+      }
+    },
+    {
+      "id": "promos.validate",
+      "role": "user",
+      "method": "POST",
+      "path": "/promos/validate",
+      "url": "https://swift-campus.vercel.app/api/v1/promos/validate",
+      "status": 400,
+      "ok": false,
+      "durationMs": 721,
+      "requestBody": {
+        "code": "WELCOME10",
+        "order_amount": 100
+      },
+      "responseBody": {
+        "error": "ValidationError",
+        "message": "Promo code and order_total are required"
+      }
+    },
+    {
+      "id": "payments.create-order",
+      "role": "user",
+      "method": "POST",
+      "path": "/payments/create-order",
+      "url": "https://swift-campus.vercel.app/api/v1/payments/create-order",
+      "status": 200,
+      "ok": true,
+      "durationMs": 1511,
+      "requestBody": {
+        "amount": 100
+      },
+      "responseBody": {
+        "amount": 10000,
+        "amount_due": 10000,
+        "amount_paid": 0,
+        "attempts": 0,
+        "created_at": 1773988590,
+        "currency": "INR",
+        "entity": "order",
+        "id": "order_STNpAdoZlozwdi",
+        "notes": [],
+        "offer_id": null,
+        "receipt": "receipt_1773988589413",
+        "status": "created"
+      }
+    },
+    {
+      "id": "notifications.device.register",
+      "role": "user",
+      "method": "POST",
+      "path": "/notifications/device",
+      "url": "https://swift-campus.vercel.app/api/v1/notifications/device",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1088,
+      "requestBody": {
+        "token": "live-test-1773988589543",
+        "platform": "android"
+      },
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "Access Denied"
+      }
+    }
+  ]
+}

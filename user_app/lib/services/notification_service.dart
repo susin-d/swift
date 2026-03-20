@@ -1,13 +1,21 @@
 import '../models/notification_model.dart';
+import 'api_exception.dart';
 import 'api_service.dart';
 
 class NotificationService {
   final ApiService _api = ApiService();
 
   Future<List<AppNotification>> getNotifications() async {
-    final response = await _api.get('/notifications');
-    final data = response.data as List? ?? [];
-    return data.map((json) => AppNotification.fromJson(json)).toList();
+    try {
+      final response = await _api.get('/notifications');
+      final data = response.data as List? ?? [];
+      return data.map((json) => AppNotification.fromJson(json)).toList();
+    } on ApiException catch (e) {
+      if (e.statusCode >= 500) {
+        return [];
+      }
+      rethrow;
+    }
   }
 
   Future<void> markRead(String id) async {

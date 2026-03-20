@@ -47,6 +47,8 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    Reliability standards (Sprint 4):
    - Admin list endpoints expose shared pagination metadata (`meta.totalPages`, `meta.hasNextPage`, `meta.hasPreviousPage`).
    - App clients apply bounded retry/backoff, superseded request cancellation, and short-lived contracts feed caching.
+   - User app now degrades gracefully when recommendations or notifications endpoints temporarily return server errors, keeping home and notifications usable with safe fallbacks.
+   - Basket checkout summary is height-capped with internal scrolling so cart food items remain visible on smaller screens.
 
    Trust surfaces (Sprint 5):
    - Order create/list responses include ETA confidence envelope (`eta.min_minutes`, `eta.max_minutes`, `eta.confidence`).
@@ -70,6 +72,10 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - Admin app shell now surfaces session posture (`Trusted device` / `Untrusted device`) with an inline remediation banner so operators can confirm trust on active devices.
    - Customer-only mutations (`/orders`, `/orders/me`, `/addresses`, `/payments`, `/reviews`) now reject vendor/admin tokens with `403 Forbidden`.
    - Delivery location updates are now explicitly scoped to vendor or admin operators, and the vendor app clears/restores sessions only for vendor-role accounts.
+
+   Live API smoke test:
+   - Run `cd backend && npm run test:api:live` to execute a live deployment API sweep.
+   - JSON response reports are written to `backend/reports/live-api-responses-latest.json` and timestamped files under `backend/reports/`.
 
 3. **Vendor App**
    ```bash

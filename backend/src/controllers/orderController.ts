@@ -269,31 +269,15 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
     }
 
     const compactId = order.id.substring(0, 8).toUpperCase();
-    await createNotification({
-        userId: user.sub,
-        audience: 'user',
-        type: 'order_created',
-        title: 'Order placed',
-        body: scheduledForIso
-            ? `Order #${compactId} scheduled for ${new Date(scheduledForIso).toLocaleString()}`
-            : `Order #${compactId} is in the queue`,
-        metadata: {
-            order_id: order.id,
-            delivery_mode: deliveryMode,
-            handoff_code: handoffCode,
-            quiet_mode: quiet_mode ?? false,
-        },
-    });
-
-    if (vendor?.owner_id) {
+    try {
         await createNotification({
-            userId: vendor.owner_id,
-            audience: 'vendor',
-            type: 'new_order',
-            title: 'New order received',
+            userId: user.sub,
+            audience: 'user',
+            type: 'order_created',
+            title: 'Order placed',
             body: scheduledForIso
-                ? `Order #${compactId} is scheduled for ${new Date(scheduledForIso).toLocaleString()}`
-                : `Order #${compactId} is ready to prepare`,
+                ? `Order #${compactId} scheduled for ${new Date(scheduledForIso).toLocaleString()}`
+                : `Order #${compactId} is in the queue`,
             metadata: {
                 order_id: order.id,
                 delivery_mode: deliveryMode,
@@ -301,6 +285,30 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
                 quiet_mode: quiet_mode ?? false,
             },
         });
+    } catch (notificationError) {
+        request.log.warn({ err: notificationError, orderId: order.id }, 'orders.create: user notification failed');
+    }
+
+    if (vendor?.owner_id) {
+        try {
+            await createNotification({
+                userId: vendor.owner_id,
+                audience: 'vendor',
+                type: 'new_order',
+                title: 'New order received',
+                body: scheduledForIso
+                    ? `Order #${compactId} is scheduled for ${new Date(scheduledForIso).toLocaleString()}`
+                    : `Order #${compactId} is ready to prepare`,
+                metadata: {
+                    order_id: order.id,
+                    delivery_mode: deliveryMode,
+                    handoff_code: handoffCode,
+                    quiet_mode: quiet_mode ?? false,
+                },
+            });
+        } catch (notificationError) {
+            request.log.warn({ err: notificationError, orderId: order.id }, 'orders.create: vendor notification failed');
+        }
     }
 
     return reply.code(201).send(attachEtaTrust(order));
@@ -593,11 +601,24 @@ export const getVendorOrders = async (request: FastifyRequest, reply: FastifyRep
     }
 
     // 2. Get orders for this vendor
-    const { data, error } = await supabase
+    const withCampus = await supabase
         .from('orders')
         .select('*, users(name, email), campus_buildings(name), order_items(*, menu_items(name))')
         .eq('vendor_id', vendor.id)
         .order('created_at', { ascending: false });
+
+    let data = withCampus.data as any[] | null;
+    let error = withCampus.error;
+
+    if (error) {
+        const withoutCampus = await supabase
+            .from('orders')
+            .select('*, users(name, email), order_items(*, menu_items(name))')
+            .eq('vendor_id', vendor.id)
+            .order('created_at', { ascending: false });
+        data = withoutCampus.data as any[] | null;
+        error = withoutCampus.error;
+    }
 
     if (error) throw error;
     return reply.send((data || []).map((order: any) => attachEtaTrust(order)));

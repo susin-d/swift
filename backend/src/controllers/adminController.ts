@@ -146,12 +146,26 @@ export const getPendingVendors = async (request: FastifyRequest, reply: FastifyR
 
         if (countError) throw countError;
 
-        const { data, error } = await supabase
+        const withOwner = await supabase
             .from('vendors')
             .select('*, owner:users(name, email)')
             .eq('status', 'pending')
             .order('created_at', { ascending: false })
             .range(from, to);
+
+        let data = withOwner.data as any[] | null;
+        let error = withOwner.error;
+
+        if (error) {
+            const withoutOwner = await supabase
+                .from('vendors')
+                .select('*')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .range(from, to);
+            data = withoutOwner.data as any[] | null;
+            error = withoutOwner.error;
+        }
 
         if (error) throw error;
 
@@ -239,17 +253,36 @@ export const getAdminOrders = async (request: FastifyRequest, reply: FastifyRepl
         const { count, error: countError } = await countQuery;
         if (countError) throw countError;
 
-          let ordersQuery = supabase
-              .from('orders')
-              .select('*, users(name, email), vendors(name), campus_buildings(name), order_items(quantity, unit_price)')
-              .order('created_at', { ascending: false })
-              .range(from, to);
+        let ordersQuery = supabase
+            .from('orders')
+            .select('*, users(name, email), vendors(name), campus_buildings(name), order_items(quantity, unit_price)')
+            .order('created_at', { ascending: false })
+            .range(from, to);
 
         if (status) {
             ordersQuery = ordersQuery.eq('status', status);
         }
 
-        const { data, error } = await ordersQuery;
+        const withCampus = await ordersQuery;
+        let data = withCampus.data as any[] | null;
+        let error = withCampus.error;
+
+        if (error) {
+            let fallbackQuery = supabase
+                .from('orders')
+                .select('*, users(name, email), vendors(name), order_items(quantity, unit_price)')
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            if (status) {
+                fallbackQuery = fallbackQuery.eq('status', status);
+            }
+
+            const withoutCampus = await fallbackQuery;
+            data = withoutCampus.data as any[] | null;
+            error = withoutCampus.error;
+        }
+
         if (error) throw error;
 
         const total = count || 0;
@@ -637,6 +670,22 @@ export const getAdminAuditLogs = async (request: FastifyRequest, reply: FastifyR
     const { page, limit, from, to } = parsePagination(query);
 
     try {
+        const { error: tableProbeError } = await supabase
+            .from('admin_logs')
+            .select('id', { head: true, count: 'exact' })
+            .limit(1);
+
+        if (tableProbeError) {
+            request.log.warn({ err: tableProbeError }, 'admin.audit: admin_logs unavailable; returning empty list');
+            return reply.send({
+                logs: [],
+                page,
+                limit,
+                total: 0,
+                meta: buildPaginationMeta(page, limit, 0),
+            });
+        }
+
         let countQuery = supabase
             .from('admin_logs')
             .select('*', { count: 'exact', head: true });

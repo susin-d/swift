@@ -36,8 +36,9 @@ type OrderItemHistoryRow = {
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 
 export const getRecommendedItems = async (request: FastifyRequest, reply: FastifyReply) => {
-    const rawLimit = Number((request.query as { limit?: string | number } | undefined)?.limit ?? 12);
-    const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(30, Math.floor(rawLimit))) : 12;
+    try {
+        const rawLimit = Number((request.query as { limit?: string | number } | undefined)?.limit ?? 12);
+        const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(30, Math.floor(rawLimit))) : 12;
 
     const { data: itemsData, error: itemsError } = await supabase
         .from('menu_items')
@@ -62,7 +63,10 @@ export const getRecommendedItems = async (request: FastifyRequest, reply: Fastif
         `)
         .eq('is_available', true);
 
-    if (itemsError) throw itemsError;
+    if (itemsError) {
+        request.log.warn({ err: itemsError }, 'recommendations: failed to fetch menu items; returning empty list');
+        return reply.send([]);
+    }
 
     const items = (itemsData ?? []) as MenuItemRow[];
     if (items.length === 0) {
@@ -81,19 +85,23 @@ export const getRecommendedItems = async (request: FastifyRequest, reply: Fastif
         `)
         .limit(5000);
 
-    if (orderHistoryError) throw orderHistoryError;
+    if (orderHistoryError) {
+        request.log.warn({ err: orderHistoryError }, 'recommendations: failed to fetch order history; using empty history fallback');
+    }
 
     const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
         .select('vendor_id, rating');
 
-    if (reviewsError) throw reviewsError;
+    if (reviewsError) {
+        request.log.warn({ err: reviewsError }, 'recommendations: failed to fetch reviews; using zero-rating fallback');
+    }
 
     const popularityByItem = new Map<string, number>();
     const recentByItem = new Map<string, number>();
     const recentCutoffMs = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
-    for (const row of ((orderHistoryData ?? []) as OrderItemHistoryRow[])) {
+    for (const row of ((orderHistoryError ? [] : (orderHistoryData ?? [])) as OrderItemHistoryRow[])) {
         const quantity = Math.max(0, Number(row.quantity ?? 0));
         const existing = popularityByItem.get(row.item_id) ?? 0;
         popularityByItem.set(row.item_id, existing + quantity);
@@ -110,7 +118,7 @@ export const getRecommendedItems = async (request: FastifyRequest, reply: Fastif
     }
 
     const vendorRatings = new Map<string, { total: number; count: number }>();
-    for (const review of (reviewsData ?? []) as Array<{ vendor_id: string; rating: number }>) {
+    for (const review of ((reviewsError ? [] : (reviewsData ?? [])) as Array<{ vendor_id: string; rating: number }>)) {
         const key = review.vendor_id;
         if (!key) continue;
         const bucket = vendorRatings.get(key) ?? { total: 0, count: 0 };
@@ -177,5 +185,9 @@ export const getRecommendedItems = async (request: FastifyRequest, reply: Fastif
         .sort((a, b) => b.recommendation.score - a.recommendation.score)
         .slice(0, limit);
 
-    return reply.send(recommendations);
+        return reply.send(recommendations);
+    } catch (error) {
+        request.log.warn({ err: error }, 'recommendations: unexpected error; returning empty list');
+        return reply.send([]);
+    }
 };

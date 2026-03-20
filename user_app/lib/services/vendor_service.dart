@@ -47,7 +47,7 @@ class VendorService {
           .toList();
     } on ApiException catch (e) {
       // Backward compatibility for deployments that do not expose /public/recommendations yet.
-      if (e.statusCode != 404 && e.statusCode != 503) {
+      if (e.statusCode != 404 && e.statusCode != 500 && e.statusCode != 503) {
         rethrow;
       }
 
