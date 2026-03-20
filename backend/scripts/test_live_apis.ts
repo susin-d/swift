@@ -85,11 +85,15 @@ async function fetchWithTimeout(url: string, init: RequestInit) {
 async function callEndpoint(ep: Endpoint, tokenByRole: Partial<Record<Role, string>>): Promise<Result> {
   const endpointPath = withQuery(ep.path, ep.query);
   const url = ep.fullUrl ?? `${API_BASE}${endpointPath}`;
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {};
 
   const token = tokenByRole[ep.role];
   if (token) {
     headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (ep.body) {
+    headers['Content-Type'] = 'application/json';
   }
 
   const started = Date.now();
@@ -355,7 +359,7 @@ async function main() {
 
     if (context.orderId) {
       const deliveryLocation = await callEndpoint(
-        { id: 'delivery.location.get', method: 'GET', path: `/delivery/${context.orderId}/location`, role: 'public' },
+        { id: 'delivery.location.get', method: 'GET', path: `/delivery/${context.orderId}/location`, role: 'user' },
         tokenByRole,
       );
       results.push(deliveryLocation);

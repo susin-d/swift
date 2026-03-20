@@ -1,18 +1,19 @@
 {
-  "generatedAt": "2026-03-20T07:13:09.687Z",
-  "startedAt": "2026-03-20T07:12:27.295Z",
+  "generatedAt": "2026-03-20T07:03:38.810Z",
+  "startedAt": "2026-03-20T07:02:38.954Z",
   "baseUrl": "https://swift-campus.vercel.app/api/v1",
   "siteUrl": "https://swift-campus.vercel.app",
   "timeoutMs": 20000,
   "summary": {
-    "total": 44,
-    "passed": 43,
+    "total": 46,
+    "passed": 45,
     "failed": 1,
-    "passRate": 97.73
+    "passRate": 97.83
   },
   "context": {
     "vendorId": "17209676-e918-46e9-a307-a70cb8f9e4cf",
-    "menuItemId": "9028e52d-03f0-4ba9-9164-ea66c8d9b775"
+    "menuItemId": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+    "orderId": "a18dacca-a78c-480a-a6f3-fcdb2780e0cb"
   },
   "results": [
     {
@@ -31,11 +32,11 @@
           "role": "user"
         },
         "session": {
-          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwOGZjZmVhMS0yMGU4LTQ4MjItOWI4ZS0xYjlkNjVhODFkN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTk0MzQ5LCJpYXQiOjE3NzM5OTA3NDksImVtYWlsIjoiZGVtby51c2VyQHN3aWZ0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJEZW1vIFVzZXIiLCJyb2xlIjoidXNlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwNzQ5fV0sInNlc3Npb25faWQiOiI3NDg5NGQ1Yi03ZjM5LTQzM2UtYTUzMy1lNzQyMWMyMGNlY2MiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.mVHB9_8eBCrLs_XozZvoiyZ1j-UYf_fSzj-3LUWQt0zLDs6wTEaBfoHNgrsqPDgCZKUXOjoMFzSbpvaAvFt55g",
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwOGZjZmVhMS0yMGU4LTQ4MjItOWI4ZS0xYjlkNjVhODFkN2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkzNzYxLCJpYXQiOjE3NzM5OTAxNjEsImVtYWlsIjoiZGVtby51c2VyQHN3aWZ0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJEZW1vIFVzZXIiLCJyb2xlIjoidXNlciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwMTYxfV0sInNlc3Npb25faWQiOiI5YzYxMjMxMS0yZTU0LTRmYWMtODJiNy01OThjZTVmMTBkMmMiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.1EMGEVtMj8Dcg3daveBqS4Mr4pcF_flgjAkbyM7BD6TQXTNhJUW7eWIoYAdWR_rHk2OfFK7RXTi3-u8LE04XQQ",
           "token_type": "bearer",
           "expires_in": 3600,
-          "expires_at": 1773994349,
-          "refresh_token": "asmot5rghe4q",
+          "expires_at": 1773993761,
+          "refresh_token": "aedwrh4pbzl2",
           "user": {
             "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
             "aud": "authenticated",
@@ -44,7 +45,7 @@
             "email_confirmed_at": "2026-03-18T05:46:19.403929Z",
             "phone": "",
             "confirmed_at": "2026-03-18T05:46:19.403929Z",
-            "last_sign_in_at": "2026-03-20T07:12:29.263706323Z",
+            "last_sign_in_at": "2026-03-20T07:02:41.015060994Z",
             "app_metadata": {
               "provider": "email",
               "providers": [
@@ -75,7 +76,7 @@
               }
             ],
             "created_at": "2026-03-18T05:46:19.361761Z",
-            "updated_at": "2026-03-20T07:12:29.268784Z",
+            "updated_at": "2026-03-20T07:02:41.031919Z",
             "is_anonymous": false
           },
           "weak_password": null
@@ -98,11 +99,11 @@
           "role": "vendor"
         },
         "session": {
-          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJlYmE1N2JmZi0zNDBmLTRhNmYtOWQ3OS1mYTBlNTE5ODZlMTQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTk0MzUwLCJpYXQiOjE3NzM5OTA3NTAsImVtYWlsIjoiZGVtby52ZW5kb3JAc3dpZnQuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkRlbW8gVmVuZG9yIiwicm9sZSI6InZlbmRvciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwNzUwfV0sInNlc3Npb25faWQiOiJiMzM0MDE2My0xMTQ1LTQwZjktOWFiMC0yYTM5MmEzOTBkMTIiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.JrxPdNNaBkUss0F3R-Daa-2_e9RawQhAlHTVlXNc2zYw4fqiZeTBlIbt1j7BCy_4Z1-f3mfT0jUL_e1kUqs1UQ",
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJlYmE1N2JmZi0zNDBmLTRhNmYtOWQ3OS1mYTBlNTE5ODZlMTQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkzNzYyLCJpYXQiOjE3NzM5OTAxNjIsImVtYWlsIjoiZGVtby52ZW5kb3JAc3dpZnQuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IkRlbW8gVmVuZG9yIiwicm9sZSI6InZlbmRvciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwMTYyfV0sInNlc3Npb25faWQiOiI4M2U1ZTU3MS1iZmI3LTQxZWEtYmFlOC0wOWZmMzZmNTkxOTAiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.SP5FIqc7rG_bNcx8RXdDgTid1O2xAUqbYm-46boTxgdmR9prYpiYs8sL8obPxwuFBu3GCuYs8zXnseupOoKqdg",
           "token_type": "bearer",
           "expires_in": 3600,
-          "expires_at": 1773994350,
-          "refresh_token": "6zxvfdezahpf",
+          "expires_at": 1773993762,
+          "refresh_token": "3od2rirxvmvn",
           "user": {
             "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
             "aud": "authenticated",
@@ -111,7 +112,7 @@
             "email_confirmed_at": "2026-03-18T05:46:24.013494Z",
             "phone": "",
             "confirmed_at": "2026-03-18T05:46:24.013494Z",
-            "last_sign_in_at": "2026-03-20T07:12:30.796715424Z",
+            "last_sign_in_at": "2026-03-20T07:02:42.66171283Z",
             "app_metadata": {
               "provider": "email",
               "providers": [
@@ -142,7 +143,7 @@
               }
             ],
             "created_at": "2026-03-18T05:46:23.996154Z",
-            "updated_at": "2026-03-20T07:12:30.800229Z",
+            "updated_at": "2026-03-20T07:02:42.66852Z",
             "is_anonymous": false
           },
           "weak_password": null
@@ -165,11 +166,11 @@
           "role": "admin"
         },
         "session": {
-          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNjBiNzk1ZC02NjU5LTQxZDEtOGUxNi03MDQ0NWY3ZDYxZDciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTk0MzUxLCJpYXQiOjE3NzM5OTA3NTEsImVtYWlsIjoiZGVtby5hZG1pbkBzd2lmdC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiRGVtbyBBZG1pbiIsInJvbGUiOiJhZG1pbiJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwNzUxfV0sInNlc3Npb25faWQiOiI3ZGZhODVlYi05NmY4LTQyY2ItYmNhYS01N2E2ZDM4MzJiMGQiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.KuE4ruD_9TadtRjP5-CGhB3rAbI92gcPZCrnZHOfYJYwwnTWGG0bVO-68y3qR3E0z-ly5MI7ybWXiDOOtQlr1Q",
+          "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE0Y2RlNGVkLTFkNzItNGIzOC05YTk0LWFiNDljMzZmZDdlOSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL25ja25oa293eXBranZ6bGV5YWFyLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNjBiNzk1ZC02NjU5LTQxZDEtOGUxNi03MDQ0NWY3ZDYxZDciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzczOTkzNzY0LCJpYXQiOjE3NzM5OTAxNjQsImVtYWlsIjoiZGVtby5hZG1pbkBzd2lmdC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiRGVtbyBBZG1pbiIsInJvbGUiOiJhZG1pbiJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzczOTkwMTY0fV0sInNlc3Npb25faWQiOiIwZTE0Njg3ZC00MGQ5LTRmYjYtOWNkNC1hNjQxMzg2MjIxN2IiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.lGBNFWWejIBejrM-VyihmflsvVmNXjit-eRiyFLO2SmknPgtLVnNjgIpN9LcZ-_oN9FGYFOykyONeE5DeQrhjA",
           "token_type": "bearer",
           "expires_in": 3600,
-          "expires_at": 1773994351,
-          "refresh_token": "crxqfp4vx5sq",
+          "expires_at": 1773993764,
+          "refresh_token": "3vfffmersbjx",
           "user": {
             "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
             "aud": "authenticated",
@@ -178,7 +179,7 @@
             "email_confirmed_at": "2026-03-18T05:46:28.011916Z",
             "phone": "",
             "confirmed_at": "2026-03-18T05:46:28.011916Z",
-            "last_sign_in_at": "2026-03-20T07:12:31.729647222Z",
+            "last_sign_in_at": "2026-03-20T07:02:44.033366794Z",
             "app_metadata": {
               "provider": "email",
               "providers": [
@@ -209,7 +210,7 @@
               }
             ],
             "created_at": "2026-03-18T05:46:27.997055Z",
-            "updated_at": "2026-03-20T07:12:31.736886Z",
+            "updated_at": "2026-03-20T07:02:44.042288Z",
             "is_anonymous": false
           },
           "weak_password": null
@@ -224,10 +225,10 @@
       "url": "https://swift-campus.vercel.app/api/health",
       "status": 200,
       "ok": true,
-      "durationMs": 269,
+      "durationMs": 317,
       "responseBody": {
         "status": "ok",
-        "timestamp": "2026-03-20T07:12:32.428Z"
+        "timestamp": "2026-03-20T07:02:44.866Z"
       }
     },
     {
@@ -238,10 +239,10 @@
       "url": "https://swift-campus.vercel.app/api/v1/contracts/registry",
       "status": 200,
       "ok": true,
-      "durationMs": 458,
+      "durationMs": 860,
       "responseBody": {
         "version": "2026.03.s11.3",
-        "generatedAt": "2026-03-20T07:12:32.883Z",
+        "generatedAt": "2026-03-20T07:02:45.522Z",
         "totalEndpoints": 44,
         "errorEnvelope": {
           "description": "Standardized error envelope for non-2xx responses.",
@@ -2365,7 +2366,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/contracts/changelog",
       "status": 200,
       "ok": true,
-      "durationMs": 283,
+      "durationMs": 371,
       "responseBody": {
         "version": "2026.03.s11.3",
         "count": 28,
@@ -2737,7 +2738,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/contracts/flags",
       "status": 200,
       "ok": true,
-      "durationMs": 294,
+      "durationMs": 1218,
       "responseBody": {
         "version": "2026.03.s11.3",
         "count": 11,
@@ -2876,7 +2877,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/public/vendors",
       "status": 200,
       "ok": true,
-      "durationMs": 564,
+      "durationMs": 966,
       "responseBody": [
         {
           "id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
@@ -2924,7 +2925,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/public/search?q=rice",
       "status": 200,
       "ok": true,
-      "durationMs": 574,
+      "durationMs": 674,
       "responseBody": [
         {
           "id": "b37753aa-124a-44cb-9846-1faef8036407",
@@ -3053,7 +3054,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/public/recommendations?limit=10",
       "status": 200,
       "ok": true,
-      "durationMs": 567,
+      "durationMs": 716,
       "responseBody": []
     },
     {
@@ -3064,7 +3065,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/public/buildings",
       "status": 200,
       "ok": true,
-      "durationMs": 558,
+      "durationMs": 958,
       "responseBody": []
     },
     {
@@ -3075,7 +3076,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/public/zones",
       "status": 200,
       "ok": true,
-      "durationMs": 557,
+      "durationMs": 610,
       "responseBody": []
     },
     {
@@ -3086,14 +3087,23 @@
       "url": "https://swift-campus.vercel.app/api/v1/auth/me",
       "status": 200,
       "ok": true,
-      "durationMs": 800,
+      "durationMs": 1201,
       "responseBody": {
         "user": {
           "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
-          "email": "demo.user@swift.com",
           "role": "user",
-          "name": "demo.user",
-          "profile": {}
+          "name": "Demo User",
+          "email": "demo.user@swift.com",
+          "phone": null,
+          "campus_id": null,
+          "created_at": "2026-03-18T05:46:21.879252+00:00",
+          "profile": {
+            "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+            "phone": null,
+            "address": null,
+            "created_at": "2026-03-18T05:46:23.23242+00:00",
+            "updated_at": "2026-03-18T05:46:23.23242+00:00"
+          }
         }
       }
     },
@@ -3105,14 +3115,25 @@
       "url": "https://swift-campus.vercel.app/api/v1/auth/me",
       "status": 200,
       "ok": true,
-      "durationMs": 840,
+      "durationMs": 2280,
       "responseBody": {
         "user": {
           "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
-          "email": "demo.vendor@swift.com",
           "role": "vendor",
-          "name": "demo.vendor",
-          "profile": {}
+          "name": "Demo Vendor",
+          "email": "demo.vendor@swift.com",
+          "phone": null,
+          "campus_id": null,
+          "created_at": "2026-03-18T05:46:25.100259+00:00",
+          "profile": {
+            "id": "cf3aa289-0dc9-469b-812a-315cba07ea63",
+            "owner_id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+            "name": "Demo Vendor",
+            "description": "Demo vendor account",
+            "is_open": true,
+            "image_url": null,
+            "created_at": "2026-03-20T05:05:00.542136+00:00"
+          }
         }
       }
     },
@@ -3124,7 +3145,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/auth/me",
       "status": 200,
       "ok": true,
-      "durationMs": 1048,
+      "durationMs": 1473,
       "responseBody": {
         "user": {
           "id": "060b795d-6659-41d1-8e16-70445f7d61d7",
@@ -3146,7 +3167,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/orders/slots",
       "status": 200,
       "ok": true,
-      "durationMs": 546,
+      "durationMs": 770,
       "responseBody": {
         "days": 3,
         "slot_minutes": 30,
@@ -3558,8 +3579,50 @@
       "url": "https://swift-campus.vercel.app/api/v1/orders/me",
       "status": 200,
       "ok": true,
-      "durationMs": 1142,
-      "responseBody": []
+      "durationMs": 1134,
+      "responseBody": [
+        {
+          "id": "f7d6703d-7f3b-4082-b676-9e86fd5beeda",
+          "user_id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+          "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+          "status": "pending",
+          "total_amount": 100,
+          "created_at": "2026-03-20T07:01:37.97144+00:00",
+          "updated_at": "2026-03-20T07:01:37.97144+00:00",
+          "vendors": {
+            "name": "Annapoorna Bhavan"
+          },
+          "order_items": [
+            {
+              "id": "af0c7e91-0152-4387-b076-84b212d7bd8a",
+              "item_id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775",
+              "order_id": "f7d6703d-7f3b-4082-b676-9e86fd5beeda",
+              "quantity": 1,
+              "menu_items": {
+                "name": "Medhu Vada"
+              },
+              "unit_price": 100,
+              "special_instructions": null,
+              "menu_item_id": "9028e52d-03f0-4ba9-9164-ea66c8d9b775"
+            }
+          ],
+          "eta": {
+            "min_minutes": 13,
+            "max_minutes": 23,
+            "confidence": "high",
+            "updated_at": "2026-03-20T07:02:58.111Z",
+            "note": "ETA range is a rolling estimate based on queue status and order age."
+          },
+          "pacing": {
+            "elapsed_minutes": 1,
+            "target_prep_minutes": 10,
+            "recommended_prep_minutes": 10,
+            "sla_risk": "low",
+            "pace_label": "on_track",
+            "note": "Pacing score blends elapsed queue time, order size, and current status."
+          }
+        }
+      ]
     },
     {
       "id": "addresses.list",
@@ -3569,7 +3632,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/addresses",
       "status": 200,
       "ok": true,
-      "durationMs": 800,
+      "durationMs": 934,
       "responseBody": []
     },
     {
@@ -3580,7 +3643,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/notifications",
       "status": 200,
       "ok": true,
-      "durationMs": 856,
+      "durationMs": 1027,
       "responseBody": []
     },
     {
@@ -3591,7 +3654,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/promos/active",
       "status": 200,
       "ok": true,
-      "durationMs": 940,
+      "durationMs": 876,
       "responseBody": []
     },
     {
@@ -3602,7 +3665,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/class-sessions",
       "status": 200,
       "ok": true,
-      "durationMs": 855,
+      "durationMs": 858,
       "responseBody": []
     },
     {
@@ -3613,7 +3676,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/profile",
       "status": 200,
       "ok": true,
-      "durationMs": 804,
+      "durationMs": 826,
       "responseBody": {
         "vendor": {
           "id": "cf3aa289-0dc9-469b-812a-315cba07ea63",
@@ -3634,7 +3697,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/menu",
       "status": 200,
       "ok": true,
-      "durationMs": 1514,
+      "durationMs": 1615,
       "responseBody": {
         "items": [],
         "categories": []
@@ -3648,7 +3711,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/orders",
       "status": 200,
       "ok": true,
-      "durationMs": 1342,
+      "durationMs": 1790,
       "responseBody": []
     },
     {
@@ -3659,7 +3722,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/vendor-ops/stats",
       "status": 200,
       "ok": true,
-      "durationMs": 1064,
+      "durationMs": 1205,
       "responseBody": {
         "stats": {
           "totalOrders": 0,
@@ -3676,12 +3739,12 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/stats",
       "status": 200,
       "ok": true,
-      "durationMs": 1638,
+      "durationMs": 3108,
       "responseBody": {
         "stats": {
-          "users": 1,
+          "users": 10,
           "vendors": 4,
-          "orders": 0,
+          "orders": 8,
           "revenue": 0,
           "gmv": 0
         }
@@ -3695,12 +3758,12 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/dashboard/summary",
       "status": 200,
       "ok": true,
-      "durationMs": 1667,
+      "durationMs": 2883,
       "responseBody": {
         "summary": {
-          "total_users": 1,
+          "total_users": 10,
           "total_vendors": 4,
-          "active_orders": 0,
+          "active_orders": 8,
           "completed_orders": 0,
           "revenue": 0
         }
@@ -3714,7 +3777,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/charts",
       "status": 200,
       "ok": true,
-      "durationMs": 874,
+      "durationMs": 1025,
       "responseBody": {
         "chartData": [
           {
@@ -3734,7 +3797,7 @@
           },
           {
             "name": "Tue",
-            "orders": 0,
+            "orders": 7,
             "revenue": 0
           },
           {
@@ -3749,7 +3812,7 @@
           },
           {
             "name": "Fri",
-            "orders": 0,
+            "orders": 1,
             "revenue": 0
           }
         ]
@@ -3763,7 +3826,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/finance/summary",
       "status": 200,
       "ok": true,
-      "durationMs": 815,
+      "durationMs": 995,
       "responseBody": {
         "summary": {
           "today_revenue": 0,
@@ -3781,7 +3844,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/finance/payouts",
       "status": 200,
       "ok": true,
-      "durationMs": 826,
+      "durationMs": 996,
       "responseBody": {
         "payouts": []
       }
@@ -3794,7 +3857,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/promos",
       "status": 200,
       "ok": true,
-      "durationMs": 794,
+      "durationMs": 985,
       "responseBody": []
     },
     {
@@ -3805,7 +3868,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/audit",
       "status": 200,
       "ok": true,
-      "durationMs": 1377,
+      "durationMs": 1628,
       "responseBody": {
         "logs": [],
         "page": 1,
@@ -3829,7 +3892,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/settings",
       "status": 200,
       "ok": true,
-      "durationMs": 641,
+      "durationMs": 665,
       "responseBody": {
         "settings": {
           "commission_rate": 12,
@@ -3845,17 +3908,194 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/orders",
       "status": 200,
       "ok": true,
-      "durationMs": 1933,
+      "durationMs": 2030,
       "responseBody": {
-        "orders": [],
+        "orders": [
+          {
+            "id": "f7d6703d-7f3b-4082-b676-9e86fd5beeda",
+            "user_id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+            "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+            "status": "pending",
+            "total_amount": 100,
+            "created_at": "2026-03-20T07:01:37.97144+00:00",
+            "updated_at": "2026-03-20T07:01:37.97144+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo.user@swift.com"
+            },
+            "vendors": {
+              "name": "Annapoorna Bhavan"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 100
+              }
+            ]
+          },
+          {
+            "id": "49b611ae-61e7-401f-9c21-9e9ab2f52fa3",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:18.928044+00:00",
+            "updated_at": "2026-03-17T09:50:18.928044+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "d77a486d-13da-4072-aa9a-d0b51cc2e323",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:18.667457+00:00",
+            "updated_at": "2026-03-17T09:50:18.667457+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "a31dc5a5-3ddb-4350-9b9e-18130e83728c",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:18.261831+00:00",
+            "updated_at": "2026-03-17T09:50:18.261831+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "8bb72ef7-5eba-4383-aecc-44094770b7be",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:18.145628+00:00",
+            "updated_at": "2026-03-17T09:50:18.145628+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "2f8c4afe-9998-4acd-9878-aa25e778cac2",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:18.046962+00:00",
+            "updated_at": "2026-03-17T09:50:18.046962+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "0a3b537c-833e-4836-9efe-449a57655266",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:17.597418+00:00",
+            "updated_at": "2026-03-17T09:50:17.597418+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          },
+          {
+            "id": "995dfa28-563c-40cd-9f7b-45e921369b5c",
+            "user_id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "vendor_id": "69f6c853-baf0-40d6-a0f4-dbbe743b4b6e",
+            "status": "pending",
+            "total_amount": 40,
+            "created_at": "2026-03-17T09:50:17.433708+00:00",
+            "updated_at": "2026-03-17T09:50:17.433708+00:00",
+            "users": {
+              "name": "Demo User",
+              "email": "demo@user.com"
+            },
+            "vendors": {
+              "name": "Madurai Bun Parotta"
+            },
+            "order_items": [
+              {
+                "quantity": 1,
+                "unit_price": 40
+              }
+            ]
+          }
+        ],
         "page": 1,
         "limit": 20,
-        "total": 0,
+        "total": 8,
         "meta": {
           "page": 1,
           "limit": 20,
-          "total": 0,
-          "totalPages": 0,
+          "total": 8,
+          "totalPages": 1,
           "hasNextPage": false,
           "hasPreviousPage": false
         }
@@ -3869,7 +4109,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/users",
       "status": 200,
       "ok": true,
-      "durationMs": 1544,
+      "durationMs": 1807,
       "responseBody": {
         "users": [
           {
@@ -3879,15 +4119,87 @@
             "role": "admin",
             "created_at": "2026-03-18T05:46:29.022091+00:00",
             "blocked": false
+          },
+          {
+            "id": "eba57bff-340f-4a6f-9d79-fa0e51986e14",
+            "name": "Demo Vendor",
+            "email": "demo.vendor@swift.com",
+            "role": "vendor",
+            "created_at": "2026-03-18T05:46:25.100259+00:00",
+            "blocked": false
+          },
+          {
+            "id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+            "name": "Demo User",
+            "email": "demo.user@swift.com",
+            "role": "user",
+            "created_at": "2026-03-18T05:46:21.879252+00:00",
+            "blocked": false
+          },
+          {
+            "id": "49fef2e1-8b8e-4cd8-aff1-6f08d0fc06fe",
+            "name": "Demo User",
+            "email": "demo@user.com",
+            "role": "user",
+            "created_at": "2026-03-11T04:03:28.802334+00:00",
+            "blocked": false
+          },
+          {
+            "id": "c6a1b4a5-939b-4936-b3fd-23cdd4cd762b",
+            "name": "susin",
+            "email": "susindran@gmail.com",
+            "role": "user",
+            "created_at": "2026-03-11T03:56:49.656561+00:00",
+            "blocked": false
+          },
+          {
+            "id": "120352bb-bca3-4fb6-9ae4-11a4d09bf6be",
+            "name": "Test User",
+            "email": "user@example.com",
+            "role": "user",
+            "created_at": "2026-03-10T04:03:22.898465+00:00",
+            "blocked": false
+          },
+          {
+            "id": "7afd125b-8545-4393-ad8c-816587a8a9f8",
+            "name": "Global Admin",
+            "email": "admin@swift.com",
+            "role": "admin",
+            "created_at": "2026-03-08T12:34:54.885617+00:00",
+            "blocked": false
+          },
+          {
+            "id": "8c921d6c-b035-4aee-b5f8-bf1e62445a54",
+            "name": "MADURAI",
+            "email": "madurai@bun.com",
+            "role": "vendor",
+            "created_at": "2026-03-08T04:53:08.369139+00:00",
+            "blocked": false
+          },
+          {
+            "id": "18cbb3d3-5ef4-493f-9500-db8383263bb6",
+            "name": "KARAIKUDI",
+            "email": "karaikudi@spice.com",
+            "role": "vendor",
+            "created_at": "2026-03-08T04:53:07.583024+00:00",
+            "blocked": false
+          },
+          {
+            "id": "f9994a91-ca34-4f1f-8439-6b4c5268d26a",
+            "name": "ANNA",
+            "email": "anna@bhawan.com",
+            "role": "vendor",
+            "created_at": "2026-03-08T04:53:06.65753+00:00",
+            "blocked": false
           }
         ],
         "page": 1,
         "limit": 20,
-        "total": 1,
+        "total": 10,
         "meta": {
           "page": 1,
           "limit": 20,
-          "total": 1,
+          "total": 10,
           "totalPages": 1,
           "hasNextPage": false,
           "hasPreviousPage": false
@@ -3902,7 +4214,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/vendors/pending",
       "status": 200,
       "ok": true,
-      "durationMs": 1043,
+      "durationMs": 2144,
       "responseBody": {
         "vendors": [],
         "page": 1,
@@ -3926,7 +4238,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/campus/buildings",
       "status": 200,
       "ok": true,
-      "durationMs": 876,
+      "durationMs": 1731,
       "responseBody": []
     },
     {
@@ -3937,7 +4249,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/admin/campus/zones",
       "status": 200,
       "ok": true,
-      "durationMs": 795,
+      "durationMs": 1127,
       "responseBody": []
     },
     {
@@ -3948,7 +4260,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/menus/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
       "status": 200,
       "ok": true,
-      "durationMs": 580,
+      "durationMs": 739,
       "responseBody": [
         {
           "id": "dd170254-120f-48c8-8b4c-7149239971e6",
@@ -4214,7 +4526,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/reviews/vendor/17209676-e918-46e9-a307-a70cb8f9e4cf",
       "status": 200,
       "ok": true,
-      "durationMs": 1281,
+      "durationMs": 1080,
       "responseBody": []
     },
     {
@@ -4223,9 +4535,9 @@
       "method": "POST",
       "path": "/orders",
       "url": "https://swift-campus.vercel.app/api/v1/orders",
-      "status": 500,
-      "ok": false,
-      "durationMs": 2218,
+      "status": 201,
+      "ok": true,
+      "durationMs": 3438,
       "requestBody": {
         "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
         "total_amount": 100,
@@ -4238,8 +4550,20 @@
         ]
       },
       "responseBody": {
-        "error": "InternalServerError",
-        "message": "Access Denied"
+        "id": "a18dacca-a78c-480a-a6f3-fcdb2780e0cb",
+        "user_id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+        "vendor_id": "17209676-e918-46e9-a307-a70cb8f9e4cf",
+        "status": "pending",
+        "total_amount": 100,
+        "created_at": "2026-03-20T07:03:32.493293+00:00",
+        "updated_at": "2026-03-20T07:03:32.493293+00:00",
+        "eta": {
+          "min_minutes": 14,
+          "max_minutes": 24,
+          "confidence": "high",
+          "updated_at": "2026-03-20T07:03:33.573Z",
+          "note": "ETA range is a rolling estimate based on queue status and order age."
+        }
       }
     },
     {
@@ -4250,7 +4574,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/promos/validate",
       "status": 200,
       "ok": true,
-      "durationMs": 805,
+      "durationMs": 903,
       "requestBody": {
         "code": "WELCOME10",
         "order_total": 100
@@ -4269,7 +4593,7 @@
       "url": "https://swift-campus.vercel.app/api/v1/payments/create-order",
       "status": 200,
       "ok": true,
-      "durationMs": 1174,
+      "durationMs": 1335,
       "requestBody": {
         "amount": 100
       },
@@ -4278,14 +4602,42 @@
         "amount_due": 10000,
         "amount_paid": 0,
         "attempts": 0,
-        "created_at": 1773990789,
+        "created_at": 1773990215,
         "currency": "INR",
         "entity": "order",
-        "id": "order_STORtYBJOHt3Be",
+        "id": "order_STOHn5Vk4LE8dm",
         "notes": [],
         "offer_id": null,
-        "receipt": "receipt_1773990789077",
+        "receipt": "receipt_1773990215075",
         "status": "created"
+      }
+    },
+    {
+      "id": "delivery.location.get",
+      "role": "user",
+      "method": "GET",
+      "path": "/delivery/a18dacca-a78c-480a-a6f3-fcdb2780e0cb/location",
+      "url": "https://swift-campus.vercel.app/api/v1/delivery/a18dacca-a78c-480a-a6f3-fcdb2780e0cb/location",
+      "status": 200,
+      "ok": true,
+      "durationMs": 900,
+      "responseBody": {
+        "message": "No location data available yet",
+        "data": null
+      }
+    },
+    {
+      "id": "orders.cancel",
+      "role": "user",
+      "method": "PATCH",
+      "path": "/orders/a18dacca-a78c-480a-a6f3-fcdb2780e0cb/cancel",
+      "url": "https://swift-campus.vercel.app/api/v1/orders/a18dacca-a78c-480a-a6f3-fcdb2780e0cb/cancel",
+      "status": 500,
+      "ok": false,
+      "durationMs": 1881,
+      "responseBody": {
+        "error": "InternalServerError",
+        "message": "An internal server error occurred"
       }
     },
     {
@@ -4296,13 +4648,19 @@
       "url": "https://swift-campus.vercel.app/api/v1/notifications/device",
       "status": 201,
       "ok": true,
-      "durationMs": 817,
+      "durationMs": 1008,
       "requestBody": {
-        "token": "live-test-1773990788870",
+        "token": "live-test-1773990217802",
         "platform": "android"
       },
       "responseBody": {
-        "success": true
+        "id": "fc647b76-23e5-4d7e-af79-8ccbd092a614",
+        "user_id": "08fcfea1-20e8-4822-9b8e-1b9d65a81d7c",
+        "audience": "user",
+        "token": "live-test-1773990217802",
+        "platform": "android",
+        "created_at": "2026-03-20T07:03:39.342713+00:00",
+        "updated_at": "2026-03-20T07:03:39.225+00:00"
       }
     }
   ]

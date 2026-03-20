@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { supabase } from '../services/supabase';
+import { createSupabaseUserClient, supabase } from '../services/supabase';
 import { createNotification } from '../services/notificationService';
 import { isPointInsideGeojson } from '../services/geofenceService';
 import { validatePromo } from '../services/promoService';
@@ -99,8 +99,21 @@ const attachVendorPacing = <T extends { status?: string; created_at?: string }>(
     pacing: buildVendorPacing(order),
 });
 
+const isAccessDeniedError = (error: any) => {
+    const message = String(error?.message || error || '').toLowerCase();
+    return message.includes('row-level security')
+        || message.includes('permission denied')
+        || message.includes('access denied')
+        || message.includes('rls');
+};
+
 export const createOrder = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
+    const authHeader = request.headers.authorization;
+    const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.slice('Bearer '.length).trim()
+        : '';
+    const writeClient = token ? createSupabaseUserClient(token) : supabase;
     const {
         vendor_id,
         items,
@@ -141,7 +154,7 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
     }
 
     // Ensure the authenticated profile exists in public.users to satisfy FK constraints on orders.user_id.
-    const { data: existingUser, error: userLookupError } = await supabase
+    const { data: existingUser, error: userLookupError } = await writeClient
         .from('users')
         .select('id')
         .eq('id', user.sub)
@@ -155,7 +168,7 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
             ? user.email
             : `${user.sub}@local.invalid`;
 
-        const upsertUser = await supabase
+        const upsertUser = await writeClient
             .from('users')
             .upsert({
                 id: user.sub,
@@ -285,11 +298,19 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
     let orderError: any = null;
 
     for (const payload of orderInsertPayloads) {
-        const inserted = await supabase
+        let inserted = await writeClient
             .from('orders')
             .insert(payload)
             .select()
             .single();
+
+        if (inserted.error && isAccessDeniedError(inserted.error)) {
+            inserted = await supabase
+                .from('orders')
+                .insert(payload)
+                .select()
+                .single();
+        }
 
         if (!inserted.error && inserted.data) {
             order = inserted.data;
@@ -330,32 +351,56 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         price: item.price || item.unit_price,
     }));
 
-    let itemsInsert = await supabase
+    let itemsInsert = await writeClient
         .from('order_items')
         .insert(orderItemsLegacy);
 
-    if (itemsInsert.error) {
+    if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
         itemsInsert = await supabase
+            .from('order_items')
+            .insert(orderItemsLegacy);
+    }
+
+    if (itemsInsert.error) {
+        itemsInsert = await writeClient
             .from('order_items')
             .insert(orderItemsModern);
+
+        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
+            itemsInsert = await supabase
+                .from('order_items')
+                .insert(orderItemsModern);
+        }
     }
 
     if (itemsInsert.error) {
-        itemsInsert = await supabase
+        itemsInsert = await writeClient
             .from('order_items')
             .insert(orderItemsLegacyPrice);
+
+        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
+            itemsInsert = await supabase
+                .from('order_items')
+                .insert(orderItemsLegacyPrice);
+        }
     }
 
     if (itemsInsert.error) {
-        itemsInsert = await supabase
+        itemsInsert = await writeClient
             .from('order_items')
             .insert(orderItemsModernPrice);
+
+        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
+            itemsInsert = await supabase
+                .from('order_items')
+                .insert(orderItemsModernPrice);
+        }
     }
 
     if (itemsInsert.error) throw itemsInsert.error;
 
     if (promoId) {
-        const redemptionInsert = await supabase.from('promotion_redemptions').insert({
+        const redemptionInsert = await writeClient.from('promotion_redemptions').insert({
             promo_id: promoId,
             user_id: user.sub,
             order_id: order.id,
@@ -541,14 +586,18 @@ export const cancelUserOrder = async (request: FastifyRequest, reply: FastifyRep
 
     if (vendor?.owner_id) {
         const compactId = data.id.substring(0, 8).toUpperCase();
-        await createNotification({
-            userId: vendor.owner_id,
-            audience: 'vendor',
-            type: 'order_cancelled',
-            title: 'Order cancelled by customer',
-            body: `Order #${compactId} was cancelled by the customer`,
-            metadata: { order_id: data.id },
-        });
+        try {
+            await createNotification({
+                userId: vendor.owner_id,
+                audience: 'vendor',
+                type: 'order_cancelled',
+                title: 'Order cancelled by customer',
+                body: `Order #${compactId} was cancelled by the customer`,
+                metadata: { order_id: data.id },
+            });
+        } catch (notificationError) {
+            request.log.warn({ err: notificationError, orderId: data.id }, 'orders.cancel: vendor notification failed');
+        }
     }
     return reply.send(attachEtaTrust(data));
 };

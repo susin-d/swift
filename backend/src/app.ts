@@ -27,7 +27,9 @@ export const buildApp = async (authOverride?: any) => {
 
     // Global Error Handler
     app.setErrorHandler((error: any, request: any, reply: any) => {
-        const statusCode = error.statusCode || 500;
+        const rawErrorMessage = String(error?.message || error || '');
+        const isRlsDenied = rawErrorMessage.includes('RLS') || rawErrorMessage.includes('row-level security');
+        const statusCode = (isRlsDenied ? 403 : (error.statusCode || 500));
         const requestId = request.id ?? 'unknown';
         const clientRequestId = request.headers?.['x-client-request-id'] ?? 'n/a';
 
@@ -37,7 +39,7 @@ export const buildApp = async (authOverride?: any) => {
             error.message || String(error)
         );
 
-        let message = error.message || String(error);
+        let message = rawErrorMessage;
         if (statusCode === 404) {
             message = 'Resource not found';
         } else if (statusCode === 400 && error.validation) {

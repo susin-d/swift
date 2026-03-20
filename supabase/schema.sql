@@ -207,6 +207,7 @@ ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menus ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_delivery_locations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
@@ -263,6 +264,31 @@ CREATE POLICY "Vendors can update their orders" ON public.orders FOR UPDATE USIN
   EXISTS (SELECT 1 FROM public.vendors WHERE vendors.id = orders.vendor_id AND vendors.owner_id = auth.uid())
 );
 
+CREATE POLICY "Users can insert own order items" ON public.order_items FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1
+    FROM public.orders
+    WHERE orders.id = order_items.order_id
+      AND orders.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Users and vendors can view order items" ON public.order_items FOR SELECT USING (
+  EXISTS (
+    SELECT 1
+    FROM public.orders
+    WHERE orders.id = order_items.order_id
+      AND (
+        orders.user_id = auth.uid()
+        OR EXISTS (
+          SELECT 1
+          FROM public.vendors
+          WHERE vendors.id = orders.vendor_id AND vendors.owner_id = auth.uid()
+        )
+      )
+  )
+);
+
 CREATE POLICY "Vendors can upsert delivery locations" ON public.order_delivery_locations FOR ALL USING (
   EXISTS (
     SELECT 1 FROM public.orders
@@ -299,3 +325,4 @@ CREATE POLICY "Users can manage own device tokens" ON public.device_tokens FOR A
 
 -- Promotion redemptions
 CREATE POLICY "Users can view own promo redemptions" ON public.promotion_redemptions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own promo redemptions" ON public.promotion_redemptions FOR INSERT WITH CHECK (auth.uid() = user_id);
