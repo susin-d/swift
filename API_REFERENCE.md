@@ -23,7 +23,7 @@ Returns versioned contract metadata for high-traffic endpoints and the shared er
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.3",
+    "version": "2026.03.s11.4",
     "generatedAt": "2026-03-15T18:00:00.000Z",
     "totalEndpoints": 42,
     "errorEnvelope": {
@@ -50,7 +50,7 @@ Returns chronological, versioned contract changes for consumer compatibility che
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.3",
+    "version": "2026.03.s11.4",
     "count": 27,
     "changes": [
       {
@@ -68,7 +68,7 @@ Returns feature flags for staged contract-rollout adoption across app consumers.
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.3",
+    "version": "2026.03.s11.4",
     "count": 11,
     "flags": [
       {
@@ -697,6 +697,16 @@ Delete a specific address.
 ### `PATCH /addresses/:id/default`
 Set an address as the default.
 
+## Cart Sync
+
+Protected by `authenticate` + customer-user role enforcement.
+
+### `GET /cart`
+Fetch the current authenticated user's backend-synced cart snapshot.
+
+### `PATCH /cart`
+Replace the authenticated user's cart with the provided `items` array payload.
+
 ## Customer Reviews
 
 ### `GET /reviews/vendor/:vendorId`
@@ -721,12 +731,13 @@ Update the delivery location.
   - `POST /orders`
   - `GET /orders/me`
   - `PATCH /orders/:id/cancel`
+  - `GET|PATCH /cart`
   - `GET|POST|DELETE|PATCH /addresses`
   - `POST /payments/create-order`
   - `POST /payments/verify`
   - `POST /reviews`
 - Delivery write access now matches the documented operational scope: `POST /delivery/location` requires vendor/admin role, while `GET /delivery/:orderId/location` remains authenticated.
-- The contracts feed reflects this as registry version `2026.03.s11.1`, changelog count `26`, and feature-flag count `11`.
+- The contracts feed reflects this as registry version `2026.03.s11.4`, changelog count `28`, and feature-flag count `11`.
 
 ## Admin Management
 

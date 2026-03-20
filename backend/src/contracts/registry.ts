@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.3';
+export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.4';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -352,6 +352,38 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: '[].id', type: 'string(uuid)', required: true, description: 'Address id.' },
                 { name: '[].label', type: 'string', required: true, description: 'Address label.' },
                 { name: '[].address_line', type: 'string', required: true, description: 'Address body.' }
+            ]
+        }
+    },
+    {
+        id: 'cart.get',
+        method: 'GET',
+        path: '/api/v1/cart',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Current authenticated user cart snapshot.',
+            fields: [
+                { name: 'items', type: 'array<object>', required: true, description: 'Cart item list with embedded menu item payload and quantity.' }
+            ]
+        }
+    },
+    {
+        id: 'cart.set',
+        method: 'PATCH',
+        path: '/api/v1/cart',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Replace user cart contents with the provided list.',
+            fields: [
+                { name: 'items', type: 'array<object>', required: true, description: 'Cart item list where each item includes item payload and quantity.' }
+            ]
+        },
+        response: {
+            description: 'Updated cart snapshot.',
+            fields: [
+                { name: 'items', type: 'array<object>', required: true, description: 'Persisted cart items.' }
             ]
         }
     },

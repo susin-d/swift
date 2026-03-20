@@ -186,6 +186,13 @@ CREATE TABLE IF NOT EXISTS favorites (
   UNIQUE(user_id, vendor_id)
 );
 
+CREATE TABLE IF NOT EXISTS user_carts (
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE PRIMARY KEY,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS vendor_settings (
   vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE PRIMARY KEY,
   preparation_time_avg INTEGER DEFAULT 15,
@@ -216,6 +223,7 @@ ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendor_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.campus_buildings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
@@ -310,6 +318,12 @@ CREATE POLICY "Public can view delivery zones" ON public.delivery_zones FOR SELE
 
 -- Class sessions (user schedule)
 CREATE POLICY "Users can manage own class sessions" ON public.class_sessions FOR ALL USING (auth.uid() = user_id);
+
+-- User carts
+CREATE POLICY "Users can view own cart" ON public.user_carts FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own cart" ON public.user_carts FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own cart" ON public.user_carts FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own cart" ON public.user_carts FOR DELETE USING (auth.uid() = user_id);
 
 -- Promotions
 CREATE POLICY "Public can view active promotions" ON public.promotions FOR SELECT USING (

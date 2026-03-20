@@ -49,6 +49,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - App clients apply bounded retry/backoff, superseded request cancellation, and short-lived contracts feed caching.
    - User app now degrades gracefully when recommendations or notifications endpoints temporarily return server errors, keeping home and notifications usable with safe fallbacks.
    - Basket checkout summary is height-capped with internal scrolling so cart food items remain visible on smaller screens.
+   - User cart now syncs with backend through `/api/v1/cart` (`GET`/`PATCH`) with local cache fallback in `user_app`.
 
    Trust surfaces (Sprint 5):
    - Order create/list responses include ETA confidence envelope (`eta.min_minutes`, `eta.max_minutes`, `eta.confidence`).

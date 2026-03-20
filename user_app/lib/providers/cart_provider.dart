@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/menu_model.dart';
+import '../services/cart_service.dart';
 
 class CartItem {
   final MenuItemModel item;
@@ -13,27 +15,39 @@ class CartItem {
 
 class CartNotifier extends StateNotifier<Map<String, CartItem>> {
   static const String _storageKey = 'user_app_cart_v1';
+  final CartService _cartService = CartService();
+
+  bool _syncInFlight = false;
+  bool _syncQueued = false;
 
   CartNotifier() : super({}) {
-    _loadCart();
+    unawaited(_loadCart());
   }
 
   Future<void> _loadCart() async {
+    await _loadLocalCart();
+    await _hydrateFromBackend();
+  }
+
+  Future<void> _loadLocalCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final encoded = prefs.getString(_storageKey);
-      if (encoded == null || encoded.isEmpty || state.isNotEmpty) return;
+      if (encoded == null || encoded.isEmpty) return;
 
       final decoded = jsonDecode(encoded);
       if (decoded is! List) return;
 
       final restored = <String, CartItem>{};
       for (final entry in decoded) {
-        if (entry is! Map<String, dynamic>) continue;
-        final itemJson = entry['item'];
-        final quantityValue = entry['quantity'];
-        if (itemJson is! Map<String, dynamic> || quantityValue is! num) continue;
+        if (entry is! Map) continue;
 
+        final row = Map<String, dynamic>.from(entry);
+        final itemJsonRaw = row['item'];
+        final quantityValue = row['quantity'];
+        if (itemJsonRaw is! Map || quantityValue is! num) continue;
+
+        final itemJson = Map<String, dynamic>.from(itemJsonRaw);
         final item = MenuItemModel.fromJson(itemJson);
         final quantity = quantityValue.toInt();
         if (quantity <= 0) continue;
@@ -47,20 +61,89 @@ class CartNotifier extends StateNotifier<Map<String, CartItem>> {
     }
   }
 
-  Future<void> _persistCart() async {
+  Future<void> _hydrateFromBackend() async {
+    try {
+      final remoteRows = await _cartService.getCartItems();
+      if (remoteRows == null) return;
+
+      final remoteState = _deserialize(remoteRows);
+      if (remoteState.isNotEmpty || state.isEmpty) {
+        state = remoteState;
+        await _persistLocalOnly();
+        return;
+      }
+
+      if (state.isNotEmpty) {
+        await _cartService.setCartItems(_serializeState(state));
+      }
+    } catch (_) {
+      // Keep local cart behavior when backend sync is unavailable.
+    }
+  }
+
+  Map<String, CartItem> _deserialize(List<Map<String, dynamic>> rows) {
+    final restored = <String, CartItem>{};
+
+    for (final row in rows) {
+      final itemRaw = row['item'];
+      final quantityRaw = row['quantity'];
+      if (itemRaw is! Map || quantityRaw is! num) continue;
+
+      final item = MenuItemModel.fromJson(Map<String, dynamic>.from(itemRaw));
+      final quantity = quantityRaw.toInt();
+      if (quantity <= 0) continue;
+
+      restored[item.id] = CartItem(item: item, quantity: quantity);
+    }
+
+    return restored;
+  }
+
+  List<Map<String, dynamic>> _serializeState(Map<String, CartItem> source) {
+    return source.values
+        .map(
+          (cartItem) => {
+            'item': cartItem.item.toJson(),
+            'quantity': cartItem.quantity,
+          },
+        )
+        .toList();
+  }
+
+  Future<void> _persistLocalOnly() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final payload = state.values
-          .map(
-            (cartItem) => {
-              'item': cartItem.item.toJson(),
-              'quantity': cartItem.quantity,
-            },
-          )
-          .toList();
+      final payload = _serializeState(state);
       await prefs.setString(_storageKey, jsonEncode(payload));
     } catch (_) {
       // Keep cart usable even if persistence fails.
+    }
+  }
+
+  Future<void> _persistCart({required bool syncBackend}) async {
+    await _persistLocalOnly();
+    if (syncBackend) {
+      unawaited(_syncToBackend());
+    }
+  }
+
+  Future<void> _syncToBackend() async {
+    if (_syncInFlight) {
+      _syncQueued = true;
+      return;
+    }
+
+    _syncInFlight = true;
+    try {
+      do {
+        _syncQueued = false;
+        final snapshot = _serializeState(state);
+        await _cartService.setCartItems(snapshot);
+      } while (_syncQueued);
+    } catch (_) {
+      // Fall back to local-only persistence when backend sync fails.
+    } finally {
+      _syncInFlight = false;
     }
   }
 
@@ -73,7 +156,7 @@ class CartNotifier extends StateNotifier<Map<String, CartItem>> {
       newState[item.id] = CartItem(item: item);
       state = newState;
     }
-    _persistCart();
+    unawaited(_persistCart(syncBackend: true));
   }
 
   void removeItem(MenuItemModel item) {
@@ -86,13 +169,13 @@ class CartNotifier extends StateNotifier<Map<String, CartItem>> {
         newState.remove(item.id);
         state = newState;
       }
-      _persistCart();
+      unawaited(_persistCart(syncBackend: true));
     }
   }
 
   void clearCart() {
     state = {};
-    _persistCart();
+    unawaited(_persistCart(syncBackend: true));
   }
 
   double get totalAmount {

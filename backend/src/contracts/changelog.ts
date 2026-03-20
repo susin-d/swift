@@ -12,6 +12,15 @@ export type ContractChange = {
 
 export const CONTRACT_CHANGELOG: ContractChange[] = [
     {
+        id: 'chg-2026-03-20-31',
+        version: '2026.03.s11.4',
+        timestamp: '2026-03-20T11:55:00.000Z',
+        changeType: 'added',
+        endpointId: 'cart.get',
+        summary: 'Added authenticated cart fetch/sync endpoints for user_app backend cart persistence.',
+        consumers: ['user_app', 'shared']
+    },
+    {
         id: 'chg-2026-03-20-30',
         version: '2026.03.s11.3',
         timestamp: '2026-03-20T10:05:00.000Z',
