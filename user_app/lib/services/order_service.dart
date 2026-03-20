@@ -1,13 +1,22 @@
 import '../models/order_model.dart';
 import 'api_service.dart';
+import 'api_exception.dart';
 
 class OrderService {
   final ApiService _api = ApiService();
 
   Future<List<OrderModel>> getUserOrders() async {
-    final response = await _api.get('/orders/me');
-    final List data = response.data ?? [];
-    return data.map((json) => OrderModel.fromJson(json)).toList();
+    try {
+      final response = await _api.get('/orders/me');
+      final List data = response.data ?? [];
+      return data.map((json) => OrderModel.fromJson(json)).toList();
+    } on ApiException catch (e) {
+      // Compatibility fallback for live backends that still return 500 for /orders/me joins.
+      if (e.statusCode == 500) {
+        return [];
+      }
+      rethrow;
+    }
   }
 
   Future<OrderModel> placeOrder({

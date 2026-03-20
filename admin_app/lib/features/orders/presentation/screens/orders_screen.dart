@@ -106,7 +106,7 @@ class _OrderRow extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Order ${order.id.substring(0, order.id.length > 8 - 8 : order.id.length)}',
+                      'Order ${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
@@ -175,7 +175,7 @@ class _OrderRow extends ConsumerWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(error ?? 'Order cancelled successfully.'),
-        backgroundColor: error == null - null : const Color(0xFFB91C1C),
+        backgroundColor: error == null ? null : const Color(0xFFB91C1C),
       ),
     );
   }

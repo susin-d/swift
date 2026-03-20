@@ -12,6 +12,15 @@ export type ContractChange = {
 
 export const CONTRACT_CHANGELOG: ContractChange[] = [
     {
+        id: 'chg-2026-03-20-30',
+        version: '2026.03.s11.3',
+        timestamp: '2026-03-20T10:05:00.000Z',
+        changeType: 'added',
+        endpointId: 'public.recommendations.list',
+        summary: 'Added backend-ranked recommended food items endpoint for user home feed.',
+        consumers: ['user_app', 'shared']
+    },
+    {
         id: 'chg-2026-03-19-29',
         version: '2026.03.s11.2',
         timestamp: '2026-03-19T14:10:00.000Z',

@@ -16,6 +16,7 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
       ),
       scaffoldBackgroundColor: AppColors.background,
+      canvasColor: AppColors.background,
       
       // Modern Typography using Outfit for Headlines and Inter for Body
       textTheme: GoogleFonts.interTextTheme().copyWith(
@@ -67,7 +68,8 @@ class AppTheme {
 
       // AppBar Design
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white.withValues(alpha: 0.8),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.outfit(
@@ -101,7 +103,7 @@ class AppTheme {
       // Input Decoration with glassmorphism style
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.inputBackground,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(22),
           borderSide: const BorderSide(color: AppColors.border, width: 1.5),

@@ -88,6 +88,18 @@ export const getMeHandler = async (request: FastifyRequest, reply: FastifyReply)
 export const registerHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password, name } = request.body as any;
 
+    if (!email || !password || !name) {
+        const err = new Error('Name, email, and password are required') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+        const err = new Error('Password must be at least 8 characters') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -96,29 +108,49 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
         }
     });
 
-    if (error) throw error;
+    if (error) {
+        const message = (error.message || '').toLowerCase();
+        const err = new Error(error.message) as any;
+        err.statusCode = message.includes('already registered') ? 409 : 400;
+        throw err;
+    }
 
-    if (data.user) {
-        // 1. Sync to public.users
-        const { error: userError } = await supabase
-            .from('users')
-            .insert({
-                id: data.user.id,
-                name,
-                email,
-                role: 'user'
-            });
+    if (!data.user) {
+        const err = new Error('Unable to complete registration') as any;
+        err.statusCode = 500;
+        throw err;
+    }
 
-        if (userError) throw userError;
+    const identities = (data.user as any).identities as Array<unknown> | undefined;
+    if (Array.isArray(identities) && identities.length === 0) {
+        const err = new Error('User already registered') as any;
+        err.statusCode = 409;
+        throw err;
+    }
 
-        // 2. Create customer profile
-        const { error: profileError } = await supabase
-            .from('customer_profiles')
-            .insert({ id: data.user.id });
+    // 1. Sync to public.users (idempotent)
+    const { error: userError } = await supabase
+        .from('users')
+        .upsert({
+            id: data.user.id,
+            name,
+            email,
+            role: 'user'
+        }, { onConflict: 'id' });
 
-        if (profileError) {
-            console.error('Customer profile creation error:', profileError);
-        }
+    if (userError) {
+        const err = new Error(userError.message) as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    // 2. Ensure customer profile exists (idempotent)
+    const { error: profileError } = await supabase
+        .from('customer_profiles')
+        .upsert({ id: data.user.id }, { onConflict: 'id' });
+
+    if (profileError) {
+        console.error('Customer profile creation error:', profileError);
     }
 
     return reply.code(201).send({ message: 'Registration successful', user: data.user });

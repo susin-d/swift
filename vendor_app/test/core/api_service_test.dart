@@ -12,6 +12,15 @@ void main() {
   });
 
   group('ApiService', () {
+    test('uses live production base URL', () {
+      final service = ApiService();
+
+      expect(
+        service.dio.options.baseUrl,
+        equals('https://swift-campus.vercel.app/api/v1'),
+      );
+    });
+
     test('retries retryable GET failures and eventually succeeds', () async {
       final service = ApiService();
       var attempts = 0;

@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:math';
 
-const _baseUrl = 'https://campus-backend-three.vercel.app/api/v1';
+const _baseUrl = 'https://swift-campus.vercel.app/api/v1';
 
 class ApiClient {
   static const int _maxRetries = 2;

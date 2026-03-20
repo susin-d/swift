@@ -1,6 +1,13 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { supabase } from '../services/supabase';
 
+const isAddressTableMissing = (error: any) => {
+    if (!error) return false;
+    const code = String(error.code ?? '');
+    const message = String(error.message ?? '').toLowerCase();
+    return code === 'PGRST205' || message.includes('user_addresses') && message.includes('schema cache');
+};
+
 export const getAddresses = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
 
@@ -11,7 +18,12 @@ export const getAddresses = async (request: FastifyRequest, reply: FastifyReply)
         .order('is_default', { ascending: false })
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+        if (isAddressTableMissing(error)) {
+            return reply.send([]);
+        }
+        throw error;
+    }
     return reply.send(data);
 };
 
@@ -36,7 +48,14 @@ export const addAddress = async (request: FastifyRequest, reply: FastifyReply) =
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        if (isAddressTableMissing(error)) {
+            const err = new Error('Address book is not configured yet') as any;
+            err.statusCode = 503;
+            throw err;
+        }
+        throw error;
+    }
     return reply.code(201).send(data);
 };
 
@@ -50,7 +69,14 @@ export const deleteAddress = async (request: FastifyRequest, reply: FastifyReply
         .eq('id', id)
         .eq('user_id', user.sub);
 
-    if (error) throw error;
+    if (error) {
+        if (isAddressTableMissing(error)) {
+            const err = new Error('Address book is not configured yet') as any;
+            err.statusCode = 503;
+            throw err;
+        }
+        throw error;
+    }
     return reply.code(204).send();
 };
 
@@ -66,6 +92,13 @@ export const setDefaultAddress = async (request: FastifyRequest, reply: FastifyR
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        if (isAddressTableMissing(error)) {
+            const err = new Error('Address book is not configured yet') as any;
+            err.statusCode = 503;
+            throw err;
+        }
+        throw error;
+    }
     return reply.send(data);
 };

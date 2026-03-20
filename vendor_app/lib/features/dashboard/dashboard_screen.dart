@@ -325,12 +325,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Swift Vendor', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: Text('Swift Vendor', style: theme.textTheme.titleLarge),
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         actions: [
           IconButton(
@@ -347,7 +349,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Column(
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF0D9488)),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0F8D82), Color(0xFF0A6B63)],
+                ),
+              ),
               child: Center(
                 child: Text(
                   'Swift Vendor',
@@ -389,9 +397,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Business Overview',
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF134E4A), Color(0xFF0D9488)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0D9488).withValues(alpha: 0.20),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Business Overview',
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Live queue, prep pacing, and status actions in one place.',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.88),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        DateFormat('EEE, MMM d').format(DateTime.now()),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               ref.watch(ordersProvider).when(
@@ -438,7 +504,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 24),
               Text(
                 'Active Orders',
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Triage by urgency, then swipe to progress or hold.',
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
               ref.watch(ordersProvider).when(
@@ -877,10 +948,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
     final buildingName = order['campus_buildings']?['name']?.toString();
     final roomLabel = order['delivery_room']?.toString();
-
-    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
-    final buildingName = order['campus_buildings']?['name']?.toString();
-    final roomLabel = order['delivery_room']?.toString();
     final handoffCode = order['handoff_code']?.toString();
     final quietMode = order['quiet_mode'] == true;
     final handoffStatus = order['handoff_status']?.toString() ?? 'pending';
@@ -1020,20 +1087,26 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
-          const SizedBox(height: 8),
-          Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-        ],
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, Color(0xFFF8FCFB)],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
+            const SizedBox(height: 8),
+            Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+          ],
+        ),
       ),
     );
   }
@@ -1098,6 +1171,9 @@ class _OrderListItem extends ConsumerWidget {
     final scheduledLabel = scheduledFor == null
         ? null
         : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
+    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
+    final buildingName = order['campus_buildings']?['name']?.toString();
+    final roomLabel = order['delivery_room']?.toString();
     final riskColor = switch (slaRisk) {
       'high' => Colors.red.shade400,
       'medium' => Colors.orange.shade400,
@@ -1297,6 +1373,7 @@ class _OrderListItem extends ConsumerWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

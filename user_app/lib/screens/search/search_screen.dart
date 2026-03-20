@@ -226,7 +226,7 @@ class _SearchResultCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              'â‚¹${result.price.toStringAsFixed(0)}',
+              '\u20B9${result.price.toStringAsFixed(0)}',
               style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
             ),
           ],

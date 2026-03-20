@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest --passWithNoTests",
     "test:api": "tsx scripts/test_all_apis.ts",
+    "seed:demo-user": "node scripts/seed-demo-user.js",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"

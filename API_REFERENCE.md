@@ -2,7 +2,9 @@
 
 This document outlines the core RESTful endpoints exposed by the Swift backend.
 
-**Base URL**: `http://localhost:3000/api/v1`
+**Base URL (Production)**: `https://swift-campus.vercel.app/api/v1`
+
+**Base URL (Local Development)**: `http://localhost:3000/api/v1`
 
 ## Contract Registry
 
@@ -13,9 +15,9 @@ Returns versioned contract metadata for high-traffic endpoints and the shared er
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.1",
+    "version": "2026.03.s11.3",
     "generatedAt": "2026-03-15T18:00:00.000Z",
-    "totalEndpoints": 41,
+    "totalEndpoints": 42,
     "errorEnvelope": {
       "description": "Standardized error envelope for non-2xx responses.",
       "fields": [
@@ -40,8 +42,8 @@ Returns chronological, versioned contract changes for consumer compatibility che
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.1",
-    "count": 26,
+    "version": "2026.03.s11.3",
+    "count": 27,
     "changes": [
       {
         "id": "chg-2026-03-15-01",
@@ -58,7 +60,7 @@ Returns feature flags for staged contract-rollout adoption across app consumers.
 - **Response** `200 OK`:
   ```json
   {
-    "version": "2026.03.s11.1",
+    "version": "2026.03.s11.3",
     "count": 11,
     "flags": [
       {
@@ -168,6 +170,42 @@ Status mapping:
 
 ## Authentication
 
+## Public Discovery
+
+### `GET /public/recommendations`
+Returns backend-ranked food item recommendations for the home feed.
+
+- Optional query params:
+  - `limit`: number of items to return (default `12`, max `30`)
+
+- **Response** `200 OK`:
+  ```json
+  [
+    {
+      "id": "menu-item-uuid",
+      "name": "Masala Dosa",
+      "description": "Crispy dosa with potato masala",
+      "price": 120,
+      "image_url": "https://...",
+      "category": "Breakfast",
+      "vendor": {
+        "id": "vendor-uuid",
+        "name": "Annapoorna Bhavan",
+        "is_open": true
+      },
+      "recommendation": {
+        "score": 0.87,
+        "signals": {
+          "popularity_orders": 24,
+          "recent_orders": 9,
+          "vendor_rating": 4.6,
+          "vendor_open": true
+        }
+      }
+    }
+  ]
+  ```
+
 All endpoints under `/auth` manage session handling.
 
 Security hardening notes (Sprint 8):
@@ -213,6 +251,9 @@ Register a new customer.
   ```json
   { "message": "Registration successful", "user": { "id": "uuid" } }
   ```
+- **Error Responses**:
+  - `400 ValidationError` when name/email/password are missing or password is shorter than 8 characters.
+  - `409 Conflict` when the email is already registered.
 
 ## Order Management
 

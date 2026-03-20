@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'api_exception.dart';
 
 class ApiService {
@@ -11,8 +12,9 @@ class ApiService {
 
   static const int _maxGetRetries = 2;
   static const int _baseRetryDelayMs = 300;
+  static const String _authRetryKey = 'authRetryAttempted';
 
-  static const String baseUrl = 'https://swift-tsbi.vercel.app/api/v1';
+  static const String baseUrl = 'https://swift-campus.vercel.app/api/v1';
 
   ApiService() {
     _dio.options.baseUrl = baseUrl;
@@ -21,8 +23,8 @@ class ApiService {
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await _storage.read(key: 'jwt');
-        if (token != null) {
+        final token = await _resolveAccessToken();
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
         _logger.i('REQUEST[${options.method}] => PATH: ${options.path}');
@@ -32,11 +34,71 @@ class ApiService {
         _logger.i('RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}');
         return handler.next(response);
       },
-      onError: (DioException e, handler) {
-        _logger.e('ERROR[${e.response?.statusCode}] => PATH: ${e.requestOptions.path}');
+      onError: (DioException e, handler) async {
+        final path = e.requestOptions.path;
+        final statusCode = e.response?.statusCode ?? 0;
+        final isExpectedRecommendationsFallback =
+            statusCode == 404 && path == '/public/recommendations';
+        final isExpectedOrdersFallback =
+            statusCode == 500 && path == '/orders/me';
+
+        if (isExpectedRecommendationsFallback) {
+          _logger.w('FALLBACK[404] => PATH: $path');
+        } else if (isExpectedOrdersFallback) {
+          _logger.w('FALLBACK[500] => PATH: $path');
+        } else {
+          _logger.e('ERROR[$statusCode] => PATH: $path');
+        }
+
+        final requestOptions = e.requestOptions;
+        final alreadyRetried = requestOptions.extra[_authRetryKey] == true;
+
+        if (statusCode == 401 && !alreadyRetried) {
+          final refreshedToken = await _refreshAndPersistAccessToken();
+          if (refreshedToken != null && refreshedToken.isNotEmpty) {
+            requestOptions.headers['Authorization'] = 'Bearer $refreshedToken';
+            requestOptions.extra[_authRetryKey] = true;
+
+            try {
+              final retryResponse = await _dio.fetch(requestOptions);
+              return handler.resolve(retryResponse);
+            } on DioException catch (retryError) {
+              return handler.next(retryError);
+            }
+          }
+        }
+
         return handler.next(e);
       },
     ));
+  }
+
+  Future<String?> _resolveAccessToken() async {
+    final sessionToken = Supabase.instance.client.auth.currentSession?.accessToken;
+    if (sessionToken != null && sessionToken.isNotEmpty) {
+      return sessionToken;
+    }
+
+    final persisted = await _storage.read(key: 'jwt');
+    if (persisted != null && persisted.isNotEmpty) {
+      return persisted;
+    }
+
+    return null;
+  }
+
+  Future<String?> _refreshAndPersistAccessToken() async {
+    try {
+      final response = await Supabase.instance.client.auth.refreshSession();
+      final newToken = response.session?.accessToken;
+      if (newToken != null && newToken.isNotEmpty) {
+        await _storage.write(key: 'jwt', value: newToken);
+        return newToken;
+      }
+    } catch (_) {
+      // Keep original 401 behavior when refresh is unavailable.
+    }
+    return null;
   }
 
   ApiException _mapError(DioException e, String fallbackMessage) {

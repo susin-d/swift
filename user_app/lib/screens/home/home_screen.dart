@@ -5,9 +5,8 @@ import '../../core/constants/app_colors.dart';
 import '../../providers/vendor_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
-import '../../providers/favorites_provider.dart';
 import '../../models/order_model.dart';
-import '../../widgets/vendor_card.dart';
+import '../../models/recommended_item.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
 import 'package:flutter/services.dart';
@@ -32,13 +31,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _MoodChip(label: 'Light', icon: Icons.eco_rounded, keywords: ['healthy', 'salad', 'light']),
   ];
 
-  bool _matchesMood(dynamic vendor, _MoodChip mood) {
+  bool _matchesMood(RecommendedItem item, _MoodChip mood) {
     if (mood.label == 'All') return true;
 
-    final category = (vendor.category ?? '').toString().toLowerCase();
-    final name = vendor.name.toString().toLowerCase();
-    final description = (vendor.description ?? '').toString().toLowerCase();
-    final combined = '$category $name $description';
+    final category = (item.category ?? '').toLowerCase();
+    final name = item.name.toLowerCase();
+    final description = (item.description ?? '').toLowerCase();
+    final vendorName = (item.vendor?.name ?? '').toLowerCase();
+    final combined = '$category $name $description $vendorName';
 
     return mood.keywords.any((keyword) => combined.contains(keyword));
   }
@@ -92,9 +92,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vendorsAsync = ref.watch(vendorsProvider);
+    final recommendedItemsAsync = ref.watch(recommendedItemsProvider);
     final userOrdersAsync = ref.watch(userOrdersProvider);
-    final favorites = ref.watch(favoritesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,7 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(vendorsProvider);
+              ref.invalidate(recommendedItemsProvider);
             },
             color: AppColors.primary,
             child: CustomScrollView(
@@ -224,7 +223,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: 120,
-                    child: vendorsAsync.when(
+                    child: recommendedItemsAsync.when(
                       data: (_) => ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -277,41 +276,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 16),
                     child: Text(
                       _selectedMood == 'All'
-                          ? 'Featured Vendors'
+                          ? 'Featured Food Items'
                           : '$_selectedMood Picks',
                       style: Theme.of(context).textTheme.displaySmall,
                     ),
                   ),
                 ),
 
-                // Vendor List
-                vendorsAsync.when(
-                  data: (vendors) => SliverPadding(
+                // Recommended Food List
+                recommendedItemsAsync.when(
+                  data: (items) => SliverPadding(
                     padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
-                          final filteredVendors = vendors.where((vendor) => _matchesMood(vendor, mood)).toList();
-                          if (filteredVendors.isEmpty) {
+                          final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
+                          if (filteredItems.isEmpty) {
                             return const _NoMoodMatchesCard();
                           }
 
-                          final vendor = filteredVendors[index];
+                          final item = filteredItems[index];
                           return AppAnimations.staggeredList(
                             index,
-                            VendorCard(
-                              vendor: vendor,
-                              onTap: () => context.push('/vendor/${vendor.id}'),
-                              isFavorite: favorites.contains(vendor.id),
-                              onToggleFavorite: () => ref.read(favoritesProvider.notifier).toggle(vendor.id),
+                            _RecommendedFoodCard(
+                              item: item,
+                              onTap: () {
+                                final vendorId = item.vendor?.id;
+                                if (vendorId != null && vendorId.isNotEmpty) {
+                                  context.push('/vendor/$vendorId');
+                                }
+                              },
                             ),
                           );
                         },
                         childCount: (() {
                           final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
-                          final filteredVendors = vendors.where((vendor) => _matchesMood(vendor, mood)).toList();
-                          return filteredVendors.isEmpty ? 1 : filteredVendors.length;
+                          final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
+                          return filteredItems.isEmpty ? 1 : filteredItems.length;
                         })(),
                       ),
                     ),
@@ -326,7 +328,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                   error: (e, _) => SliverFillRemaining(
-                    child: Center(child: Text('Error loading vendors: $e')),
+                    child: Center(child: Text('Error loading recommendations: $e')),
                   ),
                 ),
               ],
@@ -399,13 +401,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.textPrimary.withValues(alpha: 0.95),
+        color: AppColors.whiteGlass,
         borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -441,7 +444,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         child: Icon(
           icon,
-          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.5),
+          color: isActive ? Colors.white : AppColors.textSecondary,
           size: 24,
         ),
       ),
@@ -456,7 +459,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            child: Icon(icon, color: Colors.white.withValues(alpha: 0.5), size: 24),
+            child: Icon(icon, color: AppColors.textSecondary, size: 24),
           ),
           if (count > 0)
             Positioned(
@@ -632,10 +635,128 @@ class _NoMoodMatchesCard extends StatelessWidget {
         children: const [
           Icon(Icons.search_off_rounded, size: 28, color: AppColors.textMuted),
           SizedBox(height: 10),
-          Text('No vendors match this mood yet', style: TextStyle(fontWeight: FontWeight.w800)),
+          Text('No food items match this mood yet', style: TextStyle(fontWeight: FontWeight.w800)),
           SizedBox(height: 4),
           Text('Try a different mood chip to see more options.'),
         ],
+      ),
+    );
+  }
+}
+
+class _RecommendedFoodCard extends StatelessWidget {
+  const _RecommendedFoodCard({required this.item, required this.onTap});
+
+  final RecommendedItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final vendorName = item.vendor?.name ?? 'Campus Vendor';
+    final description = item.description?.trim();
+    final hasDescription = description != null && description.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 170,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      item.imageUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200',
+                    ),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    margin: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'Top Pick',
+                      style: GoogleFonts.outfit(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 30),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Rs ${item.price.toStringAsFixed(0)}',
+                          style: GoogleFonts.outfit(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      vendorName,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (hasDescription) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 13),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

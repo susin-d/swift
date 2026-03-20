@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AdminTheme {
   static const _primary = Color(0xFF0F766E);
   static const _primaryDark = Color(0xFF134E4A);
   static const _surfaceTint = Color(0xFFD7F3EE);
-  static const _canvas = Color(0xFFF4F7F6);
-  static const _panel = Color(0xFF102A2A);
+  static const _canvas = Color(0xFFF8FAFA);
+  static const _panel = Color(0xFF0E2322);
 
   static ThemeData get light {
     final base = ThemeData(
@@ -18,45 +19,63 @@ class AdminTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: _canvas,
+      canvasColor: _canvas,
       colorScheme: base.colorScheme.copyWith(
         primary: _primary,
         secondary: const Color(0xFFB45309),
         surface: Colors.white,
         surfaceTint: _surfaceTint,
       ),
-      textTheme: base.textTheme.copyWith(
-        headlineLarge: base.textTheme.headlineLarge?.copyWith(
+      textTheme: GoogleFonts.interTextTheme(base.textTheme).copyWith(
+        headlineLarge: GoogleFonts.outfit(
+          fontSize: 36,
           fontWeight: FontWeight.w800,
-          letterSpacing: -1.1,
+          letterSpacing: -1.2,
           color: const Color(0xFF10201F),
         ),
-        headlineMedium: base.textTheme.headlineMedium?.copyWith(
+        headlineMedium: GoogleFonts.outfit(
+          fontSize: 30,
           fontWeight: FontWeight.w800,
           letterSpacing: -0.8,
           color: const Color(0xFF10201F),
         ),
-        headlineSmall: base.textTheme.headlineSmall?.copyWith(
+        headlineSmall: GoogleFonts.outfit(
+          fontSize: 24,
           fontWeight: FontWeight.w700,
           color: const Color(0xFF10201F),
         ),
-        titleLarge: base.textTheme.titleLarge?.copyWith(
+        titleLarge: GoogleFonts.outfit(
+          fontSize: 21,
           fontWeight: FontWeight.w700,
           color: const Color(0xFF10201F),
         ),
-        titleMedium: base.textTheme.titleMedium?.copyWith(
+        titleMedium: GoogleFonts.inter(
+          fontSize: 16,
           fontWeight: FontWeight.w700,
           color: const Color(0xFF203534),
         ),
-        bodyMedium: base.textTheme.bodyMedium?.copyWith(
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14,
           color: const Color(0xFF516665),
           height: 1.45,
         ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        titleTextStyle: GoogleFonts.outfit(
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF10201F),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF10201F)),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           side: const BorderSide(color: Color(0xFFE3ECEA)),
         ),
         margin: EdgeInsets.zero,
@@ -86,7 +105,7 @@ class AdminTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
+          textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),

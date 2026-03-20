@@ -309,14 +309,42 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
 export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
 
-    const { data, error } = await supabase
+    const withCampus = await supabase
         .from('orders')
         .select('*, vendors(name), campus_buildings(name), order_items(*, menu_items(name))')
         .eq('user_id', user.sub)
         .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return reply.send((data || []).map((order: any) => attachVendorPacing(order)));
+    let ordersData: any[] | null = withCampus.data as any[] | null;
+    let queryError: any = withCampus.error;
+
+    if (queryError) {
+        // Backward compatibility: older DBs may not expose campus_buildings relation.
+        const withoutCampus = await supabase
+            .from('orders')
+            .select('*, vendors(name), order_items(*, menu_items(name))')
+            .eq('user_id', user.sub)
+            .order('created_at', { ascending: false });
+
+        ordersData = withoutCampus.data as any[] | null;
+        queryError = withoutCampus.error;
+    }
+
+    if (queryError) throw queryError;
+
+    const normalized = (ordersData || []).map((order: any) => {
+        const orderItems = Array.isArray(order?.order_items) ? order.order_items : [];
+        return {
+            ...order,
+            order_items: orderItems.map((item: any) => ({
+                ...item,
+                // user_app expects menu_item_id while some schemas use item_id
+                menu_item_id: item?.menu_item_id ?? item?.item_id,
+            })),
+        };
+    });
+
+    return reply.send(normalized.map((order: any) => attachVendorPacing(order)));
 };
 
 export const updateOrderStatus = async (request: FastifyRequest, reply: FastifyReply) => {

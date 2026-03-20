@@ -32,18 +32,25 @@ class CampusFoodApp extends ConsumerStatefulWidget {
 
 class _CampusFoodAppState extends ConsumerState<CampusFoodApp> {
   bool _registeredToken = false;
+  ProviderSubscription<User?>? _userSubscription;
 
   @override
   void initState() {
     super.initState();
-    ref.listen(userProvider, (previous, next) async {
+    _userSubscription = ref.listenManual<User?>(userProvider, (previous, next) async {
       if (next != null && !_registeredToken) {
         await _registerDeviceToken();
       }
       if (next == null) {
         _registeredToken = false;
       }
-    });
+    }, fireImmediately: true);
+  }
+
+  @override
+  void dispose() {
+    _userSubscription?.close();
+    super.dispose();
   }
 
   Future<void> _registerDeviceToken() async {

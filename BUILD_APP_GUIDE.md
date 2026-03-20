@@ -4,11 +4,14 @@
 
 The `build-app.ps1` PowerShell script automates building Flutter APK files for the Campus Food project. It builds the app, verifies the build, and moves the APK to the `apps` folder with the folder name as the filename.
 
+When `-All` is used, the script builds `vendor_app`, `admin_app`, and `user_app` in parallel using background jobs.
+
 ## Prerequisites
 
 - Flutter SDK installed and configured
 - Android SDK configured
 - PowerShell 5.0 or later (Windows)
+- Windows symlink support enabled (Developer Mode recommended)
 - Run from project root: `C:\project\food`
 
 ## Quick Start
@@ -41,6 +44,8 @@ This builds:
 1. vendor_app → `apps/vendor_app.apk`
 2. admin_app → `apps/admin_app.apk`
 3. user_app → `apps/user_app.apk`
+
+Note: The three builds are started in parallel to reduce total build time.
 
 ### Build Single App (Release)
 
@@ -92,6 +97,19 @@ Check Android SDK configuration:
 ```powershell
 flutter doctor -v
 ```
+
+### Building with plugins requires symlink support
+If Flutter fails with `Building with plugins requires symlink support`, enable symlink capability on Windows:
+```text
+Settings -> Privacy & security -> For developers -> Developer Mode
+```
+
+Then restart PowerShell and rerun:
+```powershell
+.\build-app.ps1 -All
+```
+
+If Developer Mode is not available in your environment, run PowerShell as Administrator.
 
 ### Permission error
 If you get a permission error, run PowerShell as Administrator or enable script execution:

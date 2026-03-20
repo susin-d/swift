@@ -7,7 +7,7 @@ final apiServiceProvider = Provider((ref) => ApiService());
 
 class ApiService {
   final Dio dio = Dio(BaseOptions(
-    baseUrl: 'https://swift-tsbi.vercel.app/api/v1',
+    baseUrl: 'https://swift-campus.vercel.app/api/v1',
     connectTimeout: const Duration(seconds: 5),
     receiveTimeout: const Duration(seconds: 3),
   ));

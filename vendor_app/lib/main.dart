@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vendor_app/core/router.dart';
+import 'package:vendor_app/core/vendor_theme.dart';
 import 'package:vendor_app/core/device_token_service.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 import 'package:vendor_app/features/notifications/notification_service.dart';
@@ -60,13 +61,7 @@ class _VendorAppState extends ConsumerState<VendorApp> {
     return MaterialApp.router(
       title: 'Vendor Swift',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0D9488),
-          primary: const Color(0xFF0D9488),
-        ),
-      ),
+      theme: VendorTheme.light,
       routerConfig: router,
     );
   }

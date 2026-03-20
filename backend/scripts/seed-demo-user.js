@@ -19,7 +19,7 @@ const demoUsers = [
         password: 'Demo@1234',
         name: 'Demo Vendor',
         role: 'vendor',
-        createProfile: 'vendor_profiles'
+        createProfile: 'vendors'
     },
     {
         email: 'demo.admin@swift.com',
@@ -77,7 +77,7 @@ async function seedDemoUser(userData) {
     }
 
     // Create role-specific profile if needed
-    if (createProfile) {
+    if (createProfile === 'customer_profiles') {
         let { data: profile } = await supabase.from(createProfile).select('*').eq('id', userId).single();
         if (!profile) {
             console.log(`Creating ${role} profile in ${createProfile}...`);
@@ -89,6 +89,37 @@ async function seedDemoUser(userData) {
             }
         } else {
             console.log(`✓ ${role} profile already exists`);
+        }
+    }
+
+    if (createProfile === 'vendors') {
+        const { data: vendorProfile, error: vendorFetchError } = await supabase
+            .from('vendors')
+            .select('id')
+            .eq('owner_id', userId)
+            .limit(1)
+            .maybeSingle();
+
+        if (vendorFetchError) {
+            console.error('Vendor profile lookup error:', vendorFetchError);
+        } else if (!vendorProfile) {
+            console.log('Creating vendor profile in vendors...');
+            const { error: vendorInsertError } = await supabase
+                .from('vendors')
+                .insert({
+                    owner_id: userId,
+                    name,
+                    description: 'Demo vendor account',
+                    is_open: true
+                });
+
+            if (vendorInsertError) {
+                console.error('Vendor profile creation error:', vendorInsertError);
+            } else {
+                console.log('✓ vendor profile created');
+            }
+        } else {
+            console.log('✓ vendor profile already exists');
         }
     }
 

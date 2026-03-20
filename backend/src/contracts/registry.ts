@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.2';
+export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.3';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -287,6 +287,26 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: '[].price', type: 'number', required: true, description: 'Menu item price.' },
                 { name: '[].vendor.id', type: 'string(uuid)', required: false, description: 'Vendor id.' },
                 { name: '[].vendor.name', type: 'string', required: false, description: 'Vendor name.' }
+            ]
+        }
+    },
+    {
+        id: 'public.recommendations.list',
+        method: 'GET',
+        path: '/api/v1/public/recommendations',
+        owner: 'user_app',
+        auth: 'public',
+        response: {
+            description: 'Backend-ranked recommended food items for home feed personalization.',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Menu item id.' },
+                { name: '[].name', type: 'string', required: true, description: 'Menu item name.' },
+                { name: '[].description', type: 'string', required: false, description: 'Menu item description.' },
+                { name: '[].price', type: 'number', required: true, description: 'Menu item price.' },
+                { name: '[].category', type: 'string', required: false, description: 'Menu category name.' },
+                { name: '[].vendor.id', type: 'string(uuid)', required: true, description: 'Vendor id.' },
+                { name: '[].vendor.name', type: 'string', required: true, description: 'Vendor name.' },
+                { name: '[].recommendation.score', type: 'number', required: true, description: 'Recommendation score in range 0-1.' }
             ]
         }
     },

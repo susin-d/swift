@@ -150,6 +150,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       orElse: () => const AddressModel(id: '', label: '', addressLine: '', isDefault: false),
     );
     final hasAddress = defaultAddress.id.isNotEmpty;
+    final hasAddressError = addressesAsync.hasError;
+    final canPlaceOrder = _deliverToClass ? hasAddress : (hasAddress || hasAddressError);
 
     return Container(
       padding: const EdgeInsets.all(32),
@@ -184,7 +186,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '?${subtotal.toInt()}',
+                  '\u20B9${subtotal.toInt()}',
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
                 ),
               ],
@@ -199,7 +201,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                   ),
                   Text(
-                    '-?${_discountAmount.toInt()}',
+                    '-\u20B9${_discountAmount.toInt()}',
                     style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
                   ),
                 ],
@@ -231,7 +233,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
                 ),
                 Text(
-                  '?${finalTotal.toInt()}',
+                  '\u20B9${finalTotal.toInt()}',
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
                 ),
               ],
@@ -266,7 +268,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: hasAddress ? () => _checkout(context) : null,
+                onPressed: canPlaceOrder ? () => _checkout(context) : null,
                 child: const Text('PLACE ORDER'),
               ),
             ),
@@ -298,7 +300,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           Expanded(
             child: addressesAsync.when(
               loading: () => const Text('Loading address...', style: TextStyle(fontWeight: FontWeight.w700)),
-              error: (e, _) => Text('Address unavailable: $e', style: const TextStyle(fontWeight: FontWeight.w700)),
+              error: (_, _) => const Text(
+                'Address book unavailable right now. You can still place the order.',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
               data: (_) => hasAddress
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

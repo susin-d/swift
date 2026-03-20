@@ -370,6 +370,14 @@ class _HeroBanner extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [Color(0xFF143A39), Color(0xFF0F766E), Color(0xFF15927F)],
         ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F766E).withValues(alpha: 0.26),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
       ),
       child: Wrap(
         alignment: WrapAlignment.spaceBetween,
@@ -506,7 +514,12 @@ class _StatCard extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Text(hint, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              hint,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
         ),
       ),
