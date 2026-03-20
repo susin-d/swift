@@ -493,10 +493,21 @@ Validate a promo code against an order total.
 - **Response** `200 OK`:
   ```json
   {
+    "valid": true,
     "promo_id": "uuid",
     "code": "SAVE10",
+    "discount_type": "percent",
+    "discount_value": 10,
     "discount_amount": 20,
     "final_amount": 180
+  }
+  ```
+- **Invalid promo response** `200 OK`:
+  ```json
+  {
+    "valid": false,
+    "message": "Promo code not found",
+    "code": "WELCOME10"
   }
   ```
 

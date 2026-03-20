@@ -25,16 +25,28 @@ export const validatePromoCode = async (request: FastifyRequest, reply: FastifyR
         throw err;
     }
 
-    const result = await validatePromo(code, total);
-    return reply.send({
-        promo_id: result.promo.id,
-        code: result.promo.code,
-        description: result.promo.description,
-        discount_type: result.promo.discount_type,
-        discount_value: result.promo.discount_value,
-        discount_amount: result.discount_amount,
-        final_amount: result.final_amount,
-    });
+    try {
+        const result = await validatePromo(code, total);
+        return reply.send({
+            valid: true,
+            promo_id: result.promo.id,
+            code: result.promo.code,
+            description: result.promo.description,
+            discount_type: result.promo.discount_type,
+            discount_value: result.promo.discount_value,
+            discount_amount: result.discount_amount,
+            final_amount: result.final_amount,
+        });
+    } catch (error: any) {
+        if (error?.statusCode === 400 || error?.statusCode === 404) {
+            return reply.send({
+                valid: false,
+                message: error?.message || 'Promo code is invalid',
+                code: normalizePromoCode(String(code)),
+            });
+        }
+        throw error;
+    }
 };
 
 export const getAdminPromos = async (_request: FastifyRequest, reply: FastifyReply) => {

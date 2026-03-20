@@ -78,6 +78,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - JSON response reports are written to `backend/reports/live-api-responses-latest.json` and timestamped files under `backend/reports/`.
    - Health checks are exposed as both `/health` and `/api/health` for compatibility with local and serverless path routing.
    - Several read/list APIs now degrade to safe empty or reduced-shape responses when optional DB relations are unavailable, reducing live `500` risk.
+   - If production schema drift is detected, run `backend/scripts/live_contract_hardening.sql` in Supabase SQL Editor to align orders, reviews, admin_logs, and RLS policies with the current API contract.
 
 3. **Vendor App**
    ```bash

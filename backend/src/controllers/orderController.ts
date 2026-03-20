@@ -140,6 +140,35 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         }
     }
 
+    // Ensure the authenticated profile exists in public.users to satisfy FK constraints on orders.user_id.
+    const { data: existingUser, error: userLookupError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.sub)
+        .maybeSingle();
+
+    if (!existingUser || userLookupError) {
+        const fallbackName = (typeof user?.email === 'string' && user.email.includes('@'))
+            ? user.email.split('@')[0]
+            : 'User';
+        const fallbackEmail = typeof user?.email === 'string' && user.email.length > 0
+            ? user.email
+            : `${user.sub}@local.invalid`;
+
+        const upsertUser = await supabase
+            .from('users')
+            .upsert({
+                id: user.sub,
+                role: user.role || 'user',
+                name: fallbackName,
+                email: fallbackEmail,
+            }, { onConflict: 'id' });
+
+        if (upsertUser.error) {
+            request.log.warn({ err: upsertUser.error, userId: user.sub }, 'orders.create: failed to upsert user profile');
+        }
+    }
+
     let scheduledForIso: string | null = null;
     if (scheduled_for) {
         const scheduledDate = new Date(scheduled_for);
@@ -280,21 +309,47 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         unit_price: item.price || item.unit_price,
     }));
 
+    const orderItemsModern = items.map((item: any) => ({
+        order_id: order.id,
+        menu_item_id: item.id || item.menu_item_id,
+        quantity: item.quantity,
+        unit_price: item.price || item.unit_price,
+    }));
+
+    const orderItemsLegacyPrice = items.map((item: any) => ({
+        order_id: order.id,
+        item_id: item.id || item.menu_item_id,
+        quantity: item.quantity,
+        price: item.price || item.unit_price,
+    }));
+
+    const orderItemsModernPrice = items.map((item: any) => ({
+        order_id: order.id,
+        menu_item_id: item.id || item.menu_item_id,
+        quantity: item.quantity,
+        price: item.price || item.unit_price,
+    }));
+
     let itemsInsert = await supabase
         .from('order_items')
         .insert(orderItemsLegacy);
 
     if (itemsInsert.error) {
-        const orderItemsModern = items.map((item: any) => ({
-            order_id: order.id,
-            menu_item_id: item.id || item.menu_item_id,
-            quantity: item.quantity,
-            unit_price: item.price || item.unit_price,
-        }));
-
         itemsInsert = await supabase
             .from('order_items')
             .insert(orderItemsModern);
+    }
+
+    if (itemsInsert.error) {
+        itemsInsert = await supabase
+            .from('order_items')
+            .insert(orderItemsLegacyPrice);
+    }
+
+    if (itemsInsert.error) {
+        itemsInsert = await supabase
+            .from('order_items')
+            .insert(orderItemsModernPrice);
     }
 
     if (itemsInsert.error) throw itemsInsert.error;

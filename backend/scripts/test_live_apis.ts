@@ -334,7 +334,7 @@ async function main() {
         method: 'POST',
         path: '/promos/validate',
         role: 'user',
-        expectedStatuses: [200, 404],
+        expectedStatuses: [200],
         body: { code: 'WELCOME10', order_total: 100 },
       },
       tokenByRole,
