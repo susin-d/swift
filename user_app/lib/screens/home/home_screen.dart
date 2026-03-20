@@ -7,6 +7,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
 import '../../models/recommended_item.dart';
+import '../../models/search_result.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
 import 'package:flutter/services.dart';
@@ -21,7 +22,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _selectedMood = 'All';
-  String? _selectedFeaturedItemId;
   bool _isReordering = false;
 
   static const List<_MoodChip> _moodChips = [
@@ -42,20 +42,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final combined = '$category $name $description $vendorName';
 
     return mood.keywords.any((keyword) => combined.contains(keyword));
-  }
-
-  RecommendedItem? _selectedFeaturedItem(List<RecommendedItem> filteredItems) {
-    if (filteredItems.isEmpty) return null;
-
-    if (_selectedFeaturedItemId == null) {
-      return filteredItems.first;
-    }
-
-    for (final item in filteredItems) {
-      if (item.id == _selectedFeaturedItemId) return item;
-    }
-
-    return filteredItems.first;
   }
 
   OrderModel? _latestOrder(List<OrderModel> orders) {
@@ -107,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final recommendedItemsAsync = ref.watch(recommendedItemsProvider);
+    final recommendedItemsAsync = ref.watch(allFoodItemsProvider);
     final userOrdersAsync = ref.watch(userOrdersProvider);
 
     return Scaffold(
@@ -116,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(recommendedItemsProvider);
+              ref.invalidate(allFoodItemsProvider);
             },
             color: AppColors.primary,
             child: CustomScrollView(
@@ -252,7 +238,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             index,
                             onTap: () => setState(() {
                               _selectedMood = mood.label;
-                              _selectedFeaturedItemId = null;
                             }),
                           );
                         }),
@@ -316,31 +301,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       );
                     }
 
-                    final selectedItem = _selectedFeaturedItem(filteredItems)!;
-
                     return SliverPadding(
                       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          _ItemTabsRow(
-                            items: filteredItems,
-                            selectedItemId: selectedItem.id,
-                            onSelect: (itemId) => setState(() => _selectedFeaturedItemId = itemId),
-                          ),
-                          const SizedBox(height: 14),
-                          AppAnimations.staggeredList(
-                            0,
-                            _RecommendedFoodCard(
-                              item: selectedItem,
-                              onTap: () {
-                                final vendorId = selectedItem.vendor?.id;
-                                if (vendorId != null && vendorId.isNotEmpty) {
-                                  context.push('/vendor/$vendorId');
-                                }
-                              },
-                            ),
-                          ),
-                        ]),
+                      sliver: SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 0.66,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final item = filteredItems[index];
+                            return AppAnimations.staggeredList(
+                              index,
+                              _RecommendedFoodGridCard(
+                                item: item,
+                                onTap: () {
+                                  context.push(
+                                    '/item',
+                                    extra: SearchResult(
+                                      id: item.id,
+                                      name: item.name,
+                                      description: item.description,
+                                      price: item.price,
+                                      imageUrl: item.imageUrl,
+                                      vendor: item.vendor == null
+                                          ? null
+                                          : SearchVendor(
+                                              id: item.vendor!.id,
+                                              name: item.vendor!.name,
+                                              description: item.vendor!.description,
+                                              imageUrl: item.vendor!.imageUrl,
+                                            ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                          childCount: filteredItems.length,
+                        ),
                       ),
                     );
                   },
@@ -670,54 +671,8 @@ class _NoMoodMatchesCard extends StatelessWidget {
   }
 }
 
-class _ItemTabsRow extends StatelessWidget {
-  const _ItemTabsRow({
-    required this.items,
-    required this.selectedItemId,
-    required this.onSelect,
-  });
-
-  final List<RecommendedItem> items;
-  final String selectedItemId;
-  final ValueChanged<String> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: items.map((item) {
-          final isSelected = item.id == selectedItemId;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(item.name),
-              selected: isSelected,
-              onSelected: (_) => onSelect(item.id),
-              selectedColor: AppColors.primary.withValues(alpha: 0.16),
-              labelStyle: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-                side: BorderSide(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.45)
-                      : AppColors.border,
-                ),
-              ),
-              backgroundColor: Colors.white,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
-
-class _RecommendedFoodCard extends StatelessWidget {
-  const _RecommendedFoodCard({required this.item, required this.onTap});
+class _RecommendedFoodGridCard extends StatelessWidget {
+  const _RecommendedFoodGridCard({required this.item, required this.onTap});
 
   final RecommendedItem item;
   final VoidCallback onTap;
@@ -725,33 +680,29 @@ class _RecommendedFoodCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vendorName = item.vendor?.name ?? 'Campus Vendor';
-    final description = item.description?.trim();
-    final hasDescription = description != null && description.isNotEmpty;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 170,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Ink(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
                   image: DecorationImage(
                     image: NetworkImage(
                       item.imageUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200',
@@ -759,75 +710,43 @@ class _RecommendedFoodCard extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Container(
-                    margin: const EdgeInsets.all(12),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 15),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    vendorName,
+                    style: GoogleFonts.inter(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
                     ),
-                    child: Text(
-                      'Top Pick',
-                      style: GoogleFonts.outfit(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '₹${item.price.toStringAsFixed(0)}',
+                    style: GoogleFonts.outfit(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
                     ),
                   ),
-                ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 30),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Rs ${item.price.toStringAsFixed(0)}',
-                          style: GoogleFonts.outfit(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      vendorName,
-                      style: GoogleFonts.inter(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    if (hasDescription) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 13),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

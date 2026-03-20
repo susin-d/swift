@@ -7,6 +7,25 @@ import 'api_service.dart';
 class VendorService {
   final ApiService _api = ApiService();
 
+  RecommendedItem _mapMenuToRecommendedItem(MenuItemModel item, VendorModel vendor) {
+    return RecommendedItem(
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      imageUrl: item.imageUrl,
+      category: item.category,
+      score: vendor.rating,
+      vendor: RecommendedVendor(
+        id: vendor.id,
+        name: vendor.name,
+        description: vendor.description,
+        imageUrl: vendor.imageUrl,
+        isOpen: vendor.isOpen,
+      ),
+    );
+  }
+
   Future<List<VendorModel>> getAllVendors() async {
     final response = await _api.get('/public/vendors');
     final List data = response.data ?? [];
@@ -101,5 +120,37 @@ class VendorService {
 
       return fallbackItems.take(limit).toList();
     }
+  }
+
+  Future<List<RecommendedItem>> getAllFoodItems() async {
+    final vendors = await getAllVendors();
+    if (vendors.isEmpty) return [];
+
+    final allItemsById = <String, RecommendedItem>{};
+
+    final perVendorMenus = await Future.wait(
+      vendors.map((vendor) async {
+        try {
+          final menuItems = await getVendorMenu(vendor.id);
+          return menuItems
+              .where((item) => item.id.trim().isNotEmpty && item.name.trim().isNotEmpty)
+              .map((item) => _mapMenuToRecommendedItem(item, vendor))
+              .toList();
+        } catch (_) {
+          return <RecommendedItem>[];
+        }
+      }),
+    );
+
+    for (final vendorItems in perVendorMenus) {
+      for (final item in vendorItems) {
+        allItemsById[item.id] = item;
+      }
+    }
+
+    final allItems = allItemsById.values.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+
+    return allItems;
   }
 }

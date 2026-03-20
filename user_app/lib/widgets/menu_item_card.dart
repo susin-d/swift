@@ -9,6 +9,7 @@ class MenuItemCard extends StatelessWidget {
   final int quantityInCart;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
+  final VoidCallback? onTap;
 
   const MenuItemCard({
     super.key,
@@ -16,24 +17,28 @@ class MenuItemCard extends StatelessWidget {
     required this.quantityInCart,
     required this.onIncrement,
     required this.onDecrement,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 Text(
                   item.name,
                   style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.textPrimary, letterSpacing: -0.5),
@@ -80,13 +85,13 @@ class MenuItemCard extends StatelessWidget {
                       ),
                   ],
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
+            const SizedBox(width: 16),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: CachedNetworkImage(
@@ -96,14 +101,14 @@ class MenuItemCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-              if (item.isAvailable)
-                Positioned(
-                  bottom: -8,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: quantityInCart > 0
-                        ? Container(
+                if (item.isAvailable)
+                  Positioned(
+                    bottom: -8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: quantityInCart > 0
+                          ? Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
@@ -120,6 +125,7 @@ class MenuItemCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     HapticFeedback.lightImpact();
                                     onDecrement();
@@ -133,6 +139,7 @@ class MenuItemCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 10),
                                 GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
                                   onTap: () {
                                     HapticFeedback.lightImpact();
                                     onIncrement();
@@ -141,13 +148,14 @@ class MenuItemCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          )
-                        : GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              onIncrement();
-                            },
-                            child: Container(
+                            )
+                          : GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                onIncrement();
+                              },
+                              child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                               decoration: BoxDecoration(
                                 color: AppColors.primary,
@@ -164,13 +172,14 @@ class MenuItemCard extends StatelessWidget {
                                 'ADD',
                                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
                               ),
+                              ),
                             ),
-                          ),
+                    ),
                   ),
-                ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

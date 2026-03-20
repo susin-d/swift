@@ -11,6 +11,7 @@ import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
 import '../../core/router/app_router.dart';
 import '../../services/review_service.dart';
+import '../../models/search_result.dart';
 
 enum _MenuSort { recommended, priceLowToHigh }
 
@@ -218,6 +219,26 @@ class _VendorMenuScreenState extends ConsumerState<VendorMenuScreen> {
                       MenuItemCard(
                         item: item,
                         quantityInCart: quantityInCart,
+                        onTap: () {
+                          context.push(
+                            '/item',
+                            extra: SearchResult(
+                              id: item.id,
+                              name: item.name,
+                              description: item.description,
+                              price: item.price,
+                              imageUrl: item.imageUrl,
+                              vendor: SearchVendor(
+                                id: widget.vendorId,
+                                name: vendorsAsync.maybeWhen(
+                                  data: (vendors) =>
+                                      vendors.firstWhere((v) => v.id == widget.vendorId).name,
+                                  orElse: () => 'Campus Vendor',
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                         onIncrement: () {
                           ref.read(cartProvider.notifier).addItem(item);
                           ScaffoldMessenger.of(context).showSnackBar(

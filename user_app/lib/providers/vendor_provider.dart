@@ -17,3 +17,7 @@ final vendorMenuProvider = FutureProvider.family<List<MenuItemModel>, String>((r
 final recommendedItemsProvider = FutureProvider<List<RecommendedItem>>((ref) async {
   return ref.watch(vendorServiceProvider).getRecommendedItems(limit: 12);
 });
+
+final allFoodItemsProvider = FutureProvider<List<RecommendedItem>>((ref) async {
+  return ref.watch(vendorServiceProvider).getAllFoodItems();
+});

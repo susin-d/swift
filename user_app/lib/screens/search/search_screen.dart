@@ -143,16 +143,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       itemCount: _results.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, index) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final result = _results[index];
         return _SearchResultCard(
           result: result,
           onTap: () {
-            final vendorId = result.vendor?.id;
-            if (vendorId != null && vendorId.isNotEmpty) {
-              context.push('/vendor/$vendorId');
-            }
+            context.push('/item', extra: result);
           },
         );
       },

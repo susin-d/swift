@@ -5,6 +5,7 @@ import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/menu/menu_screen.dart';
+import '../../screens/menu/item_screen.dart';
 import '../../screens/cart/cart_screen.dart';
 import '../../screens/orders/order_tracking_screen.dart';
 import '../../screens/orders/order_history_screen.dart';
@@ -45,6 +46,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/vendor/:id',
         builder: (context, state) => VendorMenuScreen(vendorId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/item',
+        builder: (context, state) => ItemScreen(item: state.extra),
       ),
       GoRoute(
         path: '/search',

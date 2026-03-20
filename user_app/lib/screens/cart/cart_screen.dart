@@ -46,7 +46,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _roomController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
   bool _quietMode = false;
-  final ScrollController _summaryScrollController = ScrollController();
 
   String _etaConfidenceLabel(int itemCount) {
     if (itemCount <= 2) return 'High confidence';
@@ -61,12 +60,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_summaryScrollController.hasClients) {
-        _summaryScrollController.jumpTo(0);
-      }
-    });
   }
 
   @override
@@ -75,7 +68,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     _promoController.dispose();
     _roomController.dispose();
     _instructionsController.dispose();
-    _summaryScrollController.dispose();
     super.dispose();
   }
 
@@ -161,136 +153,128 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final hasAddressError = addressesAsync.hasError;
     final canPlaceOrder = _deliverToClass ? hasAddress : (hasAddress || hasAddressError);
 
-    final maxSummaryHeight = MediaQuery.of(context).size.height * (_deliverToClass ? 0.74 : 0.70);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: maxSummaryHeight),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -10),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: SingleChildScrollView(
-            controller: _summaryScrollController,
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildAddressRow(context, addressesAsync, defaultAddress, hasAddress),
+              const SizedBox(height: 12),
+              _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
+              const SizedBox(height: 12),
+              _buildScheduleRow(context),
+              const SizedBox(height: 12),
+              _buildFoodOrderRow(),
+              const SizedBox(height: 12),
+              _buildPromoRow(context, subtotal),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildAddressRow(context, addressesAsync, defaultAddress, hasAddress),
-                const SizedBox(height: 12),
-                _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
-                const SizedBox(height: 12),
-                _buildScheduleRow(context),
-                const SizedBox(height: 12),
-                _buildPromoRow(context, subtotal),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Subtotal',
-                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      '\u20B9${subtotal.toInt()}',
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                    ),
-                  ],
+                const Text(
+                  'Subtotal',
+                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                 ),
-                if (_discountAmount > 0) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Promo discount',
-                        style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        '-\u20B9${_discountAmount.toInt()}',
-                        style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 12),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Fee',
-                      style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      'FREE',
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Divider(color: AppColors.border),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
-                    ),
-                    Text(
-                      '\u20B9${finalTotal.toInt()}',
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'ETA $_etaMin-$_etaMax min - ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
-                          style: const TextStyle(
-                            color: AppColors.info,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: canPlaceOrder ? () => _checkout(context) : null,
-                    child: const Text('PLACE ORDER'),
-                  ),
+                Text(
+                  '\u20B9${subtotal.toInt()}',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
                 ),
               ],
             ),
-          ),
+            if (_discountAmount > 0) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Promo discount',
+                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    '-\u20B9${_discountAmount.toInt()}',
+                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Fee',
+                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  'FREE',
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Divider(color: AppColors.border),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 24),
+                ),
+                Text(
+                  '\u20B9${finalTotal.toInt()}',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'ETA ${_etaMin}-${_etaMax} min - ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
+                      style: const TextStyle(
+                        color: AppColors.info,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: canPlaceOrder ? () => _checkout(context) : null,
+                child: const Text('PLACE ORDER'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -391,6 +375,86 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
+  Widget _buildFoodOrderRow() {
+    final cart = ref.watch(cartProvider);
+    final cartNotifier = ref.read(cartProvider.notifier);
+    final cartItems = cart.values.toList();
+    final itemCount = cart.length;
+    final quantityCount = cart.values.fold<int>(0, (sum, item) => sum + item.quantity);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.restaurant_menu_rounded, color: AppColors.primary, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Food order', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$itemCount item${itemCount == 1 ? '' : 's'} • $quantityCount total qty',
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (cartItems.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1, color: AppColors.border),
+            const SizedBox(height: 8),
+            ...cartItems.map(
+              (cartItem) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        cartItem.item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline_rounded),
+                      color: AppColors.textSecondary,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => cartNotifier.removeItem(cartItem.item),
+                    ),
+                    Text(
+                      '${cartItem.quantity}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_rounded),
+                      color: AppColors.primary,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => cartNotifier.addItem(cartItem.item),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildClassDeliveryRow(
     BuildContext context,
     AsyncValue<List<CampusBuilding>> buildingsAsync,
@@ -417,16 +481,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
               Switch(
                 value: _deliverToClass,
-                onChanged: (value) {
-                  setState(() => _deliverToClass = value);
-                  if (_summaryScrollController.hasClients) {
-                    _summaryScrollController.animateTo(
-                      0,
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                    );
-                  }
-                },
+                onChanged: (value) => setState(() => _deliverToClass = value),
               ),
             ],
           ),
