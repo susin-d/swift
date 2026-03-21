@@ -3,19 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_app/models/menu_model.dart';
 import 'package:mobile_app/providers/cart_provider.dart';
 
-MenuItemModel _makeItem({required String id, required String name, required double price}) =>
-    MenuItemModel(id: id, menuId: 'menu-1', name: name, price: price);
+MenuItemModel _makeItem({
+  required String id,
+  required String name,
+  required double price,
+}) => MenuItemModel(id: id, menuId: 'menu-1', name: name, price: price);
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('CheckoutFlow — cart to order transition', () {
     test('calculates correct totals from cart items', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       // Add samosa (30) x 2 + lassi (50) x 1
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
 
       final cart = container.read(cartProvider);
       expect(cart['i1']!.quantity, equals(2));
@@ -30,8 +41,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
 
       var cart = container.read(cartProvider);
       expect(cart.length, equals(2));

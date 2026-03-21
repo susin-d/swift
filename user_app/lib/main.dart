@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mobile_app/core/theme/app_theme.dart';
 import 'package:mobile_app/core/router/app_router.dart';
-import 'package:mobile_app/providers/auth_provider.dart';
+import 'package:mobile_app/features/auth/providers/auth_provider.dart';
 import 'package:mobile_app/services/device_token_service.dart';
 import 'package:mobile_app/services/notification_service.dart';
 

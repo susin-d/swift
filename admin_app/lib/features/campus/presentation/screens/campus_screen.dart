@@ -28,14 +28,7 @@ class CampusScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _BuildingsTab(),
-                _ZonesTab(),
-              ],
-            ),
-          ),
+          Expanded(child: TabBarView(children: [_BuildingsTab(), _ZonesTab()])),
         ],
       ),
     );
@@ -62,7 +55,10 @@ class _BuildingsTab extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Campus buildings', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Campus buildings',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   FilledButton.icon(
                     onPressed: () => _showBuildingDialog(context, ref),
                     icon: const Icon(Icons.add_rounded),
@@ -77,7 +73,9 @@ class _BuildingsTab extends ConsumerWidget {
                   subtitle: 'Add a building to enable class delivery routing.',
                 )
               else
-                ...buildings.map((building) => _BuildingCard(building: building)).toList(),
+                ...buildings.map(
+                  (building) => _BuildingCard(building: building),
+                ),
             ],
           ),
         );
@@ -92,10 +90,18 @@ class _BuildingsTab extends ConsumerWidget {
   }) async {
     final nameController = TextEditingController(text: building?.name ?? '');
     final codeController = TextEditingController(text: building?.code ?? '');
-    final addressController = TextEditingController(text: building?.address ?? '');
-    final latController = TextEditingController(text: building?.latitude?.toString() ?? '');
-    final lngController = TextEditingController(text: building?.longitude?.toString() ?? '');
-    final notesController = TextEditingController(text: building?.deliveryNotes ?? '');
+    final addressController = TextEditingController(
+      text: building?.address ?? '',
+    );
+    final latController = TextEditingController(
+      text: building?.latitude?.toString() ?? '',
+    );
+    final lngController = TextEditingController(
+      text: building?.longitude?.toString() ?? '',
+    );
+    final notesController = TextEditingController(
+      text: building?.deliveryNotes ?? '',
+    );
     bool isActive = building?.isActive ?? true;
 
     final result = await showDialog<bool>(
@@ -115,30 +121,46 @@ class _BuildingsTab extends ConsumerWidget {
                     const SizedBox(height: 8),
                     TextField(
                       controller: codeController,
-                      decoration: const InputDecoration(labelText: 'Code (optional)'),
+                      decoration: const InputDecoration(
+                        labelText: 'Code (optional)',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: addressController,
-                      decoration: const InputDecoration(labelText: 'Address (optional)'),
+                      decoration: const InputDecoration(
+                        labelText: 'Address (optional)',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: latController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      decoration: const InputDecoration(labelText: 'Latitude (optional)'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Latitude (optional)',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: lngController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-                      decoration: const InputDecoration(labelText: 'Longitude (optional)'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Longitude (optional)',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: notesController,
                       maxLines: 2,
-                      decoration: const InputDecoration(labelText: 'Delivery notes (optional)'),
+                      decoration: const InputDecoration(
+                        labelText: 'Delivery notes (optional)',
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SwitchListTile(
@@ -153,13 +175,20 @@ class _BuildingsTab extends ConsumerWidget {
             },
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Save')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Save'),
+            ),
           ],
         );
       },
     );
 
+    if (!context.mounted) return;
     if (result != true) return;
 
     final name = nameController.text.trim();
@@ -168,36 +197,61 @@ class _BuildingsTab extends ConsumerWidget {
       return;
     }
 
-    final latitude = latController.text.trim().isEmpty ? null : double.tryParse(latController.text.trim());
-    final longitude = lngController.text.trim().isEmpty ? null : double.tryParse(lngController.text.trim());
+    final latitude = latController.text.trim().isEmpty
+        ? null
+        : double.tryParse(latController.text.trim());
+    final longitude = lngController.text.trim().isEmpty
+        ? null
+        : double.tryParse(lngController.text.trim());
 
     String? error;
     if (building == null) {
-      error = await ref.read(campusBuildingsProvider.notifier).createBuilding(
+      error = await ref
+          .read(campusBuildingsProvider.notifier)
+          .createBuilding(
             name: name,
-            code: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
-            address: addressController.text.trim().isEmpty ? null : addressController.text.trim(),
+            code: codeController.text.trim().isEmpty
+                ? null
+                : codeController.text.trim(),
+            address: addressController.text.trim().isEmpty
+                ? null
+                : addressController.text.trim(),
             latitude: latitude,
             longitude: longitude,
-            deliveryNotes: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+            deliveryNotes: notesController.text.trim().isEmpty
+                ? null
+                : notesController.text.trim(),
             isActive: isActive,
           );
     } else {
-      error = await ref.read(campusBuildingsProvider.notifier).updateBuilding(building, {
-        'name': name,
-        'code': codeController.text.trim().isEmpty ? null : codeController.text.trim(),
-        'address': addressController.text.trim().isEmpty ? null : addressController.text.trim(),
-        'latitude': latitude,
-        'longitude': longitude,
-        'delivery_notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-        'is_active': isActive,
-      });
+      error = await ref
+          .read(campusBuildingsProvider.notifier)
+          .updateBuilding(building, {
+            'name': name,
+            'code': codeController.text.trim().isEmpty
+                ? null
+                : codeController.text.trim(),
+            'address': addressController.text.trim().isEmpty
+                ? null
+                : addressController.text.trim(),
+            'latitude': latitude,
+            'longitude': longitude,
+            'delivery_notes': notesController.text.trim().isEmpty
+                ? null
+                : notesController.text.trim(),
+            'is_active': isActive,
+          });
     }
 
+    if (!context.mounted) return;
     _showSnack(context, error ?? 'Building saved');
   }
 
-  void _showSnack(BuildContext context, String message, {bool isError = false}) {
+  void _showSnack(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -217,13 +271,20 @@ class _BuildingCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        title: Text(building.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          building.name,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (building.code != null && building.code!.isNotEmpty) Text('Code: ${building.code}'),
-            if (building.address != null && building.address!.isNotEmpty) Text(building.address!),
-            if (building.deliveryNotes != null && building.deliveryNotes!.isNotEmpty) Text('Notes: ${building.deliveryNotes}'),
+            if (building.code != null && building.code!.isNotEmpty)
+              Text('Code: ${building.code}'),
+            if (building.address != null && building.address!.isNotEmpty)
+              Text(building.address!),
+            if (building.deliveryNotes != null &&
+                building.deliveryNotes!.isNotEmpty)
+              Text('Notes: ${building.deliveryNotes}'),
           ],
         ),
         trailing: Wrap(
@@ -231,19 +292,25 @@ class _BuildingCard extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.edit_rounded),
-              onPressed: () => _BuildingsTab()._showBuildingDialog(context, ref, building: building),
+              onPressed: () => _BuildingsTab()._showBuildingDialog(
+                context,
+                ref,
+                building: building,
+              ),
             ),
             Switch(
               value: building.isActive,
               onChanged: (value) async {
-                final error = await ref.read(campusBuildingsProvider.notifier).updateBuilding(
-                      building,
-                      {'is_active': value},
-                    );
+                final error = await ref
+                    .read(campusBuildingsProvider.notifier)
+                    .updateBuilding(building, {'is_active': value});
                 if (!context.mounted) return;
                 if (error != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error), backgroundColor: const Color(0xFFB91C1C)),
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: const Color(0xFFB91C1C),
+                    ),
                   );
                 }
               },
@@ -269,7 +336,8 @@ class _ZonesTab extends ConsumerWidget {
       ),
       data: (zones) {
         final buildingMap = <String, CampusBuilding>{
-          for (final b in buildingsAsync.value ?? const <CampusBuilding>[]) b.id: b,
+          for (final b in buildingsAsync.value ?? const <CampusBuilding>[])
+            b.id: b,
         };
 
         return RefreshIndicator(
@@ -280,9 +348,16 @@ class _ZonesTab extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Delivery zones', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Delivery zones',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   FilledButton.icon(
-                    onPressed: () => _showZoneDialog(context, ref, buildings: buildingMap.values.toList()),
+                    onPressed: () => _showZoneDialog(
+                      context,
+                      ref,
+                      buildings: buildingMap.values.toList(),
+                    ),
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('Add zone'),
                   ),
@@ -295,7 +370,9 @@ class _ZonesTab extends ConsumerWidget {
                   subtitle: 'Add zones to enable geofence validation.',
                 )
               else
-                ...zones.map((zone) => _ZoneCard(zone: zone, buildingMap: buildingMap)).toList(),
+                ...zones.map(
+                  (zone) => _ZoneCard(zone: zone, buildingMap: buildingMap),
+                ),
             ],
           ),
         );
@@ -311,16 +388,21 @@ class _ZonesTab extends ConsumerWidget {
   }) async {
     final nameController = TextEditingController(text: zone?.name ?? '');
     final geoController = TextEditingController(
-      text: zone?.geojson == null ? '' : const JsonEncoder.withIndent('  ').convert(zone!.geojson),
+      text: zone?.geojson == null
+          ? ''
+          : const JsonEncoder.withIndent('  ').convert(zone!.geojson),
     );
-    String? selectedBuilding = zone?.buildingId ?? (buildings.isNotEmpty ? buildings.first.id : null);
+    String? selectedBuilding =
+        zone?.buildingId ?? (buildings.isNotEmpty ? buildings.first.id : null);
     bool isActive = zone?.isActive ?? true;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(zone == null ? 'Add delivery zone' : 'Edit delivery zone'),
+          title: Text(
+            zone == null ? 'Add delivery zone' : 'Edit delivery zone',
+          ),
           content: StatefulBuilder(
             builder: (context, setState) {
               return SingleChildScrollView(
@@ -332,13 +414,24 @@ class _ZonesTab extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String?>(
-                      value: selectedBuilding,
-                      decoration: const InputDecoration(labelText: 'Building (optional)'),
+                      initialValue: selectedBuilding,
+                      decoration: const InputDecoration(
+                        labelText: 'Building (optional)',
+                      ),
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('No building')),
-                        ...buildings.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('No building'),
+                        ),
+                        ...buildings.map(
+                          (b) => DropdownMenuItem(
+                            value: b.id,
+                            child: Text(b.name),
+                          ),
+                        ),
                       ],
-                      onChanged: (value) => setState(() => selectedBuilding = value),
+                      onChanged: (value) =>
+                          setState(() => selectedBuilding = value),
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -362,13 +455,20 @@ class _ZonesTab extends ConsumerWidget {
             },
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Save')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Save'),
+            ),
           ],
         );
       },
     );
 
+    if (!context.mounted) return;
     if (result != true) return;
 
     final name = nameController.text.trim();
@@ -389,7 +489,9 @@ class _ZonesTab extends ConsumerWidget {
 
     String? error;
     if (zone == null) {
-      error = await ref.read(campusZonesProvider.notifier).createZone(
+      error = await ref
+          .read(campusZonesProvider.notifier)
+          .createZone(
             name: name,
             buildingId: selectedBuilding,
             geojson: geojson,
@@ -404,10 +506,15 @@ class _ZonesTab extends ConsumerWidget {
       });
     }
 
+    if (!context.mounted) return;
     _showSnack(context, error ?? 'Delivery zone saved');
   }
 
-  void _showSnack(BuildContext context, String message, {bool isError = false}) {
+  void _showSnack(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -425,13 +532,18 @@ class _ZoneCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final buildingName = zone.buildingId == null ? null : buildingMap[zone.buildingId]?.name;
+    final buildingName = zone.buildingId == null
+        ? null
+        : buildingMap[zone.buildingId]?.name;
     final geojsonLabel = zone.geojson == null ? 'No geojson' : 'GeoJSON set';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        title: Text(zone.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          zone.name,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -454,11 +566,16 @@ class _ZoneCard extends ConsumerWidget {
             Switch(
               value: zone.isActive,
               onChanged: (value) async {
-                final error = await ref.read(campusZonesProvider.notifier).updateZone(zone, {'is_active': value});
+                final error = await ref
+                    .read(campusZonesProvider.notifier)
+                    .updateZone(zone, {'is_active': value});
                 if (!context.mounted) return;
                 if (error != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error), backgroundColor: const Color(0xFFB91C1C)),
+                    SnackBar(
+                      content: Text(error),
+                      backgroundColor: const Color(0xFFB91C1C),
+                    ),
                   );
                 }
               },
@@ -483,7 +600,11 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.location_city_outlined, size: 36, color: Color(0xFF64748B)),
+            const Icon(
+              Icons.location_city_outlined,
+              size: 36,
+              color: Color(0xFF64748B),
+            ),
             const SizedBox(height: 12),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 6),
@@ -510,13 +631,24 @@ class _CampusError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 32, color: Color(0xFFB91C1C)),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: Color(0xFFB91C1C),
+              ),
               const SizedBox(height: 12),
-              Text('Failed to load campus data', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Failed to load campus data',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 12),
-              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
             ],
           ),
         ),

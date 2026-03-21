@@ -50,7 +50,7 @@ class _PromosBody extends ConsumerWidget {
           if (promos.isEmpty)
             const _EmptyState()
           else
-            ...promos.map((promo) => _PromoCard(promo: promo)).toList(),
+            ...promos.map((promo) => _PromoCard(promo: promo)),
         ],
       ),
     );
@@ -81,47 +81,69 @@ class _PromosBody extends ConsumerWidget {
                 const SizedBox(height: 8),
                 TextField(
                   controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: discountType,
+                  initialValue: discountType,
                   decoration: const InputDecoration(labelText: 'Discount type'),
                   items: const [
                     DropdownMenuItem(value: 'percent', child: Text('Percent')),
-                    DropdownMenuItem(value: 'fixed', child: Text('Fixed amount')),
+                    DropdownMenuItem(
+                      value: 'fixed',
+                      child: Text('Fixed amount'),
+                    ),
                   ],
                   onChanged: (value) => discountType = value ?? 'percent',
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: valueController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Discount value'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Discount value',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: minController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Min order amount'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Min order amount',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: maxController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Max discount (optional)'),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Max discount (optional)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: usageController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Usage limit (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Usage limit (optional)',
+                  ),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: const Text('Create'),
@@ -131,6 +153,7 @@ class _PromosBody extends ConsumerWidget {
       },
     );
 
+    if (!context.mounted) return;
     if (result != true) return;
 
     final value = double.tryParse(valueController.text.trim());
@@ -147,20 +170,29 @@ class _PromosBody extends ConsumerWidget {
         ? null
         : int.tryParse(usageController.text.trim());
 
-    final error = await ref.read(promosProvider.notifier).createPromo(
-      code: codeController.text.trim(),
-      description: descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
-      discountType: discountType,
-      discountValue: value,
-      minOrderAmount: minOrderAmount,
-      maxDiscountAmount: maxDiscountAmount,
-      usageLimit: usageLimit,
-    );
+    final error = await ref
+        .read(promosProvider.notifier)
+        .createPromo(
+          code: codeController.text.trim(),
+          description: descriptionController.text.trim().isEmpty
+              ? null
+              : descriptionController.text.trim(),
+          discountType: discountType,
+          discountValue: value,
+          minOrderAmount: minOrderAmount,
+          maxDiscountAmount: maxDiscountAmount,
+          usageLimit: usageLimit,
+        );
 
+    if (!context.mounted) return;
     _showSnack(context, error ?? 'Promo created');
   }
 
-  void _showSnack(BuildContext context, String message, {bool isError = false}) {
+  void _showSnack(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -177,7 +209,11 @@ class _PromoCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currency = NumberFormat.currency(locale: 'en_IN', symbol: 'Rs ', decimalDigits: 0);
+    final currency = NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: 'Rs ',
+      decimalDigits: 0,
+    );
     final discountLabel = promo.discountType == 'percent'
         ? '${promo.discountValue.toInt()}% off'
         : '${currency.format(promo.discountValue)} off';
@@ -186,15 +222,22 @@ class _PromoCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        title: Text(promo.code, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(
+          promo.code,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
             Text(discountLabel),
             if (promo.description != null && promo.description!.isNotEmpty)
-              Text(promo.description!, style: Theme.of(context).textTheme.bodySmall),
-            if (windowLabel != null) Text(windowLabel, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                promo.description!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (windowLabel != null)
+              Text(windowLabel, style: Theme.of(context).textTheme.bodySmall),
             Text(
               'Usage ${promo.usageCount}${promo.usageLimit == null ? '' : ' / ${promo.usageLimit}'}',
               style: Theme.of(context).textTheme.bodySmall,
@@ -204,11 +247,16 @@ class _PromoCard extends ConsumerWidget {
         trailing: Switch(
           value: promo.isActive,
           onChanged: (value) async {
-            final error = await ref.read(promosProvider.notifier).toggleActive(promo, value);
+            final error = await ref
+                .read(promosProvider.notifier)
+                .toggleActive(promo, value);
             if (!context.mounted) return;
             if (error != null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error), backgroundColor: const Color(0xFFB91C1C)),
+                SnackBar(
+                  content: Text(error),
+                  backgroundColor: const Color(0xFFB91C1C),
+                ),
               );
             }
           },
@@ -228,11 +276,21 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.local_offer_outlined, size: 36, color: Color(0xFF64748B)),
+            const Icon(
+              Icons.local_offer_outlined,
+              size: 36,
+              color: Color(0xFF64748B),
+            ),
             const SizedBox(height: 12),
-            Text('No promos yet', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'No promos yet',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 6),
-            Text('Create a promo code to boost conversions.', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Create a promo code to boost conversions.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),
@@ -255,13 +313,24 @@ class _PromosError extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 32, color: Color(0xFFB91C1C)),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: Color(0xFFB91C1C),
+              ),
               const SizedBox(height: 12),
-              Text('Failed to load promos', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Failed to load promos',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 12),
-              FilledButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry')),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Retry'),
+              ),
             ],
           ),
         ),

@@ -277,7 +277,7 @@ describe('Order Controller — getVendorOrders', () => {
         const request: any = { user: { sub: 'unknown-owner' } };
         const reply: any = { send: Sinon.stub() };
 
-        const err = await getVendorOrders(request, reply).catch(e => e);
+        const err = await getVendorOrders(request, reply).catch((e: any) => e);
         expect(err.message).toBe('Vendor not found');
         expect(err.statusCode).toBe(404);
     });

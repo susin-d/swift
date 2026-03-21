@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/class_session.dart';
 import '../services/class_session_service.dart';
-import 'auth_provider.dart';
+import '../features/auth/providers/auth_provider.dart';
 
 final classSessionServiceProvider = Provider((ref) => ClassSessionService());
 

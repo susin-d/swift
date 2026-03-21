@@ -29,6 +29,14 @@ This includes (when applicable):
 
 Do not merge changes with stale docs. Documentation updates are a required acceptance criterion.
 
+## Mandatory Feature Test Rule
+If any new feature is added or existing feature behavior is changed:
+- Add or update automated tests that validate the feature behavior.
+- Cover the happy path and key edge/error paths relevant to the feature.
+- Do not merge unless all impacted tests pass locally/CI.
+
+Feature work without corresponding tests is incomplete and must not be merged.
+
 ## Required Verification
 Before merge, run:
 

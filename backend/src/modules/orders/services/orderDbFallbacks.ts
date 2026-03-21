@@ -1,4 +1,4 @@
-import { createSupabaseUserClient, supabase } from '../supabase';
+import { createSupabaseUserClient, supabase } from '../../../services/supabase';
 
 export const isAccessDeniedError = (error: any) => {
     const message = String(error?.message || error || '').toLowerCase();

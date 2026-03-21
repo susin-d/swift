@@ -3,10 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_app/providers/cart_provider.dart';
 import 'package:mobile_app/models/menu_model.dart';
 
-MenuItemModel _makeItem({required String id, required String name, required double price}) =>
-    MenuItemModel(id: id, menuId: 'menu-1', name: name, price: price);
+MenuItemModel _makeItem({
+  required String id,
+  required String name,
+  required double price,
+}) => MenuItemModel(id: id, menuId: 'menu-1', name: name, price: price);
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('CartNotifier — addItem', () {
     test('adds a new item to empty cart', () {
       final container = ProviderContainer();
@@ -36,8 +41,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
 
       final cart = container.read(cartProvider);
       expect(cart.length, equals(2));
@@ -74,8 +83,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).removeItem(_makeItem(id: 'missing', name: 'Ghost', price: 0));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .removeItem(_makeItem(id: 'missing', name: 'Ghost', price: 0));
 
       expect(container.read(cartProvider).length, equals(1));
     });
@@ -86,8 +99,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
       container.read(cartProvider.notifier).clearCart();
 
       expect(container.read(cartProvider), isEmpty);
@@ -106,8 +123,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
 
       expect(container.read(cartProvider.notifier).totalAmount, equals(60.0));
     });
@@ -116,8 +137,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
-      container.read(cartProvider.notifier).addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i1', name: 'Samosa', price: 30));
+      container
+          .read(cartProvider.notifier)
+          .addItem(_makeItem(id: 'i2', name: 'Lassi', price: 50));
 
       expect(container.read(cartProvider.notifier).totalAmount, equals(80.0));
     });

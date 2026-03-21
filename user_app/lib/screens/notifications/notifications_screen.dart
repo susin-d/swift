@@ -26,7 +26,8 @@ class NotificationsScreen extends ConsumerWidget {
       ),
       body: notificationsAsync.when(
         loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text('Failed to load notifications: $e')),
+        error: (e, _) =>
+            Center(child: Text('Failed to load notifications: $e')),
         data: (notifications) {
           if (notifications.isEmpty) {
             return const _EmptyNotifications();
@@ -35,7 +36,7 @@ class NotificationsScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(24),
             itemCount: notifications.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final item = notifications[index];
               return _NotificationCard(
@@ -44,7 +45,9 @@ class NotificationsScreen extends ConsumerWidget {
                   await ref.read(notificationServiceProvider).markRead(item.id);
                   ref.invalidate(notificationsProvider);
                   final orderId = item.metadata?['order_id']?.toString();
-                  if (orderId != null && orderId.isNotEmpty && context.mounted) {
+                  if (orderId != null &&
+                      orderId.isNotEmpty &&
+                      context.mounted) {
                     context.push('/order-status/$orderId');
                   }
                 },
@@ -87,19 +90,33 @@ class _NotificationCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: item.isRead ? AppColors.primary.withValues(alpha: 0.08) : AppColors.primary.withValues(alpha: 0.16),
+                color: item.isRead
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : AppColors.primary.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(Icons.notifications_rounded, color: AppColors.primary),
+              child: Icon(
+                Icons.notifications_rounded,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(
+                    item.title,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item.body, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  Text(
+                    item.body,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -108,7 +125,10 @@ class _NotificationCard extends StatelessWidget {
               children: [
                 Text(
                   DateFormat('MMM dd, hh:mm a').format(item.createdAt),
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                  ),
                 ),
                 if (!item.isRead)
                   Container(
@@ -138,9 +158,16 @@ class _EmptyNotifications extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_rounded, size: 64, color: AppColors.textMuted.withValues(alpha: 0.6)),
+          Icon(
+            Icons.notifications_off_rounded,
+            size: 64,
+            color: AppColors.textMuted.withValues(alpha: 0.6),
+          ),
           const SizedBox(height: 16),
-          const Text('No notifications yet', style: TextStyle(fontWeight: FontWeight.w900)),
+          const Text(
+            'No notifications yet',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 8),
           const Text('Order updates will appear here as they happen.'),
         ],

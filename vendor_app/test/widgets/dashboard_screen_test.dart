@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,8 +11,8 @@ class _DashboardFakeApiService extends ApiService {
     required List<Map<String, dynamic>> initialOrders,
     this.failPatch = false,
   }) : _orders = initialOrders
-            .map((order) => Map<String, dynamic>.from(order))
-            .toList();
+           .map((order) => Map<String, dynamic>.from(order))
+           .toList();
 
   final List<Map<String, dynamic>> _orders;
   final List<Map<String, dynamic>> patchCalls = [];
@@ -34,12 +32,12 @@ class _DashboardFakeApiService extends ApiService {
   }
 
   @override
-  Future<Response<dynamic>> patch(String path, {dynamic data, String? cancelKey}) async {
-    patchCalls.add({
-      'path': path,
-      'data': data,
-      'cancelKey': cancelKey,
-    });
+  Future<Response<dynamic>> patch(
+    String path, {
+    dynamic data,
+    String? cancelKey,
+  }) async {
+    patchCalls.add({'path': path, 'data': data, 'cancelKey': cancelKey});
 
     if (failPatch) {
       throw Exception('Patch failed');
@@ -49,10 +47,7 @@ class _DashboardFakeApiService extends ApiService {
     final orderId = path.split('/')[2];
     final orderIndex = _orders.indexWhere((order) => order['id'] == orderId);
     if (orderIndex != -1) {
-      _orders[orderIndex] = {
-        ..._orders[orderIndex],
-        'status': status,
-      };
+      _orders[orderIndex] = {..._orders[orderIndex], 'status': status};
     }
 
     return Response<dynamic>(
@@ -90,12 +85,8 @@ Future<void> _pumpDashboard(WidgetTester tester, ApiService apiService) async {
 
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        apiServiceProvider.overrideWithValue(apiService),
-      ],
-      child: const MaterialApp(
-        home: DashboardScreen(),
-      ),
+      overrides: [apiServiceProvider.overrideWithValue(apiService)],
+      child: const MaterialApp(home: DashboardScreen()),
     ),
   );
 
@@ -110,32 +101,35 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('updates order status from popup menu and shows success feedback', (tester) async {
-    final api = _DashboardFakeApiService(
-      initialOrders: [
-        _order(id: 'ord-12345678', status: 'accepted'),
-      ],
-    );
+  testWidgets(
+    'updates order status from popup menu and shows success feedback',
+    (tester) async {
+      final api = _DashboardFakeApiService(
+        initialOrders: [_order(id: 'ord-12345678', status: 'accepted')],
+      );
 
-    await _pumpDashboard(tester, api);
+      await _pumpDashboard(tester, api);
 
-    expect(find.textContaining('ACCEPTED'), findsOneWidget);
+      expect(find.textContaining('ACCEPTED'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Update').first);
-    await tester.tap(find.text('Update').first);
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Update').first);
+      await tester.tap(find.text('Update').first);
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('PREPARING').last);
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('PREPARING').last);
+      await tester.pumpAndSettle();
 
-    expect(api.patchCalls, hasLength(1));
-    expect(api.patchCalls.first['path'], '/orders/ord-12345678/status');
-    expect(api.patchCalls.first['data'], {'status': 'preparing'});
-    expect(find.text('Order updated to PREPARING'), findsOneWidget);
-    expect(find.textContaining('PREPARING • ₹100'), findsOneWidget);
-  });
+      expect(api.patchCalls, hasLength(1));
+      expect(api.patchCalls.first['path'], '/orders/ord-12345678/status');
+      expect(api.patchCalls.first['data'], {'status': 'preparing'});
+      expect(find.text('Order updated to PREPARING'), findsOneWidget);
+      expect(find.textContaining('PREPARING - Rs 100'), findsOneWidget);
+    },
+  );
 
-  testWidgets('shows failure feedback when 86 hold confirmation patch fails', (tester) async {
+  testWidgets('shows failure feedback when 86 hold confirmation patch fails', (
+    tester,
+  ) async {
     final api = _DashboardFakeApiService(
       initialOrders: [
         _order(

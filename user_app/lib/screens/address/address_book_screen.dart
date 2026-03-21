@@ -51,14 +51,16 @@ class AddressBookScreen extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(24),
               itemCount: addresses.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final address = addresses[index];
                 return _AddressCard(
                   address: address,
                   onMakeDefault: address.isDefault
                       ? null
-                      : () => ref.read(addressesProvider.notifier).setDefault(address.id),
+                      : () => ref
+                            .read(addressesProvider.notifier)
+                            .setDefault(address.id),
                   onDelete: () => _confirmDelete(context, ref, address),
                 );
               },
@@ -74,15 +76,25 @@ class AddressBookScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, AddressModel address) async {
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    AddressModel address,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete address'),
         content: Text('Remove "${address.label}" from your saved addresses?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -92,7 +104,10 @@ class AddressBookScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _showAddAddressDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showAddAddressDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final labelController = TextEditingController();
     final addressController = TextEditingController();
     bool isDefault = false;
@@ -107,7 +122,9 @@ class AddressBookScreen extends ConsumerWidget {
             children: [
               TextField(
                 controller: labelController,
-                decoration: const InputDecoration(labelText: 'Label (e.g. Hostel, Apartment)'),
+                decoration: const InputDecoration(
+                  labelText: 'Label (e.g. Hostel, Apartment)',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -120,7 +137,8 @@ class AddressBookScreen extends ConsumerWidget {
                 children: [
                   Checkbox(
                     value: isDefault,
-                    onChanged: (value) => setState(() => isDefault = value ?? false),
+                    onChanged: (value) =>
+                        setState(() => isDefault = value ?? false),
                   ),
                   const Text('Set as default'),
                 ],
@@ -129,22 +147,33 @@ class AddressBookScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
 
+    if (!context.mounted) return;
     if (result == true) {
       final label = labelController.text.trim();
       final addressLine = addressController.text.trim();
       if (label.isEmpty || addressLine.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a label and address line.')),
+          const SnackBar(
+            content: Text('Please enter a label and address line.'),
+          ),
         );
         return;
       }
-      await ref.read(addressesProvider.notifier).addAddress(
+      await ref
+          .read(addressesProvider.notifier)
+          .addAddress(
             label: label,
             addressLine: addressLine,
             isDefault: isDefault,
@@ -185,15 +214,24 @@ class _AddressCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(address.label, style: const TextStyle(fontWeight: FontWeight.w800)),
+              Text(
+                address.label,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
               if (address.isDefault)
                 const _DefaultChip()
               else
-                TextButton(onPressed: onMakeDefault, child: const Text('Make default')),
+                TextButton(
+                  onPressed: onMakeDefault,
+                  child: const Text('Make default'),
+                ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(address.addressLine, style: const TextStyle(color: AppColors.textSecondary)),
+          Text(
+            address.addressLine,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -223,7 +261,11 @@ class _DefaultChip extends StatelessWidget {
       ),
       child: const Text(
         'DEFAULT',
-        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 11),
+        style: TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w800,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -250,9 +292,16 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_on_rounded, size: 50, color: AppColors.textMuted.withValues(alpha: 0.6)),
+            Icon(
+              Icons.location_on_rounded,
+              size: 50,
+              color: AppColors.textMuted.withValues(alpha: 0.6),
+            ),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
             const SizedBox(height: 8),
             Text(
               subtitle,

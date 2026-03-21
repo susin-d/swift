@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -71,7 +71,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Save changes'),
           ),
@@ -87,20 +90,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(authServiceProvider).updateProfile(
+      await ref
+          .read(authServiceProvider)
+          .updateProfile(
             name: name.isEmpty ? null : name,
             phone: phone.isEmpty ? null : phone,
             address: address.isEmpty ? null : address,
           );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated.')),
-      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
       context.pop();
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Update failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Update failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     } finally {
       if (mounted) {

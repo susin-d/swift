@@ -34,7 +34,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   DateTime? _lastTrackingUpdate;
   String? _trackingError;
 
-  List<int> get _prepSuggestions => _rushModeEnabled ? const [6, 8, 10] : const [10, 12, 15];
+  List<int> get _prepSuggestions =>
+      _rushModeEnabled ? const [6, 8, 10] : const [10, 12, 15];
 
   @override
   void dispose() {
@@ -44,18 +45,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<bool> _ensureLocationPermission(BuildContext context) async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!context.mounted) return false;
     if (!serviceEnabled) {
       _showTrackingSnack(context, 'Location services are disabled.');
       return false;
     }
 
     var permission = await Geolocator.checkPermission();
+    if (!context.mounted) return false;
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      if (!context.mounted) return false;
     }
 
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      _showTrackingSnack(context, 'Location permission is required for live tracking.');
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      _showTrackingSnack(
+        context,
+        'Location permission is required for live tracking.',
+      );
       return false;
     }
 
@@ -72,11 +80,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         timeLimit: const Duration(seconds: 8),
       );
 
-      await ref.read(deliveryServiceProvider).updateLocation(
-        orderId: orderId,
-        lat: position.latitude,
-        lng: position.longitude,
-      );
+      await ref
+          .read(deliveryServiceProvider)
+          .updateLocation(
+            orderId: orderId,
+            lat: position.latitude,
+            lng: position.longitude,
+          );
 
       if (!mounted) return;
       setState(() {
@@ -105,7 +115,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
 
     await _sendTrackingPing(orderId);
-    _trackingTimer = Timer.periodic(const Duration(seconds: 8), (_) => _sendTrackingPing(orderId));
+    _trackingTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => _sendTrackingPing(orderId),
+    );
   }
 
   void _stopLiveTracking() {
@@ -118,7 +131,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showTrackingSnack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String _formatTrackingUpdate(DateTime? updatedAt) {
@@ -145,8 +160,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     filtered.sort((left, right) {
       switch (_queueSort) {
         case QueueSort.newest:
-          final leftCreated = DateTime.tryParse((left['created_at'] ?? '').toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final rightCreated = DateTime.tryParse((right['created_at'] ?? '').toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final leftCreated =
+              DateTime.tryParse((left['created_at'] ?? '').toString()) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+          final rightCreated =
+              DateTime.tryParse((right['created_at'] ?? '').toString()) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
           return rightCreated.compareTo(leftCreated);
         case QueueSort.highestValue:
           final leftAmount = (left['total_amount'] as num?) ?? 0;
@@ -171,19 +190,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   List<QueueRailItem> _buildQueueRails(List<dynamic> orders) {
     final all = orders.length;
-    int countFor(String status) => orders.where((order) => _normalizedStatus(order) == status).length;
+    int countFor(String status) =>
+        orders.where((order) => _normalizedStatus(order) == status).length;
 
     return [
       QueueRailItem(id: 'all', label: 'All', count: all, color: Colors.black87),
-      QueueRailItem(id: 'accepted', label: 'Accepted', count: countFor('accepted'), color: Colors.blue),
-      QueueRailItem(id: 'preparing', label: 'Preparing', count: countFor('preparing'), color: Colors.orange),
-      QueueRailItem(id: 'ready', label: 'Ready', count: countFor('ready'), color: const Color(0xFF0D9488)),
-      QueueRailItem(id: 'hold', label: '86 Hold', count: countFor('hold'), color: Colors.red),
+      QueueRailItem(
+        id: 'accepted',
+        label: 'Accepted',
+        count: countFor('accepted'),
+        color: Colors.blue,
+      ),
+      QueueRailItem(
+        id: 'preparing',
+        label: 'Preparing',
+        count: countFor('preparing'),
+        color: Colors.orange,
+      ),
+      QueueRailItem(
+        id: 'ready',
+        label: 'Ready',
+        count: countFor('ready'),
+        color: const Color(0xFF0D9488),
+      ),
+      QueueRailItem(
+        id: 'hold',
+        label: '86 Hold',
+        count: countFor('hold'),
+        color: Colors.red,
+      ),
     ];
   }
 
   int _countPacingRisk(List<dynamic> orders, String risk) {
-    return orders.where((order) => ((order['pacing'] as Map?)?['sla_risk'] ?? 'low') == risk).length;
+    return orders
+        .where(
+          (order) => ((order['pacing'] as Map?)?['sla_risk'] ?? 'low') == risk,
+        )
+        .length;
   }
 
   String _nextStatus(String currentStatus) {
@@ -206,7 +250,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     String successLabel,
   ) async {
     if (orderId.isEmpty) return;
-    final didUpdate = await ref.read(ordersProvider.notifier).updateStatus(orderId, nextStatus);
+    final didUpdate = await ref
+        .read(ordersProvider.notifier)
+        .updateStatus(orderId, nextStatus);
     if (!context.mounted) return;
     if (!didUpdate) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -214,9 +260,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(successLabel)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(successLabel)));
   }
 
   Future<void> _confirmHoldAction(
@@ -227,7 +273,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required int elapsedMinutes,
     required int recommendedPrepMinutes,
   }) async {
-    if (orderId.isEmpty || currentStatus == 'cancelled' || currentStatus == 'completed') {
+    if (orderId.isEmpty ||
+        currentStatus == 'cancelled' ||
+        currentStatus == 'completed') {
       return;
     }
 
@@ -248,12 +296,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 Text(
                   'Confirm 86 Hold',
-                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Order #$compactId will be moved to hold. Use this for stock-outs or queue exceptions, not routine pacing.',
-                  style: GoogleFonts.poppins(fontSize: 13, color: Colors.grey[700]),
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Container(
@@ -264,12 +318,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Elapsed ${elapsedMinutes}m - Suggested prep ${recommendedPrepMinutes}m',
-                          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -288,7 +348,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(sheetContext).pop(true),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade400),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade400,
+                        ),
                         child: const Text('Confirm 86'),
                       ),
                     ),
@@ -303,7 +365,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     if (shouldHold != true || !context.mounted) return;
 
-    final didUpdate = await ref.read(ordersProvider.notifier).updateStatus(orderId, 'cancelled');
+    final didUpdate = await ref
+        .read(ordersProvider.notifier)
+        .updateStatus(orderId, 'cancelled');
     if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     if (!didUpdate) {
@@ -319,7 +383,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         action: SnackBarAction(
           label: 'UNDO',
           onPressed: () {
-            ref.read(ordersProvider.notifier).updateStatus(orderId, currentStatus);
+            ref
+                .read(ordersProvider.notifier)
+                .updateStatus(orderId, currentStatus);
           },
         ),
       ),
@@ -362,7 +428,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: Center(
                 child: Text(
                   'Swift Vendor',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -445,7 +515,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(999),
@@ -463,43 +536,68 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              ref.watch(ordersProvider).when(
-                data: (orders) {
-                  final count = orders.length;
-                  final revenue = orders.fold<num>(0, (sum, o) => sum + ((o['total_amount'] ?? 0) as num));
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: AppAnimations.staggeredList(
-                          0,
-                          StatCard(title: 'Orders Today', value: '$count', color: Colors.blue),
+              ref
+                  .watch(ordersProvider)
+                  .when(
+                    data: (orders) {
+                      final count = orders.length;
+                      final revenue = orders.fold<num>(
+                        0,
+                        (sum, o) => sum + ((o['total_amount'] ?? 0) as num),
+                      );
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: AppAnimations.staggeredList(
+                              0,
+                              StatCard(
+                                title: 'Orders Today',
+                                value: '$count',
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: AppAnimations.staggeredList(
+                              1,
+                              StatCard(
+                                title: 'Revenue Today',
+                                value: 'Rs ${revenue.toInt()}',
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                    loading: () => Row(
+                      children: const [
+                        Expanded(child: DashboardStatShimmer()),
+                        SizedBox(width: 16),
+                        Expanded(child: DashboardStatShimmer()),
+                      ],
+                    ),
+                    error: (_, __) => Row(
+                      children: const [
+                        Expanded(
+                          child: StatCard(
+                            title: 'Orders Today',
+                            value: '-',
+                            color: Colors.blue,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: AppAnimations.staggeredList(
-                          1,
-                          StatCard(title: 'Revenue Today', value: 'Rs ${revenue.toInt()}', color: Colors.green),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: StatCard(
+                            title: 'Revenue Today',
+                            value: '-',
+                            color: Colors.green,
+                          ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-                loading: () => Row(
-                  children: const [
-                    Expanded(child: DashboardStatShimmer()),
-                    SizedBox(width: 16),
-                    Expanded(child: DashboardStatShimmer()),
-                  ],
-                ),
-                error: (_, __) => Row(
-                  children: const [
-                    Expanded(child: StatCard(title: 'Orders Today', value: '-', color: Colors.blue)),
-                    SizedBox(width: 16),
-                    Expanded(child: StatCard(title: 'Revenue Today', value: '-', color: Colors.green)),
-                  ],
-                ),
-              ),
+                      ],
+                    ),
+                  ),
               const SizedBox(height: 24),
               _buildRushModeStrip(),
               const SizedBox(height: 16),
@@ -507,127 +605,171 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: 24),
               Text(
                 'Active Orders',
-                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.w700),
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Triage by urgency, then swipe to progress or hold.',
-                style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
               ),
               const SizedBox(height: 16),
-              ref.watch(ordersProvider).when(
-                data: (orders) {
-                  final queueRails = _buildQueueRails(orders);
-                  final visibleOrders = _applyQueueView(orders);
-                  final trackedOrderId = _trackingOrderId;
+              ref
+                  .watch(ordersProvider)
+                  .when(
+                    data: (orders) {
+                      final queueRails = _buildQueueRails(orders);
+                      final visibleOrders = _applyQueueView(orders);
+                      final trackedOrderId = _trackingOrderId;
 
-                  if (trackedOrderId != null) {
-                    final tracked = orders.where((order) => (order['id'] ?? '') == trackedOrderId).toList();
-                    final trackedOrder = tracked.isEmpty ? null : tracked.first;
-                    final trackedStatus = trackedOrder == null ? null : _normalizedStatus(trackedOrder);
-                    final shouldStop = trackedOrder == null || trackedStatus == 'completed' || trackedStatus == 'hold';
-                    if (shouldStop) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) {
-                          _stopLiveTracking();
+                      if (trackedOrderId != null) {
+                        final tracked = orders
+                            .where(
+                              (order) => (order['id'] ?? '') == trackedOrderId,
+                            )
+                            .toList();
+                        final trackedOrder = tracked.isEmpty
+                            ? null
+                            : tracked.first;
+                        final trackedStatus = trackedOrder == null
+                            ? null
+                            : _normalizedStatus(trackedOrder);
+                        final shouldStop =
+                            trackedOrder == null ||
+                            trackedStatus == 'completed' ||
+                            trackedStatus == 'hold';
+                        if (shouldStop) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              _stopLiveTracking();
+                            }
+                          });
                         }
-                      });
-                    }
-                  }
+                      }
 
-                  if (orders.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey[300]),
-                            const SizedBox(height: 16),
-                            Text('No active orders', style: GoogleFonts.poppins(color: Colors.grey[400], fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPacingSummary(orders),
-                      const SizedBox(height: 14),
-                      _buildGuardrailHint(),
-                      const SizedBox(height: 14),
-                      _buildTrackingStrip(),
-                      const SizedBox(height: 14),
-                      _buildQueueTriageRails(queueRails),
-                      const SizedBox(height: 14),
-                      _buildQueueToolbar(visibleOrders.length),
-                      const SizedBox(height: 14),
-                      if (visibleOrders.isEmpty)
-                        _buildNoQueueMatches()
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: visibleOrders.length,
-                          itemBuilder: (context, index) {
-                            final order = visibleOrders[index];
-                            final orderId = (order['id'] ?? '').toString();
-                            final trackingActive = _trackingOrderId == orderId;
-                            final trackingLabel = trackingActive
-                                ? (_trackingError != null ? 'Last update failed' : _formatTrackingUpdate(_lastTrackingUpdate))
-                                : null;
-
-                            return AppAnimations.staggeredList(
-                              index + 2,
-                              OrderListItem(
-                                index: index,
-                                order: order,
-                                rushModeEnabled: _rushModeEnabled,
-                                selectedPrepMins: _selectedPrepMins,
-                                nextStatusFor: _nextStatus,
-                                trackingActive: trackingActive,
-                                trackingBusy: trackingActive && _trackingBusy,
-                                trackingLabel: trackingLabel,
-                                onToggleTracking: () {
-                                  if (trackingActive) {
-                                    _stopLiveTracking();
-                                  } else {
-                                    _startLiveTracking(context, orderId);
-                                  }
-                                },
-                                onOpenDetails: () => openOrderDetailsSheet(context, order),
-                                onApplyStatus: (orderId, nextStatus, successLabel) =>
-                                    _applyOrderStatus(context, orderId, nextStatus, successLabel),
-                                onHoldAction: ({
-                                  required orderId,
-                                  required currentStatus,
-                                  required compactId,
-                                  required elapsedMinutes,
-                                  required recommendedPrepMinutes,
-                                }) => _confirmHoldAction(
-                                  context,
-                                  orderId: orderId,
-                                  currentStatus: currentStatus,
-                                  compactId: compactId,
-                                  elapsedMinutes: elapsedMinutes,
-                                  recommendedPrepMinutes: recommendedPrepMinutes,
+                      if (orders.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 64,
+                                  color: Colors.grey[300],
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                    ],
-                  );
-                },
-                loading: () => ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 3,
-                  itemBuilder: (_, __) => const OrderCardShimmer(),
-                ),
-                error: (e, _) => Center(child: Text('Error: $e')),
-              ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No active orders',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.grey[400],
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildPacingSummary(orders),
+                          const SizedBox(height: 14),
+                          _buildGuardrailHint(),
+                          const SizedBox(height: 14),
+                          _buildTrackingStrip(),
+                          const SizedBox(height: 14),
+                          _buildQueueTriageRails(queueRails),
+                          const SizedBox(height: 14),
+                          _buildQueueToolbar(visibleOrders.length),
+                          const SizedBox(height: 14),
+                          if (visibleOrders.isEmpty)
+                            _buildNoQueueMatches()
+                          else
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: visibleOrders.length,
+                              itemBuilder: (context, index) {
+                                final order = visibleOrders[index];
+                                final orderId = (order['id'] ?? '').toString();
+                                final trackingActive =
+                                    _trackingOrderId == orderId;
+                                final trackingLabel = trackingActive
+                                    ? (_trackingError != null
+                                          ? 'Last update failed'
+                                          : _formatTrackingUpdate(
+                                              _lastTrackingUpdate,
+                                            ))
+                                    : null;
+
+                                return AppAnimations.staggeredList(
+                                  index + 2,
+                                  OrderListItem(
+                                    index: index,
+                                    order: order,
+                                    rushModeEnabled: _rushModeEnabled,
+                                    selectedPrepMins: _selectedPrepMins,
+                                    nextStatusFor: _nextStatus,
+                                    trackingActive: trackingActive,
+                                    trackingBusy:
+                                        trackingActive && _trackingBusy,
+                                    trackingLabel: trackingLabel,
+                                    onToggleTracking: () {
+                                      if (trackingActive) {
+                                        _stopLiveTracking();
+                                      } else {
+                                        _startLiveTracking(context, orderId);
+                                      }
+                                    },
+                                    onOpenDetails: () =>
+                                        openOrderDetailsSheet(context, order),
+                                    onApplyStatus:
+                                        (orderId, nextStatus, successLabel) =>
+                                            _applyOrderStatus(
+                                              context,
+                                              orderId,
+                                              nextStatus,
+                                              successLabel,
+                                            ),
+                                    onHoldAction:
+                                        ({
+                                          required orderId,
+                                          required currentStatus,
+                                          required compactId,
+                                          required elapsedMinutes,
+                                          required recommendedPrepMinutes,
+                                        }) => _confirmHoldAction(
+                                          context,
+                                          orderId: orderId,
+                                          currentStatus: currentStatus,
+                                          compactId: compactId,
+                                          elapsedMinutes: elapsedMinutes,
+                                          recommendedPrepMinutes:
+                                              recommendedPrepMinutes,
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      );
+                    },
+                    loading: () => ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 3,
+                      itemBuilder: (_, __) => const OrderCardShimmer(),
+                    ),
+                    error: (e, _) => Center(child: Text('Error: $e')),
+                  ),
             ],
           ),
         ),
@@ -642,7 +784,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _rushModeEnabled ? const Color(0xFF0D9488) : Colors.grey.shade200,
+          color: _rushModeEnabled
+              ? const Color(0xFF0D9488)
+              : Colors.grey.shade200,
         ),
       ),
       child: Row(
@@ -664,7 +808,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   _rushModeEnabled
                       ? 'Fast prep defaults active. Swipe right to progress queue quickly.'
                       : 'Enable to prioritize speed presets during peak demand.',
-                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600]),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
                 ),
               ],
             ),
@@ -734,7 +881,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               decoration: BoxDecoration(
                 color: selected ? rail.color : Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: selected ? rail.color : Colors.grey.shade200),
+                border: Border.all(
+                  color: selected ? rail.color : Colors.grey.shade200,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -822,7 +971,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Expanded(
             child: Text(
               'Protected 86 swipe: left swipe now requires confirmation and supports undo recovery.',
-              style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -833,10 +986,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildTrackingStrip() {
     final trackingOrderId = _trackingOrderId;
     final trackingActive = trackingOrderId != null;
-    final label = trackingActive ? 'Live courier tracking active' : 'Live courier tracking is off';
-    final compactId = trackingOrderId == null
-        ? null
-        : trackingOrderId.substring(0, trackingOrderId.length > 8 ? 8 : trackingOrderId.length).toUpperCase();
+    final label = trackingActive
+        ? 'Live courier tracking active'
+        : 'Live courier tracking is off';
+    final compactId = trackingOrderId
+        ?.substring(0, trackingOrderId.length > 8 ? 8 : trackingOrderId.length)
+        .toUpperCase();
     final detail = _trackingError != null
         ? 'Last update failed'
         : _formatTrackingUpdate(_lastTrackingUpdate);
@@ -851,7 +1006,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Row(
         children: [
           Icon(
-            trackingActive ? Icons.location_on_rounded : Icons.location_off_rounded,
+            trackingActive
+                ? Icons.location_on_rounded
+                : Icons.location_off_rounded,
             color: trackingActive ? const Color(0xFF0D9488) : Colors.grey[600],
           ),
           const SizedBox(width: 10),
@@ -861,14 +1018,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   trackingActive
                       ? 'Order #$compactId - $detail'
                       : 'Start tracking from an active order card.',
-                  style: GoogleFonts.poppins(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -897,7 +1061,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           child: Text(
             '$visibleCount in view',
-            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         ChoiceChip(
@@ -913,7 +1080,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ChoiceChip(
           label: const Text('High Value'),
           selected: _queueSort == QueueSort.highestValue,
-          onSelected: (_) => setState(() => _queueSort = QueueSort.highestValue),
+          onSelected: (_) =>
+              setState(() => _queueSort = QueueSort.highestValue),
         ),
       ],
     );
@@ -933,14 +1101,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Expanded(
             child: Text(
               'No orders match this queue filter yet. Try another rail or sort mode.',
-              style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-
 }
-
-

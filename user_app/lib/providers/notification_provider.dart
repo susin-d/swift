@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification_model.dart';
 import '../services/notification_service.dart';
-import 'auth_provider.dart';
+import '../features/auth/providers/auth_provider.dart';
 
 final notificationServiceProvider = Provider((ref) => NotificationService());
 

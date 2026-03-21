@@ -16,14 +16,20 @@ class OrderListItem extends ConsumerWidget {
   final String? trackingLabel;
   final VoidCallback onToggleTracking;
   final VoidCallback onOpenDetails;
-  final Future<void> Function(String orderId, String nextStatus, String successLabel) onApplyStatus;
+  final Future<void> Function(
+    String orderId,
+    String nextStatus,
+    String successLabel,
+  )
+  onApplyStatus;
   final Future<void> Function({
     required String orderId,
     required String currentStatus,
     required String compactId,
     required int elapsedMinutes,
     required int recommendedPrepMinutes,
-  }) onHoldAction;
+  })
+  onHoldAction;
 
   const OrderListItem({
     super.key,
@@ -54,14 +60,21 @@ class OrderListItem extends ConsumerWidget {
     final orderId = order['id'] as String? ?? '';
     final currentStatus = (order['status'] as String? ?? '').toLowerCase();
     final nextStatus = nextStatusFor(currentStatus);
-    final compactId = orderId.substring(0, orderId.length > 8 ? 8 : orderId.length).toUpperCase();
-    final canTrack = currentStatus != 'completed' && currentStatus != 'cancelled';
-    final pacing = (order['pacing'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
+    final compactId = orderId
+        .substring(0, orderId.length > 8 ? 8 : orderId.length)
+        .toUpperCase();
+    final canTrack =
+        currentStatus != 'completed' && currentStatus != 'cancelled';
+    final pacing =
+        (order['pacing'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
     final slaRisk = (pacing['sla_risk'] ?? 'low').toString();
-    final recommendedPrepMinutes = pacing['recommended_prep_minutes'] ?? selectedPrepMins;
+    final recommendedPrepMinutes =
+        pacing['recommended_prep_minutes'] ?? selectedPrepMins;
     final elapsedMinutes = pacing['elapsed_minutes'] ?? 0;
     final scheduledRaw = order['scheduled_for']?.toString();
-    final scheduledFor = scheduledRaw == null ? null : DateTime.tryParse(scheduledRaw);
+    final scheduledFor = scheduledRaw == null
+        ? null
+        : DateTime.tryParse(scheduledRaw);
     final scheduledLabel = scheduledFor == null
         ? null
         : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
@@ -91,7 +104,10 @@ class OrderListItem extends ConsumerWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           'Mark ${nextStatus.toUpperCase()}',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       secondaryBackground: Container(
@@ -104,20 +120,29 @@ class OrderListItem extends ConsumerWidget {
         alignment: Alignment.centerRight,
         child: Text(
           '86 HOLD',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       confirmDismiss: (direction) async {
         if (orderId.isEmpty) return false;
         if (currentStatus == 'completed' || currentStatus == 'cancelled') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Order #$compactId is locked from swipe actions')),
+            SnackBar(
+              content: Text('Order #$compactId is locked from swipe actions'),
+            ),
           );
           return false;
         }
 
         if (direction == DismissDirection.startToEnd) {
-          await onApplyStatus(orderId, nextStatus, 'Order #$compactId -> ${nextStatus.toUpperCase()}');
+          await onApplyStatus(
+            orderId,
+            nextStatus,
+            'Order #$compactId -> ${nextStatus.toUpperCase()}',
+          );
         } else {
           await onHoldAction(
             orderId: orderId,
@@ -138,7 +163,12 @@ class OrderListItem extends ConsumerWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 5,
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,20 +183,32 @@ class OrderListItem extends ConsumerWidget {
                     ),
                     Text(
                       '${order['status'].toString().toUpperCase()} - Rs ${order['total_amount']}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (scheduledLabel != null) ...[
                       const SizedBox(height: 4),
                       Text(
                         'Scheduled: $scheduledLabel',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                     if (deliveryMode == 'class') ...[
                       const SizedBox(height: 4),
                       Text(
                         'Class delivery ${buildingName ?? ''}${roomLabel == null ? '' : ' - $roomLabel'}',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 4),
@@ -174,7 +216,11 @@ class OrderListItem extends ConsumerWidget {
                       rushModeEnabled
                           ? 'Rush prep target: $selectedPrepMins min'
                           : 'Suggested prep target: $selectedPrepMins min',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Wrap(
@@ -182,23 +228,38 @@ class OrderListItem extends ConsumerWidget {
                       runSpacing: 6,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: riskColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             riskLabel,
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: riskColor),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: riskColor,
+                            ),
                           ),
                         ),
                         Text(
                           'Elapsed ${elapsedMinutes}m',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Text(
                           'Suggested ${recommendedPrepMinutes}m',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -208,17 +269,27 @@ class OrderListItem extends ConsumerWidget {
                         OutlinedButton.icon(
                           onPressed: canTrack ? onToggleTracking : null,
                           icon: Icon(
-                            trackingActive ? Icons.location_off_rounded : Icons.location_on_rounded,
+                            trackingActive
+                                ? Icons.location_off_rounded
+                                : Icons.location_on_rounded,
                             size: 16,
                           ),
-                          label: Text(trackingActive ? 'Stop live' : 'Start live'),
+                          label: Text(
+                            trackingActive ? 'Stop live' : 'Start live',
+                          ),
                         ),
                         const SizedBox(width: 10),
                         if (trackingActive)
                           Expanded(
                             child: Text(
-                              trackingBusy ? 'Updating location...' : (trackingLabel ?? 'Live tracking'),
-                              style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
+                              trackingBusy
+                                  ? 'Updating location...'
+                                  : (trackingLabel ?? 'Live tracking'),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w600,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -230,7 +301,11 @@ class OrderListItem extends ConsumerWidget {
               PopupMenuButton<String>(
                 onSelected: (nextStatus) async {
                   if (orderId.isEmpty || nextStatus == currentStatus) return;
-                  await onApplyStatus(orderId, nextStatus, 'Order updated to ${nextStatus.toUpperCase()}');
+                  await onApplyStatus(
+                    orderId,
+                    nextStatus,
+                    'Order updated to ${nextStatus.toUpperCase()}',
+                  );
                 },
                 itemBuilder: (context) {
                   return statusFlow.map((status) {
@@ -258,9 +333,14 @@ class OrderListItem extends ConsumerWidget {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: const Color(0xFF0D9488),
                     disabledForegroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     minimumSize: const Size(0, 0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: const Text('Update'),
                 ),
@@ -291,9 +371,12 @@ Widget buildHandoffChip(
         String? proofUrl = existingProofUrl;
         if (requiresProof) {
           proofUrl = await requestProofUrl(context, existingProofUrl);
+          if (!context.mounted) return;
           if (proofUrl == null || proofUrl.trim().isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Proof URL is required for this handoff status.')),
+              const SnackBar(
+                content: Text('Proof URL is required for this handoff status.'),
+              ),
             );
             return;
           }
@@ -304,13 +387,15 @@ Widget buildHandoffChip(
           status,
           proofUrl: proofUrl?.trim().isEmpty == true ? null : proofUrl?.trim(),
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Handoff updated: $label')),
-        );
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Handoff updated: $label')));
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update handoff: $e')),
-        );
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update handoff: $e')));
       }
     },
   );
@@ -337,7 +422,8 @@ Future<String?> requestProofUrl(BuildContext context, String? existing) async {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
             child: const Text('Save'),
           ),
         ],

@@ -33,19 +33,22 @@ void main() {
   });
 
   group('FinanceGovernance — revenue trending and forecasting', () {
-    test('tracks daily/weekly revenue and identifies growth/decline patterns', () {
-      final revenueTrend = {
-        'period': 'week',
-        'total': 125000.0,
-        'daily_average': 17857.0,
-        'trend': 'upward',
-        'peak_day': 'Thursday',
-        'growth_rate': 0.15, // 15% week-over-week
-      };
+    test(
+      'tracks daily/weekly revenue and identifies growth/decline patterns',
+      () {
+        final revenueTrend = {
+          'period': 'week',
+          'total': 125000.0,
+          'daily_average': 17857.0,
+          'trend': 'upward',
+          'peak_day': 'Thursday',
+          'growth_rate': 0.15, // 15% week-over-week
+        };
 
-      expect(revenueTrend['trend'], equals('upward'));
-      expect(revenueTrend['growth_rate'], greaterThan(0.0));
-    });
+        expect(revenueTrend['trend'], equals('upward'));
+        expect(revenueTrend['growth_rate'], greaterThan(0.0));
+      },
+    );
 
     test('flags revenue anomalies and suspicious transaction patterns', () {
       final anomalous = {
@@ -63,7 +66,7 @@ void main() {
 
   group('FinanceGovernance — vendor commission auditing', () {
     test('validates commission calculations against contract terms', () {
-      final commission = {
+      final commission = <String, Object>{
         'vendor_id': 'v1',
         'order_amount': 500.0,
         'commission_rate': 0.15,
@@ -71,13 +74,15 @@ void main() {
         'matches_contract': true,
       };
 
-      final calculated = commission['order_amount'] * commission['commission_rate'];
+      final calculated =
+          (commission['order_amount'] as double) *
+          (commission['commission_rate'] as double);
       expect(calculated, equals(commission['commission_charged']));
       expect(commission['matches_contract'], isTrue);
     });
 
     test('detects overcharging and undercharging disputes', () {
-      final disputed = {
+      final disputed = <String, Object>{
         'vendor_id': 'v2',
         'expected_commission': 100.0,
         'actual_commission': 150.0,
@@ -85,7 +90,10 @@ void main() {
         'dispute_status': 'open',
       };
 
-      expect(disputed['actual_commission'], greaterThan(disputed['expected_commission']));
+      expect(
+        disputed['actual_commission'],
+        greaterThan(disputed['expected_commission']!),
+      );
       expect(disputed['dispute_status'], equals('open'));
     });
   });

@@ -49,14 +49,25 @@ class OrderHistoryScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 80, color: AppColors.textMuted.withValues(alpha: 0.4)),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 80,
+              color: AppColors.textMuted.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 24),
-            const Text('No orders yet', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+            const Text(
+              'No orders yet',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+            ),
             const SizedBox(height: 8),
             const Text(
               'Your order history will appear here\nonce you place your first meal.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -80,7 +91,10 @@ class OrderHistoryScreen extends ConsumerWidget {
             children: [
               Text(
                 order.vendorName ?? 'Campus Vendor',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
               ),
               OrderStatusWidget(status: order.status),
             ],
@@ -91,16 +105,24 @@ class OrderHistoryScreen extends ConsumerWidget {
             children: [
               Text(
                 DateFormat('MMM dd, hh:mm a').format(order.createdAt),
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
               Text(
                 '₹${order.totalAmount.toInt()}',
-                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primary),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: AppColors.primary,
+                ),
               ),
             ],
           ),
-          
-          if (order.scheduledFor != null || (order.promoCode?.isNotEmpty ?? false)) ...[
+
+          if (order.scheduledFor != null ||
+              (order.promoCode?.isNotEmpty ?? false)) ...[
             const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -109,24 +131,32 @@ class OrderHistoryScreen extends ConsumerWidget {
                   order.scheduledFor == null
                       ? 'ASAP'
                       : 'Scheduled: ${DateFormat('MMM dd, hh:mm a').format(order.scheduledFor!)}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 if (order.promoCode != null && order.promoCode!.isNotEmpty)
                   Text(
                     'Promo: ${order.promoCode}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
               ],
             ),
           ],
-const Divider(height: 32),
+          const Divider(height: 32),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => context.push('/order-status/${order.id}'),
                   style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('TRACK ORDER'),
                 ),
@@ -170,17 +200,22 @@ const Divider(height: 32),
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Rate your order', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+              const Text(
+                'Rate your order',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+              ),
               const SizedBox(height: 12),
               ValueListenableBuilder<int>(
                 valueListenable: ratingController,
-                builder: (_, rating, __) => Row(
+                builder: (_, rating, _) => Row(
                   children: List.generate(5, (index) {
                     final value = index + 1;
                     return IconButton(
                       onPressed: () => ratingController.value = value,
                       icon: Icon(
-                        value <= rating ? Icons.star_rounded : Icons.star_border_rounded,
+                        value <= rating
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
                         color: Colors.amber,
                       ),
                     );
@@ -215,16 +250,21 @@ const Divider(height: 32),
       await ReviewService().submitReview(
         orderId: order.id,
         rating: ratingController.value,
-        comment: commentController.text.trim().isEmpty ? null : commentController.text.trim(),
+        comment: commentController.text.trim().isEmpty
+            ? null
+            : commentController.text.trim(),
       );
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thanks for the review!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Thanks for the review!')));
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Review failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }

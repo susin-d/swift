@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { createOrder, getMyOrders, updateOrderStatus, cancelUserOrder, getOrderSlots, updateOrderHandoff } from '../controllers/orderController';
-import { requireUser, requireVendor } from '../middleware/rbac';
+import { createOrder, getMyOrders, updateOrderStatus, cancelUserOrder, getOrderSlots, updateOrderHandoff } from './orders.controller';
+import { requireUser, requireVendor } from '../../middleware/rbac';
 
 export const orderRoutes = async (app: FastifyInstance) => {
     app.addHook('preValidation', app.authenticate);

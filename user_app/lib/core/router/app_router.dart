@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_provider.dart';
-import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/register_screen.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/register_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/menu/menu_screen.dart';
 import '../../screens/menu/item_screen.dart';

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../models/order_model.dart';
 import '../services/order_service.dart';
-import 'auth_provider.dart';
+import '../features/auth/providers/auth_provider.dart';
 
 final orderServiceProvider = Provider((ref) => OrderService());
 

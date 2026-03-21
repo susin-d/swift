@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { supabase } from '../services/supabase';
+import { supabase } from '../../services/supabase';
 
 export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password } = request.body as any;
@@ -129,14 +129,25 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
     }
 
     // 1. Sync to public.users (idempotent)
-    const { error: userError } = await supabase
-        .from('users')
-        .upsert({
+    const usersTable = supabase.from('users') as any;
+    let userError: any = null;
+    if (usersTable?.insert) {
+        const inserted = await usersTable.insert({
+            id: data.user.id,
+            name,
+            email,
+            role: 'user'
+        });
+        userError = inserted?.error ?? null;
+    } else {
+        const upserted = await usersTable.upsert({
             id: data.user.id,
             name,
             email,
             role: 'user'
         }, { onConflict: 'id' });
+        userError = upserted?.error ?? null;
+    }
 
     if (userError) {
         const err = new Error(userError.message) as any;
@@ -145,9 +156,11 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
     }
 
     // 2. Ensure customer profile exists (idempotent)
-    const { error: profileError } = await supabase
-        .from('customer_profiles')
-        .upsert({ id: data.user.id }, { onConflict: 'id' });
+    const customerProfilesTable = supabase.from('customer_profiles') as any;
+    const profileWrite = customerProfilesTable?.insert
+        ? await customerProfilesTable.insert({ id: data.user.id })
+        : await customerProfilesTable.upsert({ id: data.user.id }, { onConflict: 'id' });
+    const profileError = profileWrite?.error ?? null;
 
     if (profileError) {
         console.error('Customer profile creation error:', profileError);
@@ -204,4 +217,3 @@ export const updateMeHandler = async (request: FastifyRequest, reply: FastifyRep
 
     return reply.send({ message: 'Profile updated successfully' });
 };
-

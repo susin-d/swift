@@ -1,10 +1,10 @@
 import { FastifyInstance } from 'fastify';
-import { authRoutes } from './auth';
-import { orderRoutes } from './orders';
+import { authRoutes } from '../modules/auth/auth.routes';
+import { orderRoutes } from '../modules/orders/orders.routes';
 import { vendorOpsRoutes } from './vendor-ops';
 import { menuRoutes } from './menus';
 import { paymentRoutes } from './payments';
-import { adminRoutes } from './admin';
+import { adminRoutes } from '../modules/admin/admin.routes';
 
 import { deliveryRoutes } from './delivery';
 import { publicRoutes } from './public';

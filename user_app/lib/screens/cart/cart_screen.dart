@@ -8,7 +8,7 @@ import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/address_provider.dart';
 import '../../models/address_model.dart';
-import '../../providers/auth_provider.dart';
+import '../../features/auth/providers/auth_provider.dart';
 import '../../widgets/cart_item_widget.dart';
 import '../../services/payment_service.dart';
 import '../../services/promo_service.dart';
@@ -112,9 +112,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildSummary(BuildContext context, AsyncValue<List<AddressModel>> addressesAsync) {
+  Widget _buildSummary(
+    BuildContext context,
+    AsyncValue<List<AddressModel>> addressesAsync,
+  ) {
     final subtotal = ref.watch(cartProvider.notifier).totalAmount;
-    final finalTotal = (subtotal - _discountAmount).clamp(0, double.infinity).toDouble();
+    final finalTotal = (subtotal - _discountAmount)
+        .clamp(0, double.infinity)
+        .toDouble();
     final cartItems = ref.watch(cartProvider).values.toList();
     final cartNotifier = ref.read(cartProvider.notifier);
     final buildingsAsync = ref.watch(campusBuildingsProvider);
@@ -122,13 +127,27 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final defaultAddress = addressesAsync.maybeWhen(
       data: (addresses) => addresses.firstWhere(
         (addr) => addr.isDefault,
-        orElse: () => addresses.isNotEmpty ? addresses.first : const AddressModel(id: '', label: '', addressLine: '', isDefault: false),
+        orElse: () => addresses.isNotEmpty
+            ? addresses.first
+            : const AddressModel(
+                id: '',
+                label: '',
+                addressLine: '',
+                isDefault: false,
+              ),
       ),
-      orElse: () => const AddressModel(id: '', label: '', addressLine: '', isDefault: false),
+      orElse: () => const AddressModel(
+        id: '',
+        label: '',
+        addressLine: '',
+        isDefault: false,
+      ),
     );
     final hasAddress = defaultAddress.id.isNotEmpty;
     final hasAddressError = addressesAsync.hasError;
-    final canPlaceOrder = _deliverToClass ? hasAddress : (hasAddress || hasAddressError);
+    final canPlaceOrder = _deliverToClass
+        ? hasAddress
+        : (hasAddress || hasAddressError);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
@@ -146,47 +165,53 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-            children: [
-              CartAddressRow(
-                addressesAsync: addressesAsync,
-                defaultAddress: defaultAddress,
-                hasAddress: hasAddress,
-                onManageAddress: () => context.push('/addresses'),
-              ),
-              const SizedBox(height: 12),
-              _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
-              const SizedBox(height: 12),
-              CartScheduleRow(
-                scheduledFor: _scheduledFor,
-                onSelectSchedule: () => _selectScheduleSlot(context),
-              ),
-              const SizedBox(height: 12),
-              CartFoodOrderRow(
-                cartItems: cartItems,
-                onIncrement: cartNotifier.addItem,
-                onDecrement: cartNotifier.removeItem,
-              ),
-              const SizedBox(height: 12),
-              CartPromoRow(
-                promoController: _promoController,
-                isApplying: _promoApplying,
-                message: _promoMessage,
-                discountAmount: _discountAmount,
-                appliedPromoCode: _appliedPromoCode,
-                onApply: () => _applyPromo(context, subtotal),
-                onRemove: _clearPromo,
-              ),
+          children: [
+            CartAddressRow(
+              addressesAsync: addressesAsync,
+              defaultAddress: defaultAddress,
+              hasAddress: hasAddress,
+              onManageAddress: () => context.push('/addresses'),
+            ),
+            const SizedBox(height: 12),
+            _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
+            const SizedBox(height: 12),
+            CartScheduleRow(
+              scheduledFor: _scheduledFor,
+              onSelectSchedule: () => _selectScheduleSlot(context),
+            ),
+            const SizedBox(height: 12),
+            CartFoodOrderRow(
+              cartItems: cartItems,
+              onIncrement: cartNotifier.addItem,
+              onDecrement: cartNotifier.removeItem,
+            ),
+            const SizedBox(height: 12),
+            CartPromoRow(
+              promoController: _promoController,
+              isApplying: _promoApplying,
+              message: _promoMessage,
+              discountAmount: _discountAmount,
+              appliedPromoCode: _appliedPromoCode,
+              onApply: () => _applyPromo(context, subtotal),
+              onRemove: _clearPromo,
+            ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'Subtotal',
-                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   '\u20B9${subtotal.toInt()}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                  ),
                 ),
               ],
             ),
@@ -197,11 +222,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 children: [
                   const Text(
                     'Promo discount',
-                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     '-\u20B9${_discountAmount.toInt()}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ],
               ),
@@ -212,11 +243,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               children: [
                 Text(
                   'Fee',
-                  style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   'FREE',
-                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ],
             ),
@@ -233,7 +270,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
                 Text(
                   '\u20B9${finalTotal.toInt()}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 32, color: AppColors.primary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 32,
+                    color: AppColors.primary,
+                  ),
                 ),
               ],
             ),
@@ -244,15 +285,21 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               decoration: BoxDecoration(
                 color: AppColors.info.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.info.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.25),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
+                  const Icon(
+                    Icons.schedule_rounded,
+                    color: AppColors.info,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'ETA ${_etaMin}-${_etaMax} min - ${etaConfidenceLabel(ref.watch(cartProvider).length)}',
+                      'ETA $_etaMin-$_etaMax min - ${etaConfidenceLabel(ref.watch(cartProvider).length)}',
                       style: const TextStyle(
                         color: AppColors.info,
                         fontWeight: FontWeight.w700,
@@ -296,10 +343,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.school_rounded, color: AppColors.primary, size: 18),
+              const Icon(
+                Icons.school_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
               const SizedBox(width: 10),
               const Expanded(
-                child: Text('Deliver to class', style: TextStyle(fontWeight: FontWeight.w800)),
+                child: Text(
+                  'Deliver to class',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
               Switch(
                 value: _deliverToClass,
@@ -327,19 +381,24 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DropdownButtonFormField<String>(
-                      value: selectedValue,
+                      initialValue: selectedValue,
                       decoration: const InputDecoration(
                         labelText: 'Use saved class (optional)',
                         isDense: true,
                         border: OutlineInputBorder(),
                       ),
                       items: [
-                        const DropdownMenuItem(value: '__manual__', child: Text('Manual entry')),
+                        const DropdownMenuItem(
+                          value: '__manual__',
+                          child: Text('Manual entry'),
+                        ),
                         ...sessions.map((session) {
                           final title = session.courseLabel?.isNotEmpty == true
                               ? session.courseLabel!
                               : session.buildingName ?? 'Class';
-                          final room = session.room.isEmpty ? '' : ' - ${session.room}';
+                          final room = session.room.isEmpty
+                              ? ''
+                              : ' - ${session.room}';
                           return DropdownMenuItem(
                             value: session.id,
                             child: Text('$title$room'),
@@ -355,7 +414,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           });
                           return;
                         }
-                        final selected = sessions.firstWhere((s) => s.id == value);
+                        final selected = sessions.firstWhere(
+                          (s) => s.id == value,
+                        );
                         setState(() {
                           _selectedClassSessionId = selected.id;
                           _selectedBuildingId = selected.buildingId;
@@ -385,7 +446,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 _selectedBuildingId ??= selected.id;
 
                 return DropdownButtonFormField<String>(
-                  value: _selectedBuildingId,
+                  initialValue: _selectedBuildingId,
                   items: buildings
                       .map(
                         (b) => DropdownMenuItem<String>(
@@ -415,11 +476,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               error: (e, _) => Text('Unable to load zones: $e'),
               data: (zones) {
                 if (zones.isEmpty) {
-                  return const Text('No delivery zones configured for this building.');
+                  return const Text(
+                    'No delivery zones configured for this building.',
+                  );
                 }
 
                 return DropdownButtonFormField<String>(
-                  value: _selectedZoneId,
+                  initialValue: _selectedZoneId,
                   items: zones
                       .map(
                         (zone) => DropdownMenuItem<String>(
@@ -460,7 +523,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.volume_off_rounded, size: 18, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.volume_off_rounded,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 8),
                 const Expanded(child: Text('Quiet mode (no calls)')),
                 Switch(
@@ -474,7 +541,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       ),
     );
   }
-
 
   Future<void> _selectScheduleSlot(BuildContext context) async {
     try {
@@ -490,14 +556,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               shrinkWrap: true,
               padding: const EdgeInsets.all(16),
               itemCount: slots.length + 1,
-              separatorBuilder: (_, __) => const Divider(),
+              separatorBuilder: (_, _) => const Divider(),
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return ListTile(
                     leading: const Icon(Icons.flash_on_rounded),
                     title: const Text('ASAP'),
                     subtitle: const Text('Prepare as soon as possible'),
-                    onTap: () => Navigator.of(sheetContext).pop({'starts_at': null}),
+                    onTap: () =>
+                        Navigator.of(sheetContext).pop({'starts_at': null}),
                   );
                 }
 
@@ -522,7 +589,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load time slots: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Failed to load time slots: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -579,7 +649,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (vendorId == null || vendorId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to place order right now. Missing vendor context.'),
+          content: Text(
+            'Unable to place order right now. Missing vendor context.',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -598,7 +670,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
 
     if (_deliverToClass) {
-      if (_selectedBuildingId == null || _selectedBuildingId!.isEmpty || _roomController.text.trim().isEmpty) {
+      if (_selectedBuildingId == null ||
+          _selectedBuildingId!.isEmpty ||
+          _roomController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Select a building and room for class delivery.'),
@@ -608,12 +682,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         return;
       }
     }
-    
+
     final result = await showModalBottomSheet<PaymentMethod>(
       context: context,
       builder: (context) => const PaymentSheet(),
     );
 
+    if (!context.mounted) return;
     if (result == null) return;
 
     if (result == PaymentMethod.payOnPickup) {
@@ -642,26 +717,34 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     try {
       final subtotal = ref.read(cartProvider.notifier).totalAmount;
       final deliveryMode = _deliverToClass ? 'class' : 'standard';
-      final order = await ref.read(orderServiceProvider).placeOrder(
-        vendorId: vendorId,
-        items: cart.values.map((i) => {
-          'id': i.item.id,
-          'quantity': i.quantity,
-          'price': i.item.price,
-        }).toList(),
-        totalAmount: subtotal,
-        promoCode: _appliedPromoCode,
-        scheduledFor: _scheduledFor,
-        deliveryMode: deliveryMode,
-        deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
-        deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
-        deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
-        quietMode: _deliverToClass ? _quietMode : null,
-        deliveryInstructions: _deliverToClass ? _instructionsController.text.trim() : null,
-        deliveryLocationLabel: _deliverToClass ? 'Classroom' : null,
-        classStartAt: _deliverToClass ? _classStartAt : null,
-        classEndAt: _deliverToClass ? _classEndAt : null,
-      );
+      final order = await ref
+          .read(orderServiceProvider)
+          .placeOrder(
+            vendorId: vendorId,
+            items: cart.values
+                .map(
+                  (i) => {
+                    'id': i.item.id,
+                    'quantity': i.quantity,
+                    'price': i.item.price,
+                  },
+                )
+                .toList(),
+            totalAmount: subtotal,
+            promoCode: _appliedPromoCode,
+            scheduledFor: _scheduledFor,
+            deliveryMode: deliveryMode,
+            deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
+            deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
+            deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
+            quietMode: _deliverToClass ? _quietMode : null,
+            deliveryInstructions: _deliverToClass
+                ? _instructionsController.text.trim()
+                : null,
+            deliveryLocationLabel: _deliverToClass ? 'Classroom' : null,
+            classStartAt: _deliverToClass ? _classStartAt : null,
+            classEndAt: _deliverToClass ? _classEndAt : null,
+          );
 
       if (!context.mounted) return;
 
@@ -670,7 +753,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Checkout failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Checkout failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -686,21 +772,29 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (vendorId == null || vendorId.isEmpty) return;
 
     final subtotal = ref.read(cartProvider.notifier).totalAmount;
-    final finalAmount = (subtotal - _discountAmount).clamp(0, double.infinity).toDouble();
+    final finalAmount = (subtotal - _discountAmount)
+        .clamp(0, double.infinity)
+        .toDouble();
 
     setState(() => _paymentInProgress = true);
     try {
       final paymentService = PaymentService();
-      final order = await paymentService.createRazorpayOrder(amount: finalAmount);
+      final order = await paymentService.createRazorpayOrder(
+        amount: finalAmount,
+      );
       final user = ref.read(userProvider);
 
       _pendingOrder = PendingOrder(
         vendorId: vendorId,
-        items: cart.values.map((i) => {
-          'id': i.item.id,
-          'quantity': i.quantity,
-          'price': i.item.price,
-        }).toList(),
+        items: cart.values
+            .map(
+              (i) => {
+                'id': i.item.id,
+                'quantity': i.quantity,
+                'price': i.item.price,
+              },
+            )
+            .toList(),
         subtotalAmount: subtotal,
         finalAmount: finalAmount,
         promoCode: _appliedPromoCode,
@@ -710,7 +804,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
         deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
         quietMode: _deliverToClass ? _quietMode : null,
-        deliveryInstructions: _deliverToClass ? _instructionsController.text.trim() : null,
+        deliveryInstructions: _deliverToClass
+            ? _instructionsController.text.trim()
+            : null,
         classStartAt: _deliverToClass ? _classStartAt : null,
         classEndAt: _deliverToClass ? _classEndAt : null,
         razorpayOrderId: order['id']?.toString() ?? '',
@@ -722,9 +818,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         'name': PaymentConfig.merchantName,
         'description': PaymentConfig.merchantDescription,
         'order_id': _pendingOrder!.razorpayOrderId,
-        'prefill': {
-          'email': user?.email ?? '',
-        },
+        'prefill': {'email': user?.email ?? ''},
       };
 
       _razorpay.open(options);
@@ -732,7 +826,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       setState(() => _paymentInProgress = false);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment setup failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Payment setup failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -749,22 +846,26 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         signature: response.signature ?? '',
       );
 
-      final order = await ref.read(orderServiceProvider).placeOrder(
-        vendorId: pending.vendorId,
-        items: pending.items,
-        totalAmount: pending.subtotalAmount,
-        promoCode: pending.promoCode,
-        scheduledFor: pending.scheduledFor,
-        deliveryMode: pending.deliveryMode,
-        deliveryBuildingId: pending.deliveryBuildingId,
-        deliveryRoom: pending.deliveryRoom,
-        deliveryZoneId: pending.deliveryZoneId,
-        quietMode: pending.quietMode,
-        deliveryInstructions: pending.deliveryInstructions,
-        deliveryLocationLabel: pending.deliveryMode == 'class' ? 'Classroom' : null,
-        classStartAt: pending.classStartAt,
-        classEndAt: pending.classEndAt,
-      );
+      final order = await ref
+          .read(orderServiceProvider)
+          .placeOrder(
+            vendorId: pending.vendorId,
+            items: pending.items,
+            totalAmount: pending.subtotalAmount,
+            promoCode: pending.promoCode,
+            scheduledFor: pending.scheduledFor,
+            deliveryMode: pending.deliveryMode,
+            deliveryBuildingId: pending.deliveryBuildingId,
+            deliveryRoom: pending.deliveryRoom,
+            deliveryZoneId: pending.deliveryZoneId,
+            quietMode: pending.quietMode,
+            deliveryInstructions: pending.deliveryInstructions,
+            deliveryLocationLabel: pending.deliveryMode == 'class'
+                ? 'Classroom'
+                : null,
+            classStartAt: pending.classStartAt,
+            classEndAt: pending.classEndAt,
+          );
 
       if (!mounted) return;
       ref.read(cartProvider.notifier).clearCart();
@@ -775,7 +876,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment verification failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Payment verification failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     } finally {
       if (mounted) {
@@ -787,13 +891,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   void _handlePaymentError(PaymentFailureResponse response) {
     setState(() => _paymentInProgress = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Payment failed: ${response.message ?? 'Unknown error'}'), backgroundColor: AppColors.error),
+      SnackBar(
+        content: Text('Payment failed: ${response.message ?? 'Unknown error'}'),
+        backgroundColor: AppColors.error,
+      ),
     );
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('External wallet selected: ${response.walletName ?? ''}')),
+      SnackBar(
+        content: Text('External wallet selected: ${response.walletName ?? ''}'),
+      ),
     );
   }
 }
