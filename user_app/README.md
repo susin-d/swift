@@ -29,6 +29,20 @@ Primary implementation file:
 
 - `lib/screens/home/home_screen.dart`
 
+## Cart Feature Module Structure
+
+The cart flow is organized by feature and layer under `lib/screens/cart/`:
+
+- `cart_screen.dart`: screen coordinator (state wiring, checkout and payment orchestration)
+- `models/pending_order.dart`: payment-to-order handoff model
+- `utils/cart_eta.dart`: ETA confidence helpers
+- `widgets/payment_sheet.dart`: payment method selector sheet
+- `widgets/cart_empty_view.dart`: empty basket UI
+- `widgets/cart_address_row.dart`: address status and management row
+- `widgets/cart_schedule_row.dart`: scheduled time row
+- `widgets/cart_food_order_row.dart`: in-summary food item controls
+- `widgets/cart_promo_row.dart`: promo input and applied state UI
+
 ## Development Commands
 
 Run from `user_app/`:

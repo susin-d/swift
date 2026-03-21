@@ -3,109 +3,13 @@ import { createSupabaseUserClient, supabase } from '../services/supabase';
 import { createNotification } from '../services/notificationService';
 import { isPointInsideGeojson } from '../services/geofenceService';
 import { validatePromo } from '../services/promoService';
-
-type EtaConfidence = 'low' | 'medium' | 'high';
-type SlaRisk = 'low' | 'medium' | 'high';
-
-const buildEtaTrust = (status: string | null | undefined, createdAt: string) => {
-    const statusValue = (status || 'pending').toLowerCase();
-    const created = new Date(createdAt).getTime();
-    const ageMinutes = Math.max(0, Math.floor((Date.now() - created) / 60000));
-
-    let minMinutes = 14;
-    let maxMinutes = 24;
-    let confidence: EtaConfidence = 'high';
-
-    if (statusValue === 'accepted') {
-        minMinutes = 10;
-        maxMinutes = 18;
-        confidence = 'high';
-    } else if (statusValue === 'preparing') {
-        minMinutes = 6;
-        maxMinutes = 14;
-        confidence = 'medium';
-    } else if (statusValue === 'ready') {
-        minMinutes = 2;
-        maxMinutes = 6;
-        confidence = 'high';
-    } else if (statusValue === 'completed') {
-        minMinutes = 0;
-        maxMinutes = 0;
-        confidence = 'high';
-    } else if (statusValue === 'cancelled') {
-        minMinutes = 0;
-        maxMinutes = 0;
-        confidence = 'low';
-    }
-
-    const adjustedMin = Math.max(0, minMinutes - Math.min(8, ageMinutes));
-    const adjustedMax = Math.max(adjustedMin, maxMinutes - Math.min(12, ageMinutes));
-
-    return {
-        min_minutes: adjustedMin,
-        max_minutes: adjustedMax,
-        confidence,
-        updated_at: new Date().toISOString(),
-        note: 'ETA range is a rolling estimate based on queue status and order age.',
-    };
-};
-
-const attachEtaTrust = <T extends { status?: string; created_at?: string }>(order: T) => ({
-    ...order,
-    eta: buildEtaTrust(order.status, order.created_at || new Date().toISOString()),
-});
-
-const buildVendorPacing = (order: any) => {
-    const statusValue = (order?.status || 'accepted').toLowerCase();
-    const created = new Date(order?.created_at || new Date().toISOString()).getTime();
-    const elapsedMinutes = Math.max(0, Math.floor((Date.now() - created) / 60000));
-    const itemCount = Array.isArray(order?.order_items) ? order.order_items.length : 0;
-    const totalAmount = Number(order?.total_amount) || 0;
-
-    const recommendedPrepMinutes = Math.min(24, Math.max(8, 8 + (itemCount * 2) + (totalAmount >= 300 ? 2 : 0)));
-    const targetPrepMinutes = statusValue === 'ready' || statusValue === 'completed'
-        ? Math.max(2, Math.floor(recommendedPrepMinutes / 2))
-        : recommendedPrepMinutes;
-
-    let slaRisk: SlaRisk = 'low';
-    let paceLabel = 'on_track';
-
-    if (statusValue === 'cancelled') {
-        slaRisk = 'high';
-        paceLabel = 'exception';
-    } else if (statusValue === 'completed' || statusValue === 'ready') {
-        slaRisk = 'low';
-        paceLabel = 'settled';
-    } else if (elapsedMinutes >= targetPrepMinutes + 4) {
-        slaRisk = 'high';
-        paceLabel = 'urgent';
-    } else if (elapsedMinutes >= targetPrepMinutes) {
-        slaRisk = 'medium';
-        paceLabel = 'watch';
-    }
-
-    return {
-        elapsed_minutes: elapsedMinutes,
-        target_prep_minutes: targetPrepMinutes,
-        recommended_prep_minutes: recommendedPrepMinutes,
-        sla_risk: slaRisk,
-        pace_label: paceLabel,
-        note: 'Pacing score blends elapsed queue time, order size, and current status.',
-    };
-};
-
-const attachVendorPacing = <T extends { status?: string; created_at?: string }>(order: T) => ({
-    ...attachEtaTrust(order),
-    pacing: buildVendorPacing(order),
-});
-
-const isAccessDeniedError = (error: any) => {
-    const message = String(error?.message || error || '').toLowerCase();
-    return message.includes('row-level security')
-        || message.includes('permission denied')
-        || message.includes('access denied')
-        || message.includes('rls');
-};
+import { attachEtaTrust, attachVendorPacing } from '../services/orders/orderInsights';
+import {
+    insertAndSelectSingleWithAccessFallback,
+    insertWithAccessFallback,
+    listUserOrdersWithFallback,
+    listVendorOrdersWithFallback,
+} from '../services/orders/orderDbFallbacks';
 
 export const createOrder = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
@@ -298,19 +202,7 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
     let orderError: any = null;
 
     for (const payload of orderInsertPayloads) {
-        let inserted = await writeClient
-            .from('orders')
-            .insert(payload)
-            .select()
-            .single();
-
-        if (inserted.error && isAccessDeniedError(inserted.error)) {
-            inserted = await supabase
-                .from('orders')
-                .insert(payload)
-                .select()
-                .single();
-        }
+        const inserted = await insertAndSelectSingleWithAccessFallback(token, 'orders', payload);
 
         if (!inserted.error && inserted.data) {
             order = inserted.data;
@@ -351,50 +243,18 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         price: item.price || item.unit_price,
     }));
 
-    let itemsInsert = await writeClient
-        .from('order_items')
-        .insert(orderItemsLegacy);
+    let itemsInsert = await insertWithAccessFallback(token, 'order_items', orderItemsLegacy);
 
-    if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
-        itemsInsert = await supabase
-            .from('order_items')
-            .insert(orderItemsLegacy);
+    if (itemsInsert.error) {
+        itemsInsert = await insertWithAccessFallback(token, 'order_items', orderItemsModern);
     }
 
     if (itemsInsert.error) {
-        itemsInsert = await writeClient
-            .from('order_items')
-            .insert(orderItemsModern);
-
-        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
-            itemsInsert = await supabase
-                .from('order_items')
-                .insert(orderItemsModern);
-        }
+        itemsInsert = await insertWithAccessFallback(token, 'order_items', orderItemsLegacyPrice);
     }
 
     if (itemsInsert.error) {
-        itemsInsert = await writeClient
-            .from('order_items')
-            .insert(orderItemsLegacyPrice);
-
-        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
-            itemsInsert = await supabase
-                .from('order_items')
-                .insert(orderItemsLegacyPrice);
-        }
-    }
-
-    if (itemsInsert.error) {
-        itemsInsert = await writeClient
-            .from('order_items')
-            .insert(orderItemsModernPrice);
-
-        if (itemsInsert.error && isAccessDeniedError(itemsInsert.error)) {
-            itemsInsert = await supabase
-                .from('order_items')
-                .insert(orderItemsModernPrice);
-        }
+        itemsInsert = await insertWithAccessFallback(token, 'order_items', orderItemsModernPrice);
     }
 
     if (itemsInsert.error) throw itemsInsert.error;
@@ -468,37 +328,7 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
 
 export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
-
-    const withCampus = await supabase
-        .from('orders')
-        .select('*, vendors(name), campus_buildings(name), order_items(*, menu_items(name))')
-        .eq('user_id', user.sub)
-        .order('created_at', { ascending: false });
-
-    let ordersData: any[] | null = withCampus.data as any[] | null;
-    let queryError: any = withCampus.error;
-
-    if (queryError) {
-        const withoutCampus = await supabase
-            .from('orders')
-            .select('*, vendors(name), order_items(*, menu_items(name))')
-            .eq('user_id', user.sub)
-            .order('created_at', { ascending: false });
-
-        ordersData = withoutCampus.data as any[] | null;
-        queryError = withoutCampus.error;
-
-        if (queryError) {
-            const plainOrders = await supabase
-                .from('orders')
-                .select('*')
-                .eq('user_id', user.sub)
-                .order('created_at', { ascending: false });
-
-            ordersData = plainOrders.data as any[] | null;
-            queryError = plainOrders.error;
-        }
-    }
+    const { data: ordersData, error: queryError } = await listUserOrdersWithFallback(user.sub);
 
     if (queryError) throw queryError;
 
@@ -767,34 +597,7 @@ export const getVendorOrders = async (request: FastifyRequest, reply: FastifyRep
     }
 
     // 2. Get orders for this vendor
-    const withCampus = await supabase
-        .from('orders')
-        .select('*, users(name, email), campus_buildings(name), order_items(*, menu_items(name))')
-        .eq('vendor_id', vendor.id)
-        .order('created_at', { ascending: false });
-
-    let data = withCampus.data as any[] | null;
-    let error = withCampus.error;
-
-    if (error) {
-        const withoutCampus = await supabase
-            .from('orders')
-            .select('*, users(name, email), order_items(*, menu_items(name))')
-            .eq('vendor_id', vendor.id)
-            .order('created_at', { ascending: false });
-        data = withoutCampus.data as any[] | null;
-        error = withoutCampus.error;
-
-        if (error) {
-            const plainOrders = await supabase
-                .from('orders')
-                .select('*')
-                .eq('vendor_id', vendor.id)
-                .order('created_at', { ascending: false });
-            data = plainOrders.data as any[] | null;
-            error = plainOrders.error;
-        }
-    }
+    const { data, error } = await listVendorOrdersWithFallback(vendor.id);
 
     if (error) throw error;
     return reply.send((data || []).map((order: any) => attachEtaTrust(order)));

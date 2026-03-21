@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/payment_config.dart';
 import '../../providers/cart_provider.dart';
@@ -17,6 +16,14 @@ import '../../providers/campus_provider.dart';
 import '../../models/campus_building.dart';
 import '../../providers/class_session_provider.dart';
 import '../../models/class_session.dart';
+import 'models/pending_order.dart';
+import 'utils/cart_eta.dart';
+import 'widgets/cart_address_row.dart';
+import 'widgets/cart_empty_view.dart';
+import 'widgets/cart_food_order_row.dart';
+import 'widgets/cart_promo_row.dart';
+import 'widgets/cart_schedule_row.dart';
+import 'widgets/payment_sheet.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -29,7 +36,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   static const int _etaMin = 14;
   static const int _etaMax = 24;
   late final Razorpay _razorpay;
-  _PendingOrder? _pendingOrder;
+  PendingOrder? _pendingOrder;
   bool _paymentInProgress = false;
   final TextEditingController _promoController = TextEditingController();
   bool _promoApplying = false;
@@ -46,12 +53,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   final TextEditingController _roomController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
   bool _quietMode = false;
-
-  String _etaConfidenceLabel(int itemCount) {
-    if (itemCount <= 2) return 'High confidence';
-    if (itemCount <= 4) return 'Medium confidence';
-    return 'Medium confidence';
-  }
 
   @override
   void initState() {
@@ -87,7 +88,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         ),
       ),
       body: cart.isEmpty
-          ? _buildEmptyCart(context)
+          ? CartEmptyView(onBack: () => context.pop())
           : Column(
               children: [
                 Expanded(
@@ -111,35 +112,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildEmptyCart(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.shopping_basket_outlined, size: 80, color: AppColors.textMuted.withValues(alpha: 0.5)),
-          const SizedBox(height: 24),
-          const Text(
-            'Your basket is empty',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Add some delicious items from our vendors!',
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () => context.pop(),
-            child: const Text('BACK TO MENU'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSummary(BuildContext context, AsyncValue<List<AddressModel>> addressesAsync) {
     final subtotal = ref.watch(cartProvider.notifier).totalAmount;
     final finalTotal = (subtotal - _discountAmount).clamp(0, double.infinity).toDouble();
+    final cartItems = ref.watch(cartProvider).values.toList();
+    final cartNotifier = ref.read(cartProvider.notifier);
     final buildingsAsync = ref.watch(campusBuildingsProvider);
     final classSessionsAsync = ref.watch(classSessionsProvider);
     final defaultAddress = addressesAsync.maybeWhen(
@@ -170,15 +147,35 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
             children: [
-              _buildAddressRow(context, addressesAsync, defaultAddress, hasAddress),
+              CartAddressRow(
+                addressesAsync: addressesAsync,
+                defaultAddress: defaultAddress,
+                hasAddress: hasAddress,
+                onManageAddress: () => context.push('/addresses'),
+              ),
               const SizedBox(height: 12),
               _buildClassDeliveryRow(context, buildingsAsync, classSessionsAsync),
               const SizedBox(height: 12),
-              _buildScheduleRow(context),
+              CartScheduleRow(
+                scheduledFor: _scheduledFor,
+                onSelectSchedule: () => _selectScheduleSlot(context),
+              ),
               const SizedBox(height: 12),
-              _buildFoodOrderRow(),
+              CartFoodOrderRow(
+                cartItems: cartItems,
+                onIncrement: cartNotifier.addItem,
+                onDecrement: cartNotifier.removeItem,
+              ),
               const SizedBox(height: 12),
-              _buildPromoRow(context, subtotal),
+              CartPromoRow(
+                promoController: _promoController,
+                isApplying: _promoApplying,
+                message: _promoMessage,
+                discountAmount: _discountAmount,
+                appliedPromoCode: _appliedPromoCode,
+                onApply: () => _applyPromo(context, subtotal),
+                onRemove: _clearPromo,
+              ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -255,7 +252,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'ETA ${_etaMin}-${_etaMax} min - ${_etaConfidenceLabel(ref.watch(cartProvider).length)}',
+                      'ETA ${_etaMin}-${_etaMax} min - ${etaConfidenceLabel(ref.watch(cartProvider).length)}',
                       style: const TextStyle(
                         color: AppColors.info,
                         fontWeight: FontWeight.w700,
@@ -276,181 +273,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAddressRow(
-    BuildContext context,
-    AsyncValue<List<AddressModel>> addressesAsync,
-    AddressModel defaultAddress,
-    bool hasAddress,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: addressesAsync.when(
-              loading: () => const Text('Loading address...', style: TextStyle(fontWeight: FontWeight.w700)),
-              error: (_, _) => const Text(
-                'Address book unavailable right now. You can still place the order.',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              data: (_) => hasAddress
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          defaultAddress.label,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          defaultAddress.addressLine,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                        ),
-                      ],
-                    )
-                  : const Text(
-                      'Add a delivery address to place your order.',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => context.push('/addresses'),
-            child: Text(hasAddress ? 'Change' : 'Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildScheduleRow(BuildContext context) {
-    final scheduledLabel = _scheduledFor == null
-        ? 'ASAP'
-        : DateFormat('EEE, MMM d - hh:mm a').format(_scheduledFor!);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.schedule_rounded, color: AppColors.info, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Delivery time', style: TextStyle(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Text(
-                  scheduledLabel,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => _selectScheduleSlot(context),
-            child: Text(_scheduledFor == null ? 'Schedule' : 'Change'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFoodOrderRow() {
-    final cart = ref.watch(cartProvider);
-    final cartNotifier = ref.read(cartProvider.notifier);
-    final cartItems = cart.values.toList();
-    final itemCount = cart.length;
-    final quantityCount = cart.values.fold<int>(0, (sum, item) => sum + item.quantity);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.restaurant_menu_rounded, color: AppColors.primary, size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Food order', style: TextStyle(fontWeight: FontWeight.w800)),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$itemCount item${itemCount == 1 ? '' : 's'} • $quantityCount total qty',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (cartItems.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.border),
-            const SizedBox(height: 8),
-            ...cartItems.map(
-              (cartItem) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        cartItem.item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline_rounded),
-                      color: AppColors.textSecondary,
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => cartNotifier.removeItem(cartItem.item),
-                    ),
-                    Text(
-                      '${cartItem.quantity}',
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_rounded),
-                      color: AppColors.primary,
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => cartNotifier.addItem(cartItem.item),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -653,78 +475,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildPromoRow(BuildContext context, double subtotal) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Promo code', style: TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _promoController,
-                  textCapitalization: TextCapitalization.characters,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter code',
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                  ),
-                  onSubmitted: (_) => _applyPromo(context, subtotal),
-                ),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: _promoApplying ? null : () => _applyPromo(context, subtotal),
-                child: _promoApplying
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Apply'),
-              ),
-            ],
-          ),
-          if (_promoMessage != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _promoMessage!,
-              style: TextStyle(
-                color: _discountAmount > 0 ? AppColors.primary : AppColors.error,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-          if (_appliedPromoCode != null) ...[
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Chip(
-                  label: Text('Applied: $_appliedPromoCode'),
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: _clearPromo,
-                  child: const Text('Remove'),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
 
   Future<void> _selectScheduleSlot(BuildContext context) async {
     try {
@@ -859,14 +609,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       }
     }
     
-    final result = await showModalBottomSheet<_PaymentMethod>(
+    final result = await showModalBottomSheet<PaymentMethod>(
       context: context,
-      builder: (context) => const _PaymentSheet(),
+      builder: (context) => const PaymentSheet(),
     );
 
     if (result == null) return;
 
-    if (result == _PaymentMethod.payOnPickup) {
+    if (result == PaymentMethod.payOnPickup) {
       await _placeOrder(context);
       return;
     }
@@ -944,7 +694,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       final order = await paymentService.createRazorpayOrder(amount: finalAmount);
       final user = ref.read(userProvider);
 
-      _pendingOrder = _PendingOrder(
+      _pendingOrder = PendingOrder(
         vendorId: vendorId,
         items: cart.values.map((i) => {
           'id': i.item.id,
@@ -1046,75 +796,4 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       SnackBar(content: Text('External wallet selected: ${response.walletName ?? ''}')),
     );
   }
-}
-
-enum _PaymentMethod { payNow, payOnPickup }
-
-class _PaymentSheet extends StatelessWidget {
-  const _PaymentSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Choose payment method', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.credit_card_rounded),
-              title: const Text('Pay now (Razorpay)'),
-              subtitle: const Text('Cards, UPI, or wallets'),
-              onTap: () => Navigator.pop(context, _PaymentMethod.payNow),
-            ),
-            ListTile(
-              leading: const Icon(Icons.payments_rounded),
-              title: const Text('Pay on pickup'),
-              subtitle: const Text('Settle when you receive your order'),
-              onTap: () => Navigator.pop(context, _PaymentMethod.payOnPickup),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PendingOrder {
-  final String vendorId;
-  final List<Map<String, dynamic>> items;
-  final double subtotalAmount;
-  final double finalAmount;
-  final String? promoCode;
-  final DateTime? scheduledFor;
-  final String? deliveryMode;
-  final String? deliveryBuildingId;
-  final String? deliveryRoom;
-  final String? deliveryZoneId;
-  final bool? quietMode;
-  final String? deliveryInstructions;
-  final DateTime? classStartAt;
-  final DateTime? classEndAt;
-  final String razorpayOrderId;
-
-  _PendingOrder({
-    required this.vendorId,
-    required this.items,
-    required this.subtotalAmount,
-    required this.finalAmount,
-    this.promoCode,
-    this.scheduledFor,
-    this.deliveryMode,
-    this.deliveryBuildingId,
-    this.deliveryRoom,
-    this.deliveryZoneId,
-    this.quietMode,
-    this.deliveryInstructions,
-    this.classStartAt,
-    this.classEndAt,
-    required this.razorpayOrderId,
-  });
 }

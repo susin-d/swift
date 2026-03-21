@@ -9,8 +9,11 @@ import 'package:intl/intl.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 import 'package:vendor_app/features/orders/orders_provider.dart';
 import 'package:vendor_app/features/orders/delivery_provider.dart';
-import 'package:vendor_app/features/orders/handoff_service.dart';
 import 'package:vendor_app/core/utils/app_animations.dart';
+import 'package:vendor_app/features/dashboard/models/queue_models.dart';
+import 'package:vendor_app/features/dashboard/widgets/order_details_sheet.dart';
+import 'package:vendor_app/features/dashboard/widgets/dashboard_stat_card.dart';
+import 'package:vendor_app/features/dashboard/widgets/order_list_item.dart';
 import 'package:vendor_app/widgets/shimmer_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -24,7 +27,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _rushModeEnabled = false;
   int _selectedPrepMins = 12;
   String _selectedQueueFilter = 'all';
-  _QueueSort _queueSort = _QueueSort.readyFirst;
+  QueueSort _queueSort = QueueSort.readyFirst;
   Timer? _trackingTimer;
   String? _trackingOrderId;
   bool _trackingBusy = false;
@@ -141,15 +144,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     filtered.sort((left, right) {
       switch (_queueSort) {
-        case _QueueSort.newest:
+        case QueueSort.newest:
           final leftCreated = DateTime.tryParse((left['created_at'] ?? '').toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
           final rightCreated = DateTime.tryParse((right['created_at'] ?? '').toString()) ?? DateTime.fromMillisecondsSinceEpoch(0);
           return rightCreated.compareTo(leftCreated);
-        case _QueueSort.highestValue:
+        case QueueSort.highestValue:
           final leftAmount = (left['total_amount'] as num?) ?? 0;
           final rightAmount = (right['total_amount'] as num?) ?? 0;
           return rightAmount.compareTo(leftAmount);
-        case _QueueSort.readyFirst:
+        case QueueSort.readyFirst:
           const weight = {
             'ready': 0,
             'preparing': 1,
@@ -166,16 +169,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return filtered;
   }
 
-  List<_QueueRailItem> _buildQueueRails(List<dynamic> orders) {
+  List<QueueRailItem> _buildQueueRails(List<dynamic> orders) {
     final all = orders.length;
     int countFor(String status) => orders.where((order) => _normalizedStatus(order) == status).length;
 
     return [
-      _QueueRailItem(id: 'all', label: 'All', count: all, color: Colors.black87),
-      _QueueRailItem(id: 'accepted', label: 'Accepted', count: countFor('accepted'), color: Colors.blue),
-      _QueueRailItem(id: 'preparing', label: 'Preparing', count: countFor('preparing'), color: Colors.orange),
-      _QueueRailItem(id: 'ready', label: 'Ready', count: countFor('ready'), color: const Color(0xFF0D9488)),
-      _QueueRailItem(id: 'hold', label: '86 Hold', count: countFor('hold'), color: Colors.red),
+      QueueRailItem(id: 'all', label: 'All', count: all, color: Colors.black87),
+      QueueRailItem(id: 'accepted', label: 'Accepted', count: countFor('accepted'), color: Colors.blue),
+      QueueRailItem(id: 'preparing', label: 'Preparing', count: countFor('preparing'), color: Colors.orange),
+      QueueRailItem(id: 'ready', label: 'Ready', count: countFor('ready'), color: const Color(0xFF0D9488)),
+      QueueRailItem(id: 'hold', label: '86 Hold', count: countFor('hold'), color: Colors.red),
     ];
   }
 
@@ -469,14 +472,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Expanded(
                         child: AppAnimations.staggeredList(
                           0,
-                          _StatCard(title: 'Orders Today', value: '$count', color: Colors.blue),
+                          StatCard(title: 'Orders Today', value: '$count', color: Colors.blue),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: AppAnimations.staggeredList(
                           1,
-                          _StatCard(title: 'Revenue Today', value: 'Rs ${revenue.toInt()}', color: Colors.green),
+                          StatCard(title: 'Revenue Today', value: 'Rs ${revenue.toInt()}', color: Colors.green),
                         ),
                       ),
                     ],
@@ -491,9 +494,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 error: (_, __) => Row(
                   children: const [
-                    Expanded(child: _StatCard(title: 'Orders Today', value: '-', color: Colors.blue)),
+                    Expanded(child: StatCard(title: 'Orders Today', value: '-', color: Colors.blue)),
                     SizedBox(width: 16),
-                    Expanded(child: _StatCard(title: 'Revenue Today', value: '-', color: Colors.green)),
+                    Expanded(child: StatCard(title: 'Revenue Today', value: '-', color: Colors.green)),
                   ],
                 ),
               ),
@@ -577,7 +580,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                             return AppAnimations.staggeredList(
                               index + 2,
-                              _OrderListItem(
+                              OrderListItem(
                                 index: index,
                                 order: order,
                                 rushModeEnabled: _rushModeEnabled,
@@ -593,7 +596,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     _startLiveTracking(context, orderId);
                                   }
                                 },
-                                onOpenDetails: () => _openOrderDetails(context, order),
+                                onOpenDetails: () => openOrderDetailsSheet(context, order),
                                 onApplyStatus: (orderId, nextStatus, successLabel) =>
                                     _applyOrderStatus(context, orderId, nextStatus, successLabel),
                                 onHoldAction: ({
@@ -713,7 +716,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildQueueTriageRails(List<_QueueRailItem> rails) {
+  Widget _buildQueueTriageRails(List<QueueRailItem> rails) {
     return SizedBox(
       height: 82,
       child: ListView.separated(
@@ -777,7 +780,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: _MiniPacingStat(
+            child: MiniPacingStat(
               label: 'Urgent',
               value: '$highRisk',
               color: Colors.red.shade400,
@@ -785,7 +788,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: _MiniPacingStat(
+            child: MiniPacingStat(
               label: 'Watch',
               value: '$mediumRisk',
               color: Colors.orange.shade400,
@@ -793,7 +796,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: _MiniPacingStat(
+            child: MiniPacingStat(
               label: 'Prep Target',
               value: '$_selectedPrepMins m',
               color: const Color(0xFF0D9488),
@@ -899,18 +902,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         ChoiceChip(
           label: const Text('Ready First'),
-          selected: _queueSort == _QueueSort.readyFirst,
-          onSelected: (_) => setState(() => _queueSort = _QueueSort.readyFirst),
+          selected: _queueSort == QueueSort.readyFirst,
+          onSelected: (_) => setState(() => _queueSort = QueueSort.readyFirst),
         ),
         ChoiceChip(
           label: const Text('Newest'),
-          selected: _queueSort == _QueueSort.newest,
-          onSelected: (_) => setState(() => _queueSort = _QueueSort.newest),
+          selected: _queueSort == QueueSort.newest,
+          onSelected: (_) => setState(() => _queueSort = QueueSort.newest),
         ),
         ChoiceChip(
           label: const Text('High Value'),
-          selected: _queueSort == _QueueSort.highestValue,
-          onSelected: (_) => setState(() => _queueSort = _QueueSort.highestValue),
+          selected: _queueSort == QueueSort.highestValue,
+          onSelected: (_) => setState(() => _queueSort = QueueSort.highestValue),
         ),
       ],
     );
@@ -938,549 +941,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Future<void> _openOrderDetails(BuildContext context, dynamic order) async {
-    final items = (order['order_items'] as List?) ?? const [];
-    final scheduledRaw = order['scheduled_for']?.toString();
-    final scheduledFor = scheduledRaw == null ? null : DateTime.tryParse(scheduledRaw);
-    final scheduledLabel = scheduledFor == null
-        ? null
-        : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
-    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
-    final buildingName = order['campus_buildings']?['name']?.toString();
-    final roomLabel = order['delivery_room']?.toString();
-    final handoffCode = order['handoff_code']?.toString();
-    final quietMode = order['quiet_mode'] == true;
-    final handoffStatus = order['handoff_status']?.toString() ?? 'pending';
-    final proofUrl = order['handoff_proof_url']?.toString();
-    final orderId = order['id']?.toString() ?? '';
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Order Details', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 12),
-                if (scheduledLabel != null) ...[
-                  Text('Scheduled for: $scheduledLabel', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 12),
-                ],
-                if (deliveryMode == 'class') ...[
-                  Text(
-                    'Class delivery ${buildingName ?? ''}${roomLabel == null ? '' : ' - $roomLabel'}',
-                    style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                  if (handoffCode != null) ...[
-                    const SizedBox(height: 6),
-                    Text('Handoff code: $handoffCode', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                  if (quietMode) ...[
-                    const SizedBox(height: 6),
-                    Text('Quiet mode enabled', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                  if (proofUrl != null && proofUrl.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text('Proof URL: $proofUrl', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildHandoffChip(context, orderId, 'arrived_building', handoffStatus == 'arrived_building'),
-                      _buildHandoffChip(context, orderId, 'arrived_class', handoffStatus == 'arrived_class'),
-                      _buildHandoffChip(
-                        context,
-                        orderId,
-                        'delivered',
-                        handoffStatus == 'delivered',
-                        requiresProof: true,
-                        existingProofUrl: proofUrl,
-                      ),
-                      _buildHandoffChip(
-                        context,
-                        orderId,
-                        'failed',
-                        handoffStatus == 'failed',
-                        requiresProof: true,
-                        existingProofUrl: proofUrl,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                if (items.isEmpty)
-                  const Text('No items found for this order.')
-                else
-                  ...items.map((item) {
-                    final name = item['menu_items']?['name'] ?? 'Item';
-                    final qty = item['quantity'] ?? 1;
-                    final price = item['unit_price'] ?? 0;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(child: Text('$name x$qty')),
-                          Text('â‚¹${price.toString()}'),
-                        ],
-                      ),
-                    );
-                  }),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Total', style: TextStyle(fontWeight: FontWeight.w700)),
-                    Text('â‚¹${order['total_amount'] ?? 0}', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(sheetContext).pop(),
-                    child: const Text('Close'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-enum _QueueSort { readyFirst, newest, highestValue }
-
-class _QueueRailItem {
-  final String id;
-  final String label;
-  final int count;
-  final Color color;
-
-  const _QueueRailItem({
-    required this.id,
-    required this.label,
-    required this.count,
-    required this.color,
-  });
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final Color color;
-
-  const _StatCard({required this.title, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.white, Color(0xFFF8FCFB)],
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600])),
-            const SizedBox(height: 8),
-            Text(value, style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OrderListItem extends ConsumerWidget {
-  final int index;
-  final dynamic order;
-  final bool rushModeEnabled;
-  final int selectedPrepMins;
-  final String Function(String) nextStatusFor;
-  final bool trackingActive;
-  final bool trackingBusy;
-  final String? trackingLabel;
-  final VoidCallback onToggleTracking;
-  final VoidCallback onOpenDetails;
-  final Future<void> Function(String orderId, String nextStatus, String successLabel) onApplyStatus;
-  final Future<void> Function({
-    required String orderId,
-    required String currentStatus,
-    required String compactId,
-    required int elapsedMinutes,
-    required int recommendedPrepMinutes,
-  }) onHoldAction;
-
-  const _OrderListItem({
-    required this.index,
-    required this.order,
-    required this.rushModeEnabled,
-    required this.selectedPrepMins,
-    required this.nextStatusFor,
-    required this.trackingActive,
-    required this.trackingBusy,
-    required this.trackingLabel,
-    required this.onToggleTracking,
-    required this.onOpenDetails,
-    required this.onApplyStatus,
-    required this.onHoldAction,
-  });
-
-  static const _statusFlow = <String>[
-    'accepted',
-    'preparing',
-    'ready',
-    'completed',
-    'cancelled',
-  ];
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final orderId = order['id'] as String? ?? '';
-    final currentStatus = (order['status'] as String? ?? '').toLowerCase();
-    final nextStatus = nextStatusFor(currentStatus);
-    final compactId = orderId.substring(0, orderId.length > 8 ? 8 : orderId.length).toUpperCase();
-    final canTrack = currentStatus != 'completed' && currentStatus != 'cancelled';
-    final pacing = (order['pacing'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
-    final slaRisk = (pacing['sla_risk'] ?? 'low').toString();
-    final recommendedPrepMinutes = pacing['recommended_prep_minutes'] ?? selectedPrepMins;
-    final elapsedMinutes = pacing['elapsed_minutes'] ?? 0;
-    final scheduledRaw = order['scheduled_for']?.toString();
-    final scheduledFor = scheduledRaw == null ? null : DateTime.tryParse(scheduledRaw);
-    final scheduledLabel = scheduledFor == null
-        ? null
-        : DateFormat('EEE, MMM d - hh:mm a').format(scheduledFor.toLocal());
-    final deliveryMode = order['delivery_mode']?.toString() ?? 'standard';
-    final buildingName = order['campus_buildings']?['name']?.toString();
-    final roomLabel = order['delivery_room']?.toString();
-    final riskColor = switch (slaRisk) {
-      'high' => Colors.red.shade400,
-      'medium' => Colors.orange.shade400,
-      _ => const Color(0xFF0D9488),
-    };
-    final riskLabel = switch (slaRisk) {
-      'high' => 'URGENT',
-      'medium' => 'WATCH',
-      _ => 'ON TRACK',
-    };
-
-    return Dismissible(
-      key: ValueKey('order-$orderId-$index'),
-      background: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0D9488),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Mark ${nextStatus.toUpperCase()}',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
-        ),
-      ),
-      secondaryBackground: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.red.shade400,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.centerRight,
-        child: Text(
-          '86 HOLD',
-          style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        if (orderId.isEmpty) return false;
-        if (currentStatus == 'completed' || currentStatus == 'cancelled') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Order #$compactId is locked from swipe actions')),
-          );
-          return false;
-        }
-
-        if (direction == DismissDirection.startToEnd) {
-          await onApplyStatus(orderId, nextStatus, 'Order #$compactId -> ${nextStatus.toUpperCase()}');
-        } else {
-          await onHoldAction(
-            orderId: orderId,
-            currentStatus: currentStatus,
-            compactId: compactId,
-            elapsedMinutes: elapsedMinutes,
-            recommendedPrepMinutes: (recommendedPrepMinutes as num).toInt(),
-          );
-        }
-        return false;
-      },
-      child: InkWell(
-        onTap: onOpenDetails,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
-          ),
-          child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Order #$compactId',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${order['status'].toString().toUpperCase()} - Rs ${order['total_amount']}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                  ),
-                  if (scheduledLabel != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Scheduled: $scheduledLabel',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                  if (deliveryMode == 'class') ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Class delivery ${buildingName ?? ''}${roomLabel == null ? '' : ' - $roomLabel'}',
-                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    rushModeEnabled
-                        ? 'Rush prep target: $selectedPrepMins min'
-                        : 'Suggested prep target: $selectedPrepMins min',
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: riskColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          riskLabel,
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: riskColor),
-                        ),
-                      ),
-                      Text(
-                        'Elapsed ${elapsedMinutes}m',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        'Suggested ${recommendedPrepMinutes}m',
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: canTrack ? onToggleTracking : null,
-                        icon: Icon(
-                          trackingActive ? Icons.location_off_rounded : Icons.location_on_rounded,
-                          size: 16,
-                        ),
-                        label: Text(trackingActive ? 'Stop live' : 'Start live'),
-                      ),
-                      const SizedBox(width: 10),
-                      if (trackingActive)
-                        Expanded(
-                          child: Text(
-                            trackingBusy ? 'Updating location...' : (trackingLabel ?? 'Live tracking'),
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600], fontWeight: FontWeight.w600),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (nextStatus) async {
-                if (orderId.isEmpty || nextStatus == currentStatus) return;
-                await onApplyStatus(orderId, nextStatus, 'Order updated to ${nextStatus.toUpperCase()}');
-              },
-              itemBuilder: (context) {
-                return _statusFlow.map((status) {
-                  final selected = status == currentStatus;
-                  return PopupMenuItem<String>(
-                    value: status,
-                    enabled: !selected,
-                    child: Row(
-                      children: [
-                        if (selected)
-                          const Icon(Icons.check_rounded, size: 16)
-                        else
-                          const SizedBox(width: 16),
-                        const SizedBox(width: 8),
-                        Text(status.toUpperCase()),
-                      ],
-                    ),
-                  );
-                }).toList();
-              },
-              child: ElevatedButton(
-                onPressed: null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D9488),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFF0D9488),
-                  disabledForegroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: const Size(0, 0),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('Update'),
-              ),
-            ),
-          ],
-        ),
-      ),
-      ),
-    );
-  }
-}
-
-class _MiniPacingStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MiniPacingStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          Text(value, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
-        ],
-      ),
-    );
-  }
-}
-
-Widget _buildHandoffChip(
-  BuildContext context,
-  String orderId,
-  String status,
-  bool active, {
-  bool requiresProof = false,
-  String? existingProofUrl,
-}) {
-  final label = status.replaceAll('_', ' ').toUpperCase();
-  return ChoiceChip(
-    selected: active,
-    label: Text(label, style: const TextStyle(fontSize: 11)),
-    onSelected: (value) async {
-      if (orderId.isEmpty) return;
-      try {
-        String? proofUrl = existingProofUrl;
-        if (requiresProof) {
-          proofUrl = await _requestProofUrl(context, existingProofUrl);
-          if (proofUrl == null || proofUrl.trim().isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Proof URL is required for this handoff status.')),
-            );
-            return;
-          }
-        }
-
-        await HandoffService().updateHandoff(
-          orderId,
-          status,
-          proofUrl: proofUrl?.trim().isEmpty == true ? null : proofUrl?.trim(),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Handoff updated: $label')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update handoff: $e')),
-        );
-      }
-    },
-  );
-}
-
-Future<String?> _requestProofUrl(BuildContext context, String? existing) async {
-  final controller = TextEditingController(text: existing ?? '');
-
-  return showDialog<String?>(
-    context: context,
-    builder: (dialogContext) {
-      return AlertDialog(
-        title: const Text('Add proof URL'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Proof URL',
-            hintText: 'https://...',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(null),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      );
-    },
-  );
 }
 
 
