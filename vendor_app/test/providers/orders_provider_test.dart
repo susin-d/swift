@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vendor_app/core/api_exception.dart';
 import 'package:vendor_app/core/api_service.dart';
 import 'package:vendor_app/features/orders/orders_provider.dart';
 
@@ -134,6 +135,55 @@ void main() {
 
       await container.read(ordersProvider.notifier).fetchOrders();
       expect(requestedPath, '/vendor-ops/orders/active');
+    });
+
+    test('falls back to full orders endpoint when active endpoint returns 404',
+        () async {
+      final requestedPaths = <String>[];
+      final container = ProviderContainer(overrides: [
+        apiServiceProvider.overrideWithValue(
+          _FakeApiService(
+            getHandler: (path) async {
+              requestedPaths.add(path);
+              if (path == '/vendor-ops/orders/active') {
+                throw const ApiException(message: 'Not found', statusCode: 404);
+              }
+              return _jsonResponse([
+                {'id': 'ord-fallback', 'status': 'accepted'}
+              ]);
+            },
+          ),
+        ),
+      ]);
+      addTearDown(container.dispose);
+
+      await container.read(ordersProvider.notifier).fetchOrders();
+      final state = container.read(ordersProvider);
+
+        expect(requestedPaths.where((p) => p == '/vendor-ops/orders/active').length,
+          greaterThanOrEqualTo(1));
+        expect(requestedPaths.where((p) => p == '/vendor-ops/orders').length,
+          greaterThanOrEqualTo(1));
+      expect(state.value, isNotNull);
+      expect(state.value!.first['id'], 'ord-fallback');
+    });
+
+    test('sets incoming order signal for new pending order', () async {
+      final container = ProviderContainer(overrides: [
+        apiServiceProvider.overrideWithValue(
+          _FakeApiService(
+            getHandler: (_) async => _jsonResponse([
+              {'id': 'ord-pending', 'status': 'pending', 'total_amount': 150}
+            ]),
+          ),
+        ),
+      ]);
+      addTearDown(container.dispose);
+
+      await container.read(ordersProvider.notifier).fetchOrders();
+      final incoming = container.read(incomingOrderProvider);
+      expect(incoming, isNotNull);
+      expect(incoming!['id'], 'ord-pending');
     });
   });
 

@@ -696,6 +696,10 @@ Fetch active vendor queue only.
 ### `GET /vendor-ops/orders/:id`
 Fetch full details for a single vendor order (includes `order_items`).
 - **Headers**: `Authorization: Bearer <JWT>`
+- Includes additional sections:
+  - `customer` with masked contact and optional email/phone.
+  - `payment` summary (`status`, `mode`, `amount`, `provider_ref`).
+  - `delivery_partner.live_location` when courier coordinates are available.
 
 ### `POST /vendor-ops/orders/:id/accept`
 Accept a pending order.
@@ -714,10 +718,286 @@ Advance order lifecycle from vendor operations surface.
   ```
 - Uses the same transition rules as `PATCH /orders/:id/status`.
 
+### `GET /vendor-ops/orders/stream`
+Subscribe to vendor order realtime events over Server-Sent Events (SSE).
+- **Headers**: `Authorization: Bearer <JWT>`
+- Event types include `stream_connected`, `order_created`, `order_status_changed`, `order_handoff_changed`.
+
+### `GET /vendor-ops/store-controls`
+Fetch operational store controls for the authenticated vendor.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Response**:
+  - `controls.is_open`
+  - `controls.auto_accept_orders`
+  - `controls.preparation_time_avg`
+  - `controls.busy_mode_enabled`
+  - `controls.busy_mode_message`
+  - `controls.holiday_until`
+
+### `PATCH /vendor-ops/store-controls`
+Update operational store controls for the authenticated vendor.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body** (partial updates allowed):
+  ```json
+  {
+    "is_open": true,
+    "auto_accept_orders": false,
+    "preparation_time_avg": 20,
+    "busy_mode_enabled": true,
+    "busy_mode_message": "High queue, expect +10 mins",
+    "holiday_until": "2026-03-28T18:00:00.000Z"
+  }
+  ```
+
+### `GET /vendor-ops/finance/earnings`
+Fetch vendor earnings summary and per-period trend.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/finance/payouts`
+Fetch payout buckets (processing, completed, scheduled) for vendor finance operations.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/finance/transactions`
+Fetch transaction ledger rows enriched with payment and order metadata.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/finance/tax-reports`
+Fetch vendor tax report periods and export metadata.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/analytics/sales`
+Fetch sales analytics summary and time-series.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/analytics/performance`
+Fetch vendor order funnel performance metrics.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/analytics/peak-hours`
+Fetch hourly demand distribution for vendor orders.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/analytics/top-items`
+Fetch top-performing menu items by volume and sales.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/staff/management`
+Fetch vendor staff management roster.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /vendor-ops/staff/management`
+Create a vendor staff member record.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "name": "Kitchen Lead",
+    "role_key": "manager",
+    "status": "active",
+    "email": "kitchen.lead@example.com",
+    "phone": "+91XXXXXXXXXX"
+  }
+  ```
+
+### `PATCH /vendor-ops/staff/management/:staffId`
+Update a vendor staff member record.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**: partial update for `name`, `role_key`, `status`, `email`, `phone`.
+
+### `DELETE /vendor-ops/staff/management/:staffId`
+Delete a vendor staff member record.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/staff/invitations`
+List vendor staff invitation records with onboarding status.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /vendor-ops/staff/invitations`
+Create a staff invitation tied to real user identity by email.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "email": "staff.member@example.com",
+    "role_key": "cashier",
+    "expires_in_days": 7
+  }
+  ```
+
+### `GET /vendor-ops/staff/roles`
+Fetch vendor staff role catalog and assignment counts.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `PATCH /vendor-ops/staff/roles`
+Upsert vendor role definitions.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "roles": [
+      {
+        "key": "manager",
+        "permissions": ["orders.manage", "menu.manage", "reports.view"]
+      }
+    ]
+  }
+  ```
+
+### `GET /vendor-ops/reports/download`
+Fetch downloadable report artifacts for the vendor.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/reports/sales`
+Fetch sales-focused report cards.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/reports/orders`
+Fetch order-focused operational reports.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `GET /vendor-ops/preferences/language`
+Fetch language preference options for the vendor app.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `PATCH /vendor-ops/preferences/language`
+Update selected language preference.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "current": "English"
+  }
+  ```
+
+### `GET /vendor-ops/preferences/theme`
+Fetch theme preference options for the vendor app.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `PATCH /vendor-ops/preferences/theme`
+Update theme preference settings.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**: provide one or both fields.
+  ```json
+  {
+    "dark_mode": true,
+    "high_contrast": false
+  }
+  ```
+
+### `GET /vendor-ops/preferences/app`
+Fetch app-level vendor preferences (notifications, receipt printing, compact mode).
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `PATCH /vendor-ops/preferences/app`
+Update app-level vendor preferences.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**: provide one or more fields.
+  ```json
+  {
+    "compact_cards": true,
+    "silent_alerts": false,
+    "notification_enabled": true,
+    "auto_print_receipts": true
+  }
+  ```
+
+### `POST /auth/staff/onboarding/accept`
+Accept a staff invitation as the authenticated user identity.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  {
+    "token": "invitation-token"
+  }
+  ```
+
 ### `GET /vendor-ops/stats`
 Fetch vendor performance statistics.
 
 ## Menu Management
+
+### `GET /vendor-ops/menu` (Vendor only)
+Fetch the authenticated vendor menu snapshot with both grouped categories and a flattened items list.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Response Body**:
+  ```json
+  {
+    "categories": [
+      {
+        "id": "uuid",
+        "vendor_id": "uuid",
+        "category_name": "Burgers",
+        "sort_order": 1,
+        "created_at": "2026-03-24T10:00:00.000Z",
+        "updated_at": "2026-03-24T10:10:00.000Z",
+        "menu_items": [
+          {
+            "id": "uuid",
+            "menu_id": "uuid",
+            "name": "Cheese Burger",
+            "description": "Double patty",
+            "price": 149,
+            "is_available": true,
+            "image_url": "https://...",
+            "created_at": "2026-03-24T10:00:00.000Z",
+            "updated_at": "2026-03-24T10:10:00.000Z"
+          }
+        ]
+      }
+    ],
+    "items": [
+      {
+        "id": "uuid",
+        "menu_id": "uuid",
+        "name": "Cheese Burger",
+        "description": "Double patty",
+        "price": 149,
+        "is_available": true,
+        "image_url": "https://...",
+        "created_at": "2026-03-24T10:00:00.000Z",
+        "updated_at": "2026-03-24T10:10:00.000Z",
+        "category": "Burgers",
+        "category_name": "Burgers",
+        "category_id": "uuid",
+        "category_sort_order": 1,
+        "vendor_id": "uuid"
+      }
+    ]
+  }
+  ```
+- `image_url` accepts `https://` URLs and data URLs (`data:image/...;base64,...`) for app upload flows.
+
+### `POST /vendor-ops/menu/upload-image` (Vendor only)
+Upload a menu item image to secure storage and receive a public HTTPS URL.
+- **Headers**: `Authorization: Bearer <JWT>`, `Content-Type: application/json`
+- **Request Body**:
+  ```json
+  {
+    "imageData": "base64-encoded-image-bytes",
+    "mimeType": "image/jpeg|image/png|image/webp|image/gif"
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "url": "https://{project-id}.supabase.co/storage/v1/object/public/menu-items/vendor/{vendorId}/items/{fileName}",
+    "path": "vendor/{vendorId}/items/{fileName}",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 12345
+  }
+  ```
+- **Error (400 Bad Request)**:
+  ```json
+  {
+    "error": "validation_error",
+    "message": "File too large. Maximum size: 5MB. Got: 6.50MB"
+  }
+  ```
+- **Constraints**:
+  - Maximum file size: 5 MB
+  - Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+  - Returns public HTTPS URL suitable for direct embedding in `image_url` fields
+  - Files are cached for 1 year; use unique filenames for cache busting if needed
 
 ### `GET /menus/vendor/:vendorId`
 Fetch menu items for a specific vendor.
@@ -822,6 +1102,9 @@ Requires admin role.
 
 ### `GET /admin/stats`
 Get global platform statistics.
+
+### `GET /admin/audit/vendor-mutations`
+Get filtered audit log rows for vendor staff and vendor preference mutation actions.
 
 ### `GET /admin/charts`
 Fetch analytical chart data.

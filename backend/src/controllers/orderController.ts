@@ -5,6 +5,7 @@ export {
     getVendorOrderById,
     getMyOrders,
     rejectVendorOrder,
+    streamVendorOrderEvents,
     updateVendorOrderStatusAction,
     updateOrderStatus,
     getVendorOrders,

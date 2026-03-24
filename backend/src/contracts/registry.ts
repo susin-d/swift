@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.5';
+export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.9';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -60,6 +60,28 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'user.email', type: 'string', required: false, description: 'Account email if present.' },
                 { name: 'user.role', type: 'string', required: true, description: 'Resolved role.' },
                 { name: 'user.profile', type: 'object', required: true, description: 'Role specific profile object.' }
+            ]
+        }
+    },
+    {
+        id: 'auth.staff.onboarding.accept',
+        method: 'POST',
+        path: '/api/v1/auth/staff/onboarding/accept',
+        owner: 'vendor_app',
+        auth: 'authenticated',
+        request: {
+            description: 'Accept a vendor staff onboarding invitation token as the authenticated user identity.',
+            fields: [
+                { name: 'token', type: 'string', required: true, description: 'Invitation onboarding token.' }
+            ]
+        },
+        response: {
+            description: 'Accepted onboarding payload with vendor and role linkage.',
+            fields: [
+                { name: 'onboarding.invitation_id', type: 'string(uuid)', required: true, description: 'Invitation id.' },
+                { name: 'onboarding.vendor_id', type: 'string(uuid)', required: true, description: 'Vendor id for staff assignment.' },
+                { name: 'onboarding.role_key', type: 'string', required: true, description: 'Assigned role key.' },
+                { name: 'onboarding.status', type: 'string', required: true, description: 'Onboarding status, expected accepted.' }
             ]
         }
     },
@@ -236,6 +258,475 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
                 { name: 'status', type: 'string', required: true, description: 'Updated order status.' },
                 { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.stream',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/orders/stream',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Server-sent stream of vendor order events.',
+            fields: [
+                { name: 'data.type', type: 'string', required: true, description: 'Event type like stream_connected|order_created|order_status_changed.' },
+                { name: 'data.ts', type: 'string(datetime)', required: true, description: 'Event timestamp.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.store.controls.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/store-controls',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor store controls and operational settings.',
+            fields: [
+                { name: 'controls.vendor_id', type: 'string(uuid)', required: true, description: 'Vendor identifier.' },
+                { name: 'controls.is_open', type: 'boolean', required: true, description: 'Store open/closed flag.' },
+                { name: 'controls.auto_accept_orders', type: 'boolean', required: true, description: 'Auto-accept new orders toggle.' },
+                { name: 'controls.preparation_time_avg', type: 'number', required: true, description: 'Average prep time target in minutes.' },
+                { name: 'controls.busy_mode_enabled', type: 'boolean', required: true, description: 'Busy mode toggle.' },
+                { name: 'controls.busy_mode_message', type: 'string', required: false, description: 'Busy mode customer-facing note.' },
+                { name: 'controls.holiday_until', type: 'string(datetime)', required: false, description: 'Optional holiday closure end timestamp.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.store.controls.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/store-controls',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update operational store controls.',
+            fields: [
+                { name: 'is_open', type: 'boolean', required: false, description: 'Store open/closed flag.' },
+                { name: 'auto_accept_orders', type: 'boolean', required: false, description: 'Auto-accept toggle for new orders.' },
+                { name: 'preparation_time_avg', type: 'number', required: false, description: 'Average prep time in minutes.' },
+                { name: 'busy_mode_enabled', type: 'boolean', required: false, description: 'Busy mode toggle.' },
+                { name: 'busy_mode_message', type: 'string', required: false, description: 'Busy mode message.' },
+                { name: 'holiday_until', type: 'string(datetime)', required: false, description: 'Optional holiday closure end timestamp.' }
+            ]
+        },
+        response: {
+            description: 'Updated vendor store controls payload.',
+            fields: [
+                { name: 'controls.vendor_id', type: 'string(uuid)', required: true, description: 'Vendor identifier.' },
+                { name: 'controls.is_open', type: 'boolean', required: true, description: 'Store open/closed flag.' },
+                { name: 'controls.auto_accept_orders', type: 'boolean', required: true, description: 'Auto-accept toggle.' },
+                { name: 'controls.preparation_time_avg', type: 'number', required: true, description: 'Average prep time target in minutes.' },
+                { name: 'controls.busy_mode_enabled', type: 'boolean', required: true, description: 'Busy mode toggle.' },
+                { name: 'controls.busy_mode_message', type: 'string', required: false, description: 'Busy mode message.' },
+                { name: 'controls.holiday_until', type: 'string(datetime)', required: false, description: 'Optional holiday closure end timestamp.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.finance.earnings.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/finance/earnings',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor earnings summary and period trend rows.',
+            fields: [
+                { name: 'summary.gross_earnings', type: 'number', required: true, description: 'Gross completed-order revenue.' },
+                { name: 'summary.completed_orders', type: 'number', required: true, description: 'Completed orders count.' },
+                { name: 'summary.avg_order_value', type: 'number', required: true, description: 'Average order value for completed orders.' },
+                { name: 'trend', type: 'array<object>', required: true, description: 'Per-day earnings trend payload.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.finance.payouts.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/finance/payouts',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor payout buckets by status.',
+            fields: [
+                { name: 'payouts', type: 'array<object>', required: true, description: 'Grouped payout rows with amount, status, and date.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.finance.transactions.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/finance/transactions',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor transaction feed enriched with order context.',
+            fields: [
+                { name: 'transactions', type: 'array<object>', required: true, description: 'Transaction rows with payment and order references.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.finance.tax_reports.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/finance/tax-reports',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor tax report summary and export links.',
+            fields: [
+                { name: 'reports', type: 'array<object>', required: true, description: 'Tax report rows by period.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.analytics.sales.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/analytics/sales',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor sales time-series and totals.',
+            fields: [
+                { name: 'summary.total_sales', type: 'number', required: true, description: 'Total sales amount in the selected window.' },
+                { name: 'summary.orders_count', type: 'number', required: true, description: 'Order count in the selected window.' },
+                { name: 'series', type: 'array<object>', required: true, description: 'Sales aggregation time series.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.analytics.performance.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/analytics/performance',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor order funnel and completion metrics.',
+            fields: [
+                { name: 'metrics.total_orders', type: 'number', required: true, description: 'Total orders counted for the metrics window.' },
+                { name: 'metrics.completed_orders', type: 'number', required: true, description: 'Completed orders count.' },
+                { name: 'metrics.completion_rate', type: 'number', required: true, description: 'Completion rate as percent.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.analytics.peak_hours.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/analytics/peak-hours',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor hourly order distribution.',
+            fields: [
+                { name: 'hours', type: 'array<object>', required: true, description: 'Hour buckets with order counts.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.analytics.top_items.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/analytics/top-items',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Top-selling menu items for vendor analytics.',
+            fields: [
+                { name: 'items', type: 'array<object>', required: true, description: 'Top menu items by quantity and revenue.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.management.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/staff/management',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor staff roster for management views.',
+            fields: [
+                { name: 'staff', type: 'array<object>', required: true, description: 'Staff member rows with role and status.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.management.create',
+        method: 'POST',
+        path: '/api/v1/vendor-ops/staff/management',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Create a vendor staff member record.',
+            fields: [
+                { name: 'name', type: 'string', required: true, description: 'Staff display name.' },
+                { name: 'role_key', type: 'string', required: true, description: 'Assigned role key.' },
+                { name: 'status', type: 'string', required: false, description: 'One of active|inactive|suspended.' },
+                { name: 'email', type: 'string', required: false, description: 'Staff email.' },
+                { name: 'phone', type: 'string', required: false, description: 'Staff phone.' }
+            ]
+        },
+        response: {
+            description: 'Created vendor staff member payload.',
+            fields: [
+                { name: 'staff.id', type: 'string(uuid)', required: true, description: 'Staff record id.' },
+                { name: 'staff.name', type: 'string', required: true, description: 'Staff display name.' },
+                { name: 'staff.role_key', type: 'string', required: true, description: 'Assigned role key.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.management.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/staff/management/:staffId',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update a vendor staff member record.',
+            fields: [
+                { name: 'name', type: 'string', required: false, description: 'Updated staff name.' },
+                { name: 'role_key', type: 'string', required: false, description: 'Updated role key.' },
+                { name: 'status', type: 'string', required: false, description: 'One of active|inactive|suspended.' },
+                { name: 'email', type: 'string', required: false, description: 'Updated email.' },
+                { name: 'phone', type: 'string', required: false, description: 'Updated phone.' }
+            ]
+        },
+        response: {
+            description: 'Updated vendor staff member payload.',
+            fields: [
+                { name: 'staff.id', type: 'string(uuid)', required: true, description: 'Staff record id.' },
+                { name: 'staff.name', type: 'string', required: true, description: 'Staff display name.' },
+                { name: 'staff.role_key', type: 'string', required: true, description: 'Assigned role key.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.management.delete',
+        method: 'DELETE',
+        path: '/api/v1/vendor-ops/staff/management/:staffId',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Deletion acknowledgement for a vendor staff member.',
+            fields: [
+                { name: 'success', type: 'boolean', required: true, description: 'Deletion success flag.' },
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Deleted staff record id.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.roles.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/staff/roles',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor role catalog and assignment stats.',
+            fields: [
+                { name: 'roles', type: 'array<object>', required: true, description: 'Supported role definitions and counts.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.invitations.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/staff/invitations',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor staff invitation list with identity linkage fields.',
+            fields: [
+                { name: 'invitations', type: 'array<object>', required: true, description: 'Invitation rows for pending and processed onboarding flows.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.invitations.create',
+        method: 'POST',
+        path: '/api/v1/vendor-ops/staff/invitations',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Create a staff invitation tied to a real user identity by email (and user id when matched).',
+            fields: [
+                { name: 'email', type: 'string', required: true, description: 'Invitee email address.' },
+                { name: 'role_key', type: 'string', required: true, description: 'Role key assigned on onboarding.' },
+                { name: 'expires_in_days', type: 'number', required: false, description: 'Optional invitation expiration window in days.' }
+            ]
+        },
+        response: {
+            description: 'Created invitation payload with onboarding token.',
+            fields: [
+                { name: 'invitation.id', type: 'string(uuid)', required: true, description: 'Invitation id.' },
+                { name: 'invitation.email', type: 'string', required: true, description: 'Invitee email.' },
+                { name: 'invitation.role_key', type: 'string', required: true, description: 'Assigned role key.' },
+                { name: 'invitation.status', type: 'string', required: true, description: 'Invitation lifecycle status.' },
+                { name: 'invitation.invite_token', type: 'string', required: true, description: 'Onboarding token.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.staff.roles.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/staff/roles',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Upsert vendor staff role definitions.',
+            fields: [
+                { name: 'roles', type: 'array<object>', required: true, description: 'List of roles with key and permissions fields.' }
+            ]
+        },
+        response: {
+            description: 'Updated vendor role catalog payload.',
+            fields: [
+                { name: 'roles', type: 'array<object>', required: true, description: 'Role definitions after update.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.reports.download.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/reports/download',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor generated report download list.',
+            fields: [
+                { name: 'downloads', type: 'array<object>', required: true, description: 'Available report files and metadata.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.reports.sales.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/reports/sales',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor sales report cards and trend snapshots.',
+            fields: [
+                { name: 'cards', type: 'array<object>', required: true, description: 'Sales report cards.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.reports.orders.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/reports/orders',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor order reports and processing breakdown.',
+            fields: [
+                { name: 'cards', type: 'array<object>', required: true, description: 'Order report cards.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.language.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/preferences/language',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor language preference payload.',
+            fields: [
+                { name: 'selected_language', type: 'string', required: true, description: 'Current selected language code.' },
+                { name: 'available_languages', type: 'array<object>', required: true, description: 'Supported language options.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.language.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/preferences/language',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update selected vendor language preference.',
+            fields: [
+                { name: 'current', type: 'string', required: true, description: 'Language label to set as current selection.' }
+            ]
+        },
+        response: {
+            description: 'Updated vendor language preference payload.',
+            fields: [
+                { name: 'language.current', type: 'string', required: true, description: 'Current selected language.' },
+                { name: 'language.options', type: 'array<string>', required: true, description: 'Supported language options.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.theme.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/preferences/theme',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor theme preference payload.',
+            fields: [
+                { name: 'selected_theme', type: 'string', required: true, description: 'Current selected theme key.' },
+                { name: 'available_themes', type: 'array<object>', required: true, description: 'Supported theme options.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.theme.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/preferences/theme',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update vendor theme preference settings.',
+            fields: [
+                { name: 'dark_mode', type: 'boolean', required: false, description: 'Dark mode toggle.' },
+                { name: 'high_contrast', type: 'boolean', required: false, description: 'High contrast toggle.' }
+            ]
+        },
+        response: {
+            description: 'Updated vendor theme settings payload.',
+            fields: [
+                { name: 'theme.dark_mode', type: 'boolean', required: true, description: 'Dark mode toggle state.' },
+                { name: 'theme.high_contrast', type: 'boolean', required: true, description: 'High contrast toggle state.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.app.get',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/preferences/app',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor app-level preferences payload.',
+            fields: [
+                { name: 'app_settings.notification_enabled', type: 'boolean', required: true, description: 'Notifications toggle.' },
+                { name: 'app_settings.auto_print_receipts', type: 'boolean', required: true, description: 'Auto print receipts toggle.' },
+                { name: 'app_settings.compact_cards', type: 'boolean', required: true, description: 'Compact UI mode toggle.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.preferences.app.patch',
+        method: 'PATCH',
+        path: '/api/v1/vendor-ops/preferences/app',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Update app-level vendor preferences.',
+            fields: [
+                { name: 'compact_cards', type: 'boolean', required: false, description: 'Compact card mode toggle.' },
+                { name: 'silent_alerts', type: 'boolean', required: false, description: 'Silent alert mode toggle.' },
+                { name: 'notification_enabled', type: 'boolean', required: false, description: 'Notification toggle.' },
+                { name: 'auto_print_receipts', type: 'boolean', required: false, description: 'Auto print receipts toggle.' }
+            ]
+        },
+        response: {
+            description: 'Updated app-level vendor preference payload.',
+            fields: [
+                { name: 'app_settings.compact_cards', type: 'boolean', required: true, description: 'Compact card mode toggle.' },
+                { name: 'app_settings.silent_alerts', type: 'boolean', required: true, description: 'Silent alert mode toggle.' },
+                { name: 'app_settings.notification_enabled', type: 'boolean', required: true, description: 'Notification toggle.' },
+                { name: 'app_settings.auto_print_receipts', type: 'boolean', required: true, description: 'Auto print receipts toggle.' }
             ]
         }
     },
@@ -648,6 +1139,20 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'meta.totalPages', type: 'number', required: true, description: 'Total page count.' },
                 { name: 'meta.hasNextPage', type: 'boolean', required: true, description: 'Whether next page exists.' },
                 { name: 'meta.hasPreviousPage', type: 'boolean', required: true, description: 'Whether previous page exists.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.audit.vendor_mutations.list',
+        method: 'GET',
+        path: '/api/v1/admin/audit/vendor-mutations',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Filtered audit feed for vendor mutation actions, including staff and preference changes.',
+            fields: [
+                { name: 'logs', type: 'array<object>', required: true, description: 'Vendor mutation audit rows.' },
+                { name: 'meta.total', type: 'number', required: true, description: 'Total matching log records.' }
             ]
         }
     },

@@ -576,6 +576,40 @@ export const getAdminAuditLogs = async (request: FastifyRequest, reply: FastifyR
     });
 };
 
+export const getAdminVendorMutationAuditLogs = async (request: FastifyRequest, reply: FastifyReply) => {
+    const query = (request.query as Record<string, unknown>) || {};
+    const { page, limit, from, to } = getPaging(query, 20);
+
+    const { count, error: countError } = await supabase
+        .from('admin_logs')
+        .select('*', { count: 'exact', head: true })
+        .like('action_performed', 'vendor.%');
+
+    if (countError) {
+        throw countError;
+    }
+
+    const { data, error } = await supabase
+        .from('admin_logs')
+        .select('*')
+        .like('action_performed', 'vendor.%')
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (error) {
+        throw error;
+    }
+
+    const total = count || 0;
+    return reply.send({
+        logs: data || [],
+        page,
+        limit,
+        total,
+        meta: buildMeta(page, limit, total),
+    });
+};
+
 export const getAdminSettings = async (_request: FastifyRequest, reply: FastifyReply) => {
     return reply.send({
         settings: {

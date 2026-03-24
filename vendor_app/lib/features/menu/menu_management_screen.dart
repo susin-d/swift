@@ -1,12 +1,20 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'menu_models.dart';
 import 'menu_provider.dart';
 
+typedef MenuImagePicker = Future<String?> Function(BuildContext context);
+
 class MenuManagementScreen extends ConsumerStatefulWidget {
-  const MenuManagementScreen({super.key});
+  const MenuManagementScreen({super.key, this.imagePicker});
+
+  final MenuImagePicker? imagePicker;
 
   @override
   ConsumerState<MenuManagementScreen> createState() => _MenuManagementScreenState();
@@ -119,6 +127,56 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     });
   }
 
+  static bool _isDataImageUrl(String value) => value.toLowerCase().startsWith('data:image/');
+
+  static bool _isValidImageUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return false;
+    if (_isDataImageUrl(trimmed)) return trimmed.contains(';base64,');
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null) return false;
+    if (uri.host.isEmpty) return false;
+    return uri.scheme == 'http' || uri.scheme == 'https';
+  }
+
+  String _mimeFromPath(String fileName) {
+    final name = fileName.toLowerCase();
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.gif')) return 'image/gif';
+    if (name.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  Future<String?> _pickImageUrl(BuildContext context) async {
+    if (widget.imagePicker != null) {
+      return widget.imagePicker!(context);
+    }
+
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+      maxWidth: 1600,
+    );
+    if (image == null) return null;
+
+    final bytes = await image.readAsBytes();
+    final mime = image.mimeType ?? _mimeFromPath(image.name);
+    return 'data:$mime;base64,${base64Encode(bytes)}';
+  }
+
+  Uint8List? _decodeDataImage(String? value) {
+    if (value == null || !_isDataImageUrl(value)) return null;
+    final marker = ';base64,';
+    final index = value.indexOf(marker);
+    if (index <= 0) return null;
+    try {
+      return base64Decode(value.substring(index + marker.length));
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _showEditCategory(BuildContext context, MenuCategory category) async {
     final nameController = TextEditingController(text: category.name);
     final sortController = TextEditingController(text: category.sortOrder?.toString() ?? '');
@@ -177,6 +235,8 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     final nameController = TextEditingController();
     final descController = TextEditingController();
     final priceController = TextEditingController();
+    String? imageUrl;
+    String? imageError;
     bool isAvailable = true;
 
     final result = await showDialog<bool>(
@@ -201,6 +261,39 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                   controller: descController,
                   decoration: const InputDecoration(labelText: 'Description'),
                 ),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: _DialogImageThumb(
+                    imageUrl: imageUrl,
+                    decoder: _decodeDataImage,
+                  ),
+                  title: const Text('Item image (optional)'),
+                  subtitle: Text(
+                    imageUrl == null ? 'No image selected' : 'Image selected',
+                    style: TextStyle(color: imageError == null ? Colors.grey : Colors.red),
+                  ),
+                  trailing: OutlinedButton.icon(
+                    onPressed: () async {
+                      final nextImageUrl = await _pickImageUrl(context);
+                      if (nextImageUrl == null) return;
+                      setState(() {
+                        imageUrl = nextImageUrl;
+                        imageError = _isValidImageUrl(nextImageUrl) ? null : 'Invalid image URL format.';
+                      });
+                    },
+                    icon: const Icon(Icons.upload_rounded),
+                    label: const Text('Upload'),
+                  ),
+                ),
+                if (imageError != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      imageError!,
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: priceController,
@@ -228,6 +321,13 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     final name = nameController.text.trim();
     final price = double.tryParse(priceController.text.trim()) ?? 0;
     if (name.isEmpty || price <= 0) return;
+    if (imageUrl != null && !_isValidImageUrl(imageUrl!)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid image URL format.')),
+      );
+      return;
+    }
 
     await ref.read(menuProvider.notifier).createMenuItem({
       'menu_id': selected.id,
@@ -235,6 +335,7 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
       'description': descController.text.trim(),
       'price': price,
       'is_available': isAvailable,
+      if (imageUrl != null) 'image_url': imageUrl,
     });
   }
 
@@ -242,6 +343,8 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     final nameController = TextEditingController(text: item.name);
     final descController = TextEditingController(text: item.description ?? '');
     final priceController = TextEditingController(text: item.price.toStringAsFixed(0));
+    String? imageUrl = item.imageUrl;
+    String? imageError;
     bool isAvailable = item.isAvailable;
 
     final result = await showDialog<bool>(
@@ -258,6 +361,52 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                 TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Item name')),
                 const SizedBox(height: 8),
                 TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description')),
+                const SizedBox(height: 8),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: _DialogImageThumb(
+                    imageUrl: imageUrl,
+                    decoder: _decodeDataImage,
+                  ),
+                  title: const Text('Item image (optional)'),
+                  subtitle: Text(
+                    imageUrl == null ? 'No image selected' : 'Image selected',
+                    style: TextStyle(color: imageError == null ? Colors.grey : Colors.red),
+                  ),
+                  trailing: Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final nextImageUrl = await _pickImageUrl(context);
+                          if (nextImageUrl == null) return;
+                          setState(() {
+                            imageUrl = nextImageUrl;
+                            imageError = _isValidImageUrl(nextImageUrl) ? null : 'Invalid image URL format.';
+                          });
+                        },
+                        icon: const Icon(Icons.upload_rounded),
+                        label: const Text('Upload'),
+                      ),
+                      if (imageUrl != null)
+                        IconButton(
+                          onPressed: () => setState(() {
+                            imageUrl = null;
+                            imageError = null;
+                          }),
+                          icon: const Icon(Icons.delete_outline_rounded),
+                        ),
+                    ],
+                  ),
+                ),
+                if (imageError != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      imageError!,
+                      style: const TextStyle(fontSize: 12, color: Colors.red),
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: priceController,
@@ -282,11 +431,20 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     );
 
     if (result != true) return;
+    if (imageUrl != null && !_isValidImageUrl(imageUrl!)) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid image URL format.')),
+      );
+      return;
+    }
+
     await ref.read(menuProvider.notifier).updateMenuItem(item.id, {
       'name': nameController.text.trim(),
       'description': descController.text.trim(),
       'price': double.tryParse(priceController.text.trim()) ?? item.price,
       'is_available': isAvailable,
+      'image_url': imageUrl,
     });
   }
 
@@ -411,6 +569,8 @@ class _ItemRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dataBytes = _decodeDataImage(item.imageUrl);
+    final hasImage = item.imageUrl != null && item.imageUrl!.trim().isNotEmpty;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -420,13 +580,51 @@ class _ItemRow extends StatelessWidget {
       ),
       child: Row(
         children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 52,
+              height: 52,
+              color: const Color(0xFFE2E8F0),
+                child: dataBytes != null
+                  ? Image.memory(dataBytes, fit: BoxFit.cover)
+                  : hasImage
+                  ? Image.network(
+                      item.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined),
+                    )
+                  : const Icon(Icons.image_outlined),
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
-                Text('â‚¹${item.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.grey)),
+                Text('Rs ${item.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.grey)),
+                if ((item.description ?? '').trim().isNotEmpty)
+                  Text(
+                    item.description!.trim(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                Text(
+                  'Item ID: ${item.id}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                if (item.updatedAt != null)
+                  Text(
+                    'Updated: ${item.updatedAt!.toLocal()}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
               ],
             ),
           ),
@@ -437,6 +635,48 @@ class _ItemRow extends StatelessWidget {
           IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
           IconButton(onPressed: onDelete, icon: const Icon(Icons.delete_outline_rounded)),
         ],
+      ),
+    );
+  }
+
+  static Uint8List? _decodeDataImage(String? value) {
+    if (value == null || !value.toLowerCase().startsWith('data:image/')) return null;
+    final marker = ';base64,';
+    final index = value.indexOf(marker);
+    if (index <= 0) return null;
+    try {
+      return base64Decode(value.substring(index + marker.length));
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
+class _DialogImageThumb extends StatelessWidget {
+  const _DialogImageThumb({required this.imageUrl, required this.decoder});
+
+  final String? imageUrl;
+  final Uint8List? Function(String? value) decoder;
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = decoder(imageUrl);
+    final hasUrl = imageUrl != null && imageUrl!.trim().isNotEmpty;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 40,
+        height: 40,
+        color: const Color(0xFFE2E8F0),
+        child: bytes != null
+            ? Image.memory(bytes, fit: BoxFit.cover)
+            : hasUrl
+                ? Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined),
+                  )
+                : const Icon(Icons.image_outlined, size: 20),
       ),
     );
   }

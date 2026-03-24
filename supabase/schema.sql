@@ -59,7 +59,9 @@ CREATE TABLE IF NOT EXISTS menus (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE,
   category_name TEXT NOT NULL,
-  sort_order INTEGER DEFAULT 0
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS menu_items (
@@ -69,7 +71,9 @@ CREATE TABLE IF NOT EXISTS menu_items (
   description TEXT,
   price DECIMAL(10,2) NOT NULL,
   is_available BOOLEAN DEFAULT true,
-  image_url TEXT
+  image_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS promotions (
@@ -196,7 +200,56 @@ CREATE TABLE IF NOT EXISTS user_carts (
 CREATE TABLE IF NOT EXISTS vendor_settings (
   vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE PRIMARY KEY,
   preparation_time_avg INTEGER DEFAULT 15,
-  auto_accept_orders BOOLEAN DEFAULT false
+  auto_accept_orders BOOLEAN DEFAULT false,
+  busy_mode_enabled BOOLEAN DEFAULT false,
+  busy_mode_message TEXT,
+  holiday_until TIMESTAMP WITH TIME ZONE,
+  preferred_language TEXT DEFAULT 'English',
+  theme_dark_mode BOOLEAN DEFAULT false,
+  theme_high_contrast BOOLEAN DEFAULT false,
+  app_compact_cards BOOLEAN DEFAULT false,
+  app_silent_alerts BOOLEAN DEFAULT false,
+  app_notification_enabled BOOLEAN DEFAULT true,
+  app_auto_print_receipts BOOLEAN DEFAULT false
+);
+
+CREATE TABLE IF NOT EXISTS vendor_staff_members (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  role_key TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+  email TEXT,
+  phone TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(vendor_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS vendor_staff_roles (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE NOT NULL,
+  role_key TEXT NOT NULL,
+  permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(vendor_id, role_key)
+);
+
+CREATE TABLE IF NOT EXISTS vendor_staff_invitations (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  vendor_id UUID REFERENCES public.vendors(id) ON DELETE CASCADE NOT NULL,
+  invited_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  invited_user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  role_key TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'revoked', 'expired')),
+  invite_token TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  accepted_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS admin_logs (
@@ -225,6 +278,9 @@ ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendor_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vendor_staff_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vendor_staff_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.vendor_staff_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.campus_buildings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_sessions ENABLE ROW LEVEL SECURITY;

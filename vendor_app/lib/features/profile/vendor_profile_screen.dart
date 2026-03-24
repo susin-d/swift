@@ -17,7 +17,12 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _imageController = TextEditingController();
+  final _prepController = TextEditingController();
+  final _busyMessageController = TextEditingController();
   bool _isOpen = true;
+  bool _autoAcceptOrders = false;
+  bool _busyModeEnabled = false;
+  DateTime? _holidayUntil;
   bool _dirty = false;
 
   @override
@@ -25,6 +30,8 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
     _nameController.dispose();
     _descController.dispose();
     _imageController.dispose();
+    _prepController.dispose();
+    _busyMessageController.dispose();
     super.dispose();
   }
 
@@ -33,6 +40,11 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
     _descController.text = profile.description ?? '';
     _imageController.text = profile.imageUrl ?? '';
     _isOpen = profile.isOpen;
+    _autoAcceptOrders = profile.autoAcceptOrders;
+    _busyModeEnabled = profile.busyModeEnabled;
+    _prepController.text = profile.preparationTimeAvg.toString();
+    _busyMessageController.text = profile.busyModeMessage ?? '';
+    _holidayUntil = profile.holidayUntil;
   }
 
   @override
@@ -70,6 +82,24 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
                 title: Text(_isOpen ? 'Store open' : 'Store closed'),
                 subtitle: const Text('Toggle availability for customers'),
               ),
+              SwitchListTile(
+                value: _autoAcceptOrders,
+                onChanged: (value) => setState(() {
+                  _autoAcceptOrders = value;
+                  _dirty = true;
+                }),
+                title: const Text('Auto accept incoming orders'),
+                subtitle: const Text('New orders enter as accepted when enabled'),
+              ),
+              SwitchListTile(
+                value: _busyModeEnabled,
+                onChanged: (value) => setState(() {
+                  _busyModeEnabled = value;
+                  _dirty = true;
+                }),
+                title: const Text('Busy mode'),
+                subtitle: const Text('Show queue pressure state in operations'),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: _nameController,
@@ -89,6 +119,67 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
                 onChanged: (_) => setState(() => _dirty = true),
                 decoration: const InputDecoration(labelText: 'Image URL'),
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _prepController,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => setState(() => _dirty = true),
+                decoration: const InputDecoration(labelText: 'Avg prep time (minutes)'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _busyMessageController,
+                onChanged: (_) => setState(() => _dirty = true),
+                decoration: const InputDecoration(labelText: 'Busy mode message (optional)'),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Holiday closed until'),
+                subtitle: Text(
+                  _holidayUntil == null
+                      ? 'Not scheduled'
+                      : _holidayUntil!.toLocal().toString(),
+                ),
+                trailing: Wrap(
+                  spacing: 8,
+                  children: [
+                    IconButton(
+                      tooltip: 'Pick date',
+                      onPressed: () async {
+                        final now = DateTime.now();
+                        final selectedDate = await showDatePicker(
+                          context: context,
+                          initialDate: _holidayUntil ?? now,
+                          firstDate: now,
+                          lastDate: now.add(const Duration(days: 365)),
+                        );
+                        if (selectedDate == null || !mounted) return;
+                        setState(() {
+                          _holidayUntil = DateTime(
+                            selectedDate.year,
+                            selectedDate.month,
+                            selectedDate.day,
+                            23,
+                            59,
+                          );
+                          _dirty = true;
+                        });
+                      },
+                      icon: const Icon(Icons.event_rounded),
+                    ),
+                    if (_holidayUntil != null)
+                      IconButton(
+                        tooltip: 'Clear holiday',
+                        onPressed: () => setState(() {
+                          _holidayUntil = null;
+                          _dirty = true;
+                        }),
+                        icon: const Icon(Icons.clear_rounded),
+                      ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _dirty ? () => _save() : null,
@@ -106,12 +197,19 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
     final name = _nameController.text.trim();
     final description = _descController.text.trim();
     final imageUrl = _imageController.text.trim();
+        final prepTime = int.tryParse(_prepController.text.trim()) ?? 15;
+        final busyMessage = _busyMessageController.text.trim();
 
     await ref.read(vendorProfileProvider.notifier).updateProfile(
           name: name,
           description: description.isEmpty ? null : description,
           imageUrl: imageUrl.isEmpty ? null : imageUrl,
           isOpen: _isOpen,
+          autoAcceptOrders: _autoAcceptOrders,
+          preparationTimeAvg: prepTime,
+          busyModeEnabled: _busyModeEnabled,
+          busyModeMessage: busyMessage.isEmpty ? null : busyMessage,
+          holidayUntil: _holidayUntil,
         );
 
     if (!mounted) return;

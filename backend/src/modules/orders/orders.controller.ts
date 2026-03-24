@@ -11,6 +11,7 @@ import {
     listUserOrdersWithFallback,
     listVendorOrdersWithFallback,
 } from './services/orderDbFallbacks';
+import { vendorOrderEvents } from './services/vendorOrderEvents';
 
 export const createOrder = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
@@ -175,6 +176,23 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         ? `${Math.floor(100000 + Math.random() * 900000)}`
         : null;
 
+    let initialStatus = 'pending';
+    if (!isMockedSupabase) {
+        try {
+            const { data: vendorSettings } = await supabase
+                .from('vendor_settings')
+                .select('auto_accept_orders')
+                .eq('vendor_id', vendor_id)
+                .single();
+
+            if (vendorSettings?.auto_accept_orders === true) {
+                initialStatus = 'accepted';
+            }
+        } catch {
+            // Keep backward-compatible fallback for schemas without vendor settings.
+        }
+    }
+
     const orderInsertPayloads: Record<string, unknown>[] = [
         {
             user_id: user.sub,
@@ -184,7 +202,7 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
             promo_id: promoId,
             promo_code: promoCode,
             scheduled_for: scheduledForIso,
-            status: 'pending',
+            status: initialStatus,
             delivery_mode: deliveryMode,
             delivery_instructions: delivery_instructions || null,
             delivery_location_label: delivery_location_label || null,
@@ -201,14 +219,14 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
             vendor_id,
             total_amount: finalTotal,
             scheduled_for: scheduledForIso,
-            status: 'pending',
+            status: initialStatus,
             delivery_mode: deliveryMode,
         },
         {
             user_id: user.sub,
             vendor_id,
             total_amount: finalTotal,
-            status: 'pending',
+            status: initialStatus,
         },
     ];
 
@@ -340,6 +358,14 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         }
     }
 
+    vendorOrderEvents.publish(vendor_id, {
+        type: 'order_created',
+        order_id: order.id,
+        status: order.status,
+        total_amount: order.total_amount,
+        created_at: order.created_at,
+    });
+
     return reply.code(201).send(attachEtaTrust(order));
 };
 
@@ -387,6 +413,13 @@ const allowedVendorTransitions: Record<string, Set<string>> = {
 const activeVendorStatuses = ['pending', 'accepted', 'preparing', 'ready', 'out_for_delivery'];
 
 const normalizeStatus = (value: unknown) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+
+const maskContact = (value: string | null | undefined) => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (trimmed.length <= 4) return '****';
+    return `****${trimmed.slice(-4)}`;
+};
 
 const assertVendorTransition = (fromStatus: string, toStatus: string) => {
     if (!allowedOrderStatuses.has(toStatus)) {
@@ -487,6 +520,15 @@ const updateScopedOrderStatus = async (orderId: string, toStatus: string, vendor
         }
     }
 
+    if (data?.vendor_id) {
+        vendorOrderEvents.publish(data.vendor_id, {
+            type: 'order_status_changed',
+            order_id: data.id,
+            status: data.status,
+            updated_at: data.updated_at,
+        });
+    }
+
     return data;
 };
 
@@ -500,6 +542,40 @@ export const updateOrderStatus = async (request: FastifyRequest, reply: FastifyR
     return reply.send(attachEtaTrust(updated));
 };
 
+export const streamVendorOrderEvents = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const vendorId = await resolveVendorIdForUser(user);
+
+    if (!vendorId) {
+        const err = new Error('Vendor profile not found for stream subscription') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+    });
+
+    const writeEvent = (event: unknown) => {
+        reply.raw.write(`data: ${JSON.stringify(event)}\\n\\n`);
+    };
+
+    writeEvent({ type: 'stream_connected', ts: new Date().toISOString() });
+
+    const unsubscribe = vendorOrderEvents.subscribe(vendorId, writeEvent);
+    const keepAlive = setInterval(() => {
+        reply.raw.write(': ping\\n\\n');
+    }, 15000);
+
+    request.raw.on('close', () => {
+        clearInterval(keepAlive);
+        unsubscribe();
+        reply.raw.end();
+    });
+};
+
 export const getVendorOrderById = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
     const { id } = request.params as any;
@@ -511,10 +587,55 @@ export const getVendorOrderById = async (request: FastifyRequest, reply: Fastify
         .select('*, menu_items(name, image_url, description)')
         .eq('order_id', id);
 
-    return reply.send(attachVendorPacing(attachEtaTrust({
+    const { data: customer } = await supabase
+        .from('users')
+        .select('id, name, email, phone')
+        .eq('id', order.user_id)
+        .single();
+
+    const { data: payment } = await supabase
+        .from('payments')
+        .select('id, amount, status, provider_ref')
+        .eq('order_id', id)
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    const { data: deliveryLocation } = await supabase
+        .from('order_delivery_locations')
+        .select('lat, lng, updated_at')
+        .eq('order_id', id)
+        .maybeSingle();
+
+    const payload = {
         ...order,
         order_items: orderItems || [],
-    })));
+        customer: {
+            id: customer?.id,
+            name: customer?.name || 'Customer',
+            contact_masked: maskContact(customer?.phone || customer?.email),
+            email: customer?.email || null,
+            phone: customer?.phone || null,
+        },
+        payment: {
+            id: payment?.id || null,
+            amount: payment?.amount ?? order.total_amount,
+            status: payment?.status || 'pending',
+            provider_ref: payment?.provider_ref || null,
+            mode: payment ? 'prepaid' : 'pay_on_delivery',
+        },
+        delivery_partner: {
+            live_location: deliveryLocation
+                ? {
+                    lat: Number(deliveryLocation.lat),
+                    lng: Number(deliveryLocation.lng),
+                    updated_at: deliveryLocation.updated_at,
+                }
+                : null,
+        },
+    };
+
+    return reply.send(attachVendorPacing(attachEtaTrust(payload)));
 };
 
 export const getVendorActiveOrders = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -782,6 +903,15 @@ export const updateOrderHandoff = async (request: FastifyRequest, reply: Fastify
                 handoff_proof_url: proofValue || null,
                 quiet_mode: data.quiet_mode ?? false,
             },
+        });
+    }
+
+    if (data?.vendor_id) {
+        vendorOrderEvents.publish(data.vendor_id, {
+            type: 'order_handoff_changed',
+            order_id: data.id,
+            handoff_status: data.handoff_status,
+            updated_at: data.updated_at,
         });
     }
 

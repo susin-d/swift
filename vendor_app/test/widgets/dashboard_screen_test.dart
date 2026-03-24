@@ -16,6 +16,7 @@ class _DashboardFakeApiService extends ApiService {
 
   final List<Map<String, dynamic>> _orders;
   final List<Map<String, dynamic>> patchCalls = [];
+  final List<Map<String, dynamic>> postCalls = [];
   bool failPatch;
 
   @override
@@ -52,6 +53,46 @@ class _DashboardFakeApiService extends ApiService {
 
     return Response<dynamic>(
       data: {'status': status},
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
+  }
+
+  @override
+  Future<Response<dynamic>> post(
+    String path, {
+    dynamic data,
+    String? cancelKey,
+  }) async {
+    postCalls.add({'path': path, 'data': data, 'cancelKey': cancelKey});
+
+    if (failPatch) {
+      throw Exception('Patch failed');
+    }
+
+    final segments = path.split('/');
+    if (segments.length >= 4 && segments[1] == 'vendor-ops' && segments[2] == 'orders') {
+      final orderId = segments[3];
+      final action = segments.length > 4 ? segments[4] : '';
+      String? nextStatus;
+      if (action == 'status' && data is Map<String, dynamic>) {
+        nextStatus = data['status'] as String?;
+      } else if (action == 'accept') {
+        nextStatus = 'accepted';
+      } else if (action == 'reject') {
+        nextStatus = 'cancelled';
+      }
+
+      if (nextStatus != null) {
+        final orderIndex = _orders.indexWhere((order) => order['id'] == orderId);
+        if (orderIndex != -1) {
+          _orders[orderIndex] = {..._orders[orderIndex], 'status': nextStatus};
+        }
+      }
+    }
+
+    return Response<dynamic>(
+      data: {'status': (data is Map<String, dynamic>) ? data['status'] : null},
       statusCode: 200,
       requestOptions: RequestOptions(path: path),
     );
@@ -119,9 +160,9 @@ void main() {
       await tester.tap(find.text('PREPARING').last);
       await tester.pumpAndSettle();
 
-      expect(api.patchCalls, hasLength(1));
-      expect(api.patchCalls.first['path'], '/orders/ord-12345678/status');
-      expect(api.patchCalls.first['data'], {'status': 'preparing'});
+      expect(api.postCalls, hasLength(1));
+      expect(api.postCalls.first['path'], '/vendor-ops/orders/ord-12345678/status');
+      expect(api.postCalls.first['data'], {'status': 'preparing'});
       expect(find.text('Order updated to PREPARING'), findsOneWidget);
       expect(find.textContaining('PREPARING - Rs 100'), findsOneWidget);
     },
@@ -154,8 +195,9 @@ void main() {
     await tester.tap(find.text('Confirm 86'));
     await tester.pumpAndSettle();
 
-    expect(api.patchCalls, hasLength(1));
-    expect(api.patchCalls.first['data'], {'status': 'cancelled'});
+    expect(api.postCalls, hasLength(1));
+    expect(api.postCalls.first['path'], '/vendor-ops/orders/ord-87654321/status');
+    expect(api.postCalls.first['data'], {'status': 'cancelled'});
     expect(find.text('Failed to move order to 86 HOLD'), findsOneWidget);
   });
 }

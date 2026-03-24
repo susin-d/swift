@@ -5,6 +5,7 @@ import {
     blockAdminUser,
     cancelAdminOrder,
     getAdminAuditLogs,
+    getAdminVendorMutationAuditLogs,
     getAdminOrders,
     getAdminSettings,
     getAdminUsers,
@@ -50,6 +51,7 @@ export const adminRoutes = async (app: FastifyInstance) => {
     app.post('/users/block-many', { preHandler: [requireAdmin] }, blockAdminUsersMany);
     app.post('/users/role-many', { preHandler: [requireAdmin] }, updateAdminUsersRoleMany);
     app.get('/audit', { preHandler: [requireAdmin] }, getAdminAuditLogs);
+    app.get('/audit/vendor-mutations', { preHandler: [requireAdmin] }, getAdminVendorMutationAuditLogs);
     app.get('/finance/summary', { preHandler: [requireAdmin] }, getFinanceSummary);
     app.get('/finance/payouts', { preHandler: [requireAdmin] }, getFinancePayouts);
     app.get('/finance/payouts/export', { preHandler: [requireAdmin] }, getPayoutRecords);

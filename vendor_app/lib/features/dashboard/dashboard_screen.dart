@@ -23,6 +23,21 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
+class _SidebarSection {
+  const _SidebarSection({required this.title, required this.items});
+
+  final String title;
+  final List<_SidebarItem> items;
+}
+
+class _SidebarItem {
+  const _SidebarItem(this.label, this.icon, this.route);
+
+  final String label;
+  final IconData icon;
+  final String route;
+}
+
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _rushModeEnabled = false;
   int _selectedPrepMins = 12;
@@ -33,14 +48,69 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _trackingBusy = false;
   DateTime? _lastTrackingUpdate;
   String? _trackingError;
+  ProviderSubscription<Map<String, dynamic>?>? _incomingOrderSub;
+  String? _lastIncomingPopupId;
 
   List<int> get _prepSuggestions =>
       _rushModeEnabled ? const [6, 8, 10] : const [10, 12, 15];
 
   @override
+  void initState() {
+    super.initState();
+    _incomingOrderSub = ref.listenManual<Map<String, dynamic>?>(
+      incomingOrderProvider,
+      (_, next) {
+        if (next == null || !mounted) return;
+        final nextId = next['id']?.toString();
+        if (nextId == null || nextId.isEmpty || nextId == _lastIncomingPopupId) {
+          return;
+        }
+        _lastIncomingPopupId = nextId;
+        _showIncomingOrderDialog(next);
+      },
+    );
+  }
+
+  @override
   void dispose() {
     _trackingTimer?.cancel();
+    _incomingOrderSub?.close();
     super.dispose();
+  }
+
+  Future<void> _showIncomingOrderDialog(Map<String, dynamic> order) async {
+    if (!mounted) return;
+    final orderId = order['id']?.toString() ?? '';
+    final amount = order['total_amount'];
+    final compactId = orderId.length <= 8 ? orderId.toUpperCase() : orderId.substring(0, 8).toUpperCase();
+
+    final action = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Incoming Order'),
+          content: Text('Order #$compactId received. Total Rs ${amount ?? 0}'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop('reject'),
+              child: const Text('Reject'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop('accept'),
+              child: const Text('Accept'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted || orderId.isEmpty) return;
+
+    if (action == 'accept') {
+      await ref.read(ordersProvider.notifier).acceptOrder(orderId);
+    } else if (action == 'reject') {
+      await ref.read(ordersProvider.notifier).rejectOrder(orderId);
+    }
   }
 
   Future<bool> _ensureLocationPermission(BuildContext context) async {
@@ -149,6 +219,161 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final status = (order['status'] as String? ?? '').toLowerCase();
     if (status == 'cancelled') return 'hold';
     return status.isEmpty ? 'accepted' : status;
+  }
+
+  String _featureRoute({required String section, required String title}) {
+    final encodedSection = Uri.encodeQueryComponent(section);
+    final encodedTitle = Uri.encodeQueryComponent(title);
+    return '/feature?section=$encodedSection&title=$encodedTitle';
+  }
+
+  List<_SidebarSection> _buildSidebarSections() {
+    return [
+      _SidebarSection(
+        title: 'Core Navigation',
+        items: [
+          _SidebarItem('Dashboard (Business Overview)', Icons.dashboard_rounded, '/'),
+          _SidebarItem('Active Orders', Icons.receipt_long_rounded, '/'),
+          _SidebarItem('Order History', Icons.history_rounded,
+              _featureRoute(section: 'Core Navigation', title: 'Order History')),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Menu & Inventory',
+        items: [
+          _SidebarItem('Menu Management', Icons.restaurant_menu_rounded, '/menu'),
+          _SidebarItem('Categories', Icons.category_rounded,
+              _featureRoute(section: 'Menu & Inventory', title: 'Categories')),
+          _SidebarItem('Add / Edit Items', Icons.edit_note_rounded,
+              _featureRoute(section: 'Menu & Inventory', title: 'Add / Edit Items')),
+          _SidebarItem('Inventory / Stock Control', Icons.inventory_2_rounded,
+              _featureRoute(section: 'Menu & Inventory', title: 'Inventory / Stock Control')),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Finance & Payments',
+        items: [
+          _SidebarItem('Earnings Dashboard', Icons.account_balance_wallet_rounded,
+            '/finance/earnings'),
+          _SidebarItem('Payouts / Settlements', Icons.payments_rounded,
+            '/finance/payouts'),
+          _SidebarItem('Transactions History', Icons.receipt_rounded,
+            '/finance/transactions'),
+          _SidebarItem('Tax / GST Reports', Icons.request_page_rounded,
+            '/finance/tax-reports'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Analytics',
+        items: [
+          _SidebarItem('Sales Analytics', Icons.query_stats_rounded,
+            '/analytics/sales'),
+          _SidebarItem('Performance Metrics', Icons.insights_rounded,
+            '/analytics/performance'),
+          _SidebarItem('Peak Hours Insights', Icons.schedule_rounded,
+            '/analytics/peak-hours'),
+          _SidebarItem('Top-Selling Items', Icons.local_fire_department_rounded,
+            '/analytics/top-items'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Operations',
+        items: [
+          _SidebarItem('Delivery Management', Icons.local_shipping_rounded,
+              _featureRoute(section: 'Operations', title: 'Delivery Management')),
+          _SidebarItem('Live Order Tracking', Icons.location_on_rounded,
+              _featureRoute(section: 'Operations', title: 'Live Order Tracking')),
+          _SidebarItem('Rider / Delivery Partner Info', Icons.pedal_bike_rounded,
+              _featureRoute(section: 'Operations', title: 'Rider / Delivery Partner Info')),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Growth & Marketing',
+        items: [
+          _SidebarItem('Promotions & Offers', Icons.campaign_rounded,
+              _featureRoute(section: 'Growth & Marketing', title: 'Promotions & Offers')),
+          _SidebarItem('Discounts / Coupons', Icons.local_offer_rounded,
+              _featureRoute(section: 'Growth & Marketing', title: 'Discounts / Coupons')),
+          _SidebarItem('Campaigns', Icons.auto_graph_rounded,
+              _featureRoute(section: 'Growth & Marketing', title: 'Campaigns')),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Store Management',
+        items: [
+          _SidebarItem('Store Profile', Icons.storefront_rounded, '/profile'),
+          _SidebarItem('Store Settings', Icons.settings_rounded,
+              _featureRoute(section: 'Store Management', title: 'Store Settings')),
+          _SidebarItem('Open / Close Store Toggle', Icons.power_settings_new_rounded, '/profile'),
+          _SidebarItem('Busy Mode / Rush Mode', Icons.bolt_rounded, '/profile'),
+          _SidebarItem('Working Hours', Icons.access_time_filled_rounded,
+              _featureRoute(section: 'Store Management', title: 'Working Hours')),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Staff & Access Control',
+        items: [
+          _SidebarItem('Staff Management', Icons.groups_rounded,
+              '/staff/management'),
+          _SidebarItem('Roles & Permissions', Icons.admin_panel_settings_rounded,
+              '/staff/roles'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Notifications',
+        items: [
+          _SidebarItem('Notifications Center', Icons.notifications_active_rounded, '/notifications'),
+          _SidebarItem('Alerts & Updates', Icons.notification_important_rounded, '/notifications'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Reports',
+        items: [
+          _SidebarItem('Download Reports (PDF/CSV)', Icons.download_rounded,
+              '/reports/download'),
+          _SidebarItem('Sales Reports', Icons.bar_chart_rounded,
+              '/reports/sales'),
+          _SidebarItem('Order Reports', Icons.summarize_rounded,
+              '/reports/orders'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Preferences',
+        items: [
+          _SidebarItem('Language Selection', Icons.language_rounded,
+              '/preferences/language'),
+          _SidebarItem('Dark Mode', Icons.dark_mode_rounded,
+              '/preferences/theme'),
+          _SidebarItem('App Settings', Icons.tune_rounded,
+              '/preferences/app'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Support & Legal',
+        items: [
+          _SidebarItem('Help Center', Icons.help_center_rounded,
+              _featureRoute(section: 'Support & Legal', title: 'Help Center')),
+          _SidebarItem('Contact Support', Icons.support_agent_rounded,
+              _featureRoute(section: 'Support & Legal', title: 'Contact Support')),
+          _SidebarItem('Terms of Service', Icons.gavel_rounded, '/legal'),
+          _SidebarItem('Privacy Policy', Icons.privacy_tip_rounded, '/privacy'),
+        ],
+      ),
+      _SidebarSection(
+        title: 'Account',
+        items: [
+          _SidebarItem('Profile', Icons.person_rounded, '/profile'),
+        ],
+      ),
+    ];
+  }
+
+  Future<void> _onSidebarTap(BuildContext context, _SidebarItem item) async {
+    Navigator.of(context).pop();
+    if (item.route == '/') return;
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    if (!context.mounted) return;
+    context.push(item.route);
   }
 
   List<dynamic> _applyQueueView(List<dynamic> orders) {
@@ -415,50 +640,82 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ],
       ),
       drawer: Drawer(
-        child: Column(
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0F8D82), Color(0xFF0A6B63)],
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  'Swift Vendor',
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF0F8D82), Color(0xFF0A6B63)],
                   ),
                 ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: Colors.white24,
+                      child: Icon(Icons.storefront_rounded, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Swift Vendor',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.gavel_rounded),
-              title: const Text('Terms of Service'),
-              onTap: () => context.push('/legal'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.storefront_rounded),
-              title: const Text('Store Profile'),
-              onTap: () => context.push('/profile'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_rounded),
-              title: const Text('Privacy Policy'),
-              onTap: () => context.push('/privacy'),
-            ),
-            const Spacer(),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () => ref.read(authProvider.notifier).logout(),
-            ),
-            const SizedBox(height: 20),
-          ],
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                  children: [
+                    ..._buildSidebarSections().expand((section) => [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 12, 8, 6),
+                            child: Text(
+                              section.title,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          ...section.items.map(
+                            (item) => ListTile(
+                              dense: true,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              leading: Icon(item.icon, size: 20),
+                              title: Text(item.label),
+                              onTap: () => _onSidebarTap(context, item),
+                            ),
+                          ),
+                        ]),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.logout_rounded, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ref.read(authProvider.notifier).logout();
+                },
+              ),
+            ],
+          ),
         ),
       ),
       body: RefreshIndicator(

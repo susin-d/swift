@@ -217,3 +217,121 @@ export const updateMeHandler = async (request: FastifyRequest, reply: FastifyRep
 
     return reply.send({ message: 'Profile updated successfully' });
 };
+
+export const acceptStaffOnboardingInviteHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { token } = request.body as { token?: string };
+
+    if (!token || typeof token !== 'string') {
+        const err = new Error('token is required') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const { data: invitation, error: invitationError } = await supabase
+        .from('vendor_staff_invitations')
+        .select('*')
+        .eq('invite_token', token)
+        .maybeSingle();
+
+    if (invitationError) throw invitationError;
+    if (!invitation) {
+        const err = new Error('Invitation not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    if (invitation.status !== 'pending') {
+        const err = new Error('Invitation is no longer valid') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const expiresAt = invitation.expires_at ? new Date(invitation.expires_at).getTime() : 0;
+    if (expiresAt > 0 && expiresAt < Date.now()) {
+        const err = new Error('Invitation has expired') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const invitedUserId = invitation.invited_user_id as string | null;
+    const invitedEmail = (invitation.email || '').toString().toLowerCase();
+    const requesterEmail = (user.email || '').toString().toLowerCase();
+
+    if (invitedUserId && invitedUserId !== user.sub) {
+        const err = new Error('Invitation does not belong to this user') as any;
+        err.statusCode = 403;
+        throw err;
+    }
+
+    if (!invitedUserId && invitedEmail && requesterEmail && invitedEmail !== requesterEmail) {
+        const err = new Error('Invitation email does not match authenticated user') as any;
+        err.statusCode = 403;
+        throw err;
+    }
+
+    const now = new Date().toISOString();
+
+    const { data: existingStaff } = await supabase
+        .from('vendor_staff_members')
+        .select('id')
+        .eq('vendor_id', invitation.vendor_id)
+        .eq('user_id', user.sub)
+        .maybeSingle();
+
+    if (existingStaff?.id) {
+        const { error: updateStaffError } = await supabase
+            .from('vendor_staff_members')
+            .update({
+                role_key: invitation.role_key,
+                status: 'active',
+                email: user.email || invitation.email,
+                updated_at: now,
+            })
+            .eq('id', existingStaff.id);
+
+        if (updateStaffError) throw updateStaffError;
+    } else {
+        const { error: createStaffError } = await supabase
+            .from('vendor_staff_members')
+            .insert({
+                vendor_id: invitation.vendor_id,
+                user_id: user.sub,
+                name: user.email?.split('@')[0] || 'Staff Member',
+                role_key: invitation.role_key,
+                status: 'active',
+                email: user.email || invitation.email,
+                updated_at: now,
+            });
+
+        if (createStaffError) throw createStaffError;
+    }
+
+    const { error: markAcceptedError } = await supabase
+        .from('vendor_staff_invitations')
+        .update({
+            invited_user_id: user.sub,
+            status: 'accepted',
+            accepted_at: now,
+            updated_at: now,
+        })
+        .eq('id', invitation.id);
+
+    if (markAcceptedError) throw markAcceptedError;
+
+    await supabase.from('admin_logs').insert({
+        admin_id: user.sub,
+        action_performed: 'vendor.staff.invitation.accept',
+        target_id: invitation.id,
+        reason: `Staff onboarding accepted for vendor ${invitation.vendor_id}`,
+    });
+
+    return reply.send({
+        onboarding: {
+            invitation_id: invitation.id,
+            vendor_id: invitation.vendor_id,
+            role_key: invitation.role_key,
+            status: 'accepted',
+        },
+    });
+};

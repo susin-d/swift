@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,16 @@ Future<void> openOrderDetailsSheet(BuildContext context, dynamic order) async {
   final handoffStatus = order['handoff_status']?.toString() ?? 'pending';
   final proofUrl = order['handoff_proof_url']?.toString();
   final orderId = order['id']?.toString() ?? '';
+    final customer = (order['customer'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
+    final payment = (order['payment'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
+    final deliveryPartner =
+      (order['delivery_partner'] as Map?)?.cast<dynamic, dynamic>() ?? const {};
+    final customerName = customer['name']?.toString() ?? 'Customer';
+    final contactMasked = customer['contact_masked']?.toString() ?? 'N/A';
+    final paymentMode = payment['mode']?.toString() ?? 'unknown';
+    final paymentStatus = payment['status']?.toString() ?? 'pending';
+    final liveLocation =
+      (deliveryPartner['live_location'] as Map?)?.cast<dynamic, dynamic>();
 
   await showModalBottomSheet<void>(
     context: context,
@@ -104,6 +115,52 @@ Future<void> openOrderDetailsSheet(BuildContext context, dynamic order) async {
                     ),
                   );
                 }),
+              const SizedBox(height: 8),
+              const Divider(height: 20),
+              Text(
+                'Customer',
+                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text('$customerName - $contactMasked'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(ClipboardData(text: contactMasked));
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Contact copied')),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: const Text('Copy Contact'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Direct chat integration is coming next.')),
+                      );
+                    },
+                    icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                    label: const Text('Chat'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Payment: ${paymentMode.toUpperCase()} - ${paymentStatus.toUpperCase()}',
+                style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              if (liveLocation != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Courier location: ${liveLocation['lat']}, ${liveLocation['lng']}',
+                  style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

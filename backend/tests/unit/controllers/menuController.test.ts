@@ -93,7 +93,9 @@ describe('Menu Controller - Menu CRUD', () => {
 
             await updateMenu(request, reply);
 
-            Sinon.assert.calledWithExactly(updateStub, { category_name: 'Mains', sort_order: 2 });
+            Sinon.assert.calledOnce(updateStub);
+            expect(updateStub.firstCall.args[0]).toMatchObject({ category_name: 'Mains', sort_order: 2 });
+            expect(updateStub.firstCall.args[0]).toHaveProperty('updated_at');
             Sinon.assert.calledWithExactly(eqStub, 'id', 'menu-1');
             expect(reply.send.firstCall.args[0]).toEqual(updated);
         });
@@ -182,7 +184,9 @@ describe('Menu Controller - Menu Item CRUD', () => {
 
             await updateMenuItem(request, reply);
 
-            Sinon.assert.calledWithExactly(updateStub, { name: 'Paneer Tikka', price: 120 });
+            Sinon.assert.calledOnce(updateStub);
+            expect(updateStub.firstCall.args[0]).toMatchObject({ name: 'Paneer Tikka', price: 120 });
+            expect(updateStub.firstCall.args[0]).toHaveProperty('updated_at');
             Sinon.assert.calledWithExactly(eqStub, 'id', 'item-1');
             expect(reply.send.firstCall.args[0]).toEqual(updated);
         });

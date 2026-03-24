@@ -128,4 +128,48 @@ describe('API - Auth Controller Expansion', () => {
             },
         });
     });
+
+    it('POST /staff/onboarding/accept - accepts onboarding token for authenticated user', async () => {
+        mockSupabase.from.withArgs('vendor_staff_invitations').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub()
+                .onFirstCall()
+                .resolves({
+                    data: {
+                        id: 'inv-1',
+                        vendor_id: 'ven-1',
+                        role_key: 'cashier',
+                        invited_user_id: 'user_123',
+                        email: 'test@campus.edu',
+                        status: 'pending',
+                        expires_at: new Date(Date.now() + 86400000).toISOString(),
+                    },
+                    error: null,
+                })
+                .onSecondCall()
+                .returnsThis(),
+            update: Sinon.stub().returnsThis(),
+        } as any);
+
+        mockSupabase.from.withArgs('vendor_staff_members').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: null, error: null }),
+            insert: Sinon.stub().resolves({ error: null }),
+        } as any);
+
+        mockSupabase.from.withArgs('admin_logs').returns({
+            insert: Sinon.stub().resolves({ error: null }),
+        } as any);
+
+        const response = await supertest(app.server as any)
+            .post('/api/v1/auth/staff/onboarding/accept')
+            .set('Authorization', 'Bearer valid_user_token')
+            .send({ token: 'invite-token' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.onboarding.status).toBe('accepted');
+        expect(response.body.onboarding.role_key).toBe('cashier');
+    });
 });

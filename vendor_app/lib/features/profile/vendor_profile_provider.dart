@@ -34,6 +34,11 @@ class VendorProfileNotifier extends StateNotifier<AsyncValue<VendorProfile>> {
     String? description,
     String? imageUrl,
     required bool isOpen,
+    bool? autoAcceptOrders,
+    int? preparationTimeAvg,
+    bool? busyModeEnabled,
+    String? busyModeMessage,
+    DateTime? holidayUntil,
   }) async {
     try {
       final updated = await _service.updateProfile(
@@ -41,6 +46,11 @@ class VendorProfileNotifier extends StateNotifier<AsyncValue<VendorProfile>> {
         description: description,
         imageUrl: imageUrl,
         isOpen: isOpen,
+        autoAcceptOrders: autoAcceptOrders,
+        preparationTimeAvg: preparationTimeAvg,
+        busyModeEnabled: busyModeEnabled,
+        busyModeMessage: busyModeMessage,
+        holidayUntil: holidayUntil,
       );
       state = AsyncValue.data(updated);
     } catch (e, st) {
