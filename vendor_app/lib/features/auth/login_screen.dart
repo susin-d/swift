@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 
@@ -97,7 +98,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [BoxShadow(color: _teal.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8))],
                               ),
-                              child: const Icon(Icons.storefront_rounded, size: 30, color: Colors.white),
+                              child: SvgPicture.asset(
+                                'assets/branding/vendor_swift_logo.svg',
+                                width: 30,
+                                height: 30,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Text(

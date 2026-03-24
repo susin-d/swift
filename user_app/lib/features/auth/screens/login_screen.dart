@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
@@ -130,7 +131,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                                   BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8)),
                                 ],
                               ),
-                              child: const Icon(Icons.restaurant_rounded, size: 32, color: Colors.white),
+                              child: SvgPicture.asset(
+                                'assets/branding/swift_logo.svg',
+                                width: 32,
+                                height: 32,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Text(

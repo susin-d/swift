@@ -8,8 +8,8 @@ final apiServiceProvider = Provider((ref) => ApiService());
 class ApiService {
   final Dio dio = Dio(BaseOptions(
     baseUrl: 'https://swift-campus.vercel.app/api/v1',
-    connectTimeout: const Duration(seconds: 5),
-    receiveTimeout: const Duration(seconds: 3),
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 30),
   ));
   final Map<String, CancelToken> _inFlightRequests = {};
 

@@ -1,5 +1,5 @@
 # Features and Gaps (Live App Audit)
-Date: 2026-03-19
+Date: 2026-03-24
 
 ## User App (user_app)
 Innovative features (implemented)
@@ -45,9 +45,9 @@ Missing or not yet implemented
 Implemented features
 - Admin auth, session posture, and routed shell
 - Dashboard summary and chart visibility
-- Vendor approval and vendor management
+- Vendor approval and vendor management (single + bulk approve/reject)
 - Orders table with cancellation reason capture
-- User management and role updates
+- User management and role updates (single + bulk block/unblock and bulk role change)
 - Finance summary, payout list, and CSV export
 - Settings management and audit log viewer
 - Campus buildings and delivery zone management
@@ -56,6 +56,7 @@ Missing or not yet implemented
 - Admin role hierarchy management (beyond role updates)
 - Audit export or long-term archival tools
 - Alerting for SLA breaches or fraud thresholds
+- Bulk moderation preview/undo workflow for high-risk admin actions
 
 ## Backend API (backend)
 Implemented features
@@ -64,13 +65,14 @@ Implemented features
 - Delivery location update and retrieval
 - Geofence validation for class handoff updates
 - Promotions and scheduling endpoints
-- Admin governance endpoints (dashboard, finance, audit, settings)
+- Admin governance endpoints (dashboard, finance, audit, settings, bulk moderation routes)
 - Contract registry, changelog, and flags
 
 Missing or not yet implemented
 - Refunds and chargeback workflows
 - Courier/driver management endpoints
 - Webhook integrations for external systems
+- Bulk user moderation audit-log parity (per-user action audit entries for block/role bulk mutations)
 
 ## Cross-App Gaps
 - Dedicated courier/driver application

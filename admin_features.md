@@ -3,10 +3,12 @@
 ## ✅ Existing Features
 
 - **Vendor Moderation**: Approve/reject pending vendors with required audit reasons (`GET /api/v1/admin/vendors/pending`, `PATCH /api/v1/admin/vendors/:id/approve`, `PATCH /api/v1/admin/vendors/:id/reject`)
+- **Bulk Vendor Moderation**: Batch approve/reject selected vendors (`POST /api/v1/admin/vendors/approve-many`, `POST /api/v1/admin/vendors/reject-many`) with partial-failure reporting
 - **Dashboard Snapshot**: Real-time system overview—total users, vendors, active orders, completed orders, total revenue, and pending vendor count
 - **Revenue Analytics**: Daily, weekly, monthly, and total revenue breakdown with 7-day historical chart data
 - **Order Management**: List all orders (filterable by status: pending/accepted/preparing/ready/completed/cancelled), view order details, cancel orders with reason requirement
 - **User Management**: List all platform users with pagination, block/unblock users with audit justification, role assignment (user/vendor/admin)
+- **Bulk User Moderation**: Batch block/unblock users and batch role updates (`POST /api/v1/admin/users/block-many`, `POST /api/v1/admin/users/role-many`) with per-entity error results
 - **Finance/Payouts**: Aggregated revenue per vendor from completed orders, payout status tracking, CSV export capability for payouts
 - **Campus Configuration**: Manage delivery buildings and geographic delivery zones with GeoJSON boundary support
 - **Audit Logs**: Searchable activity log tracking admin actions (vendor status updates, order cancellations, user blocks, role changes) with admin identity, timestamp, and reason fields
@@ -21,7 +23,8 @@
 - **Admin Request Logging**: Endpoint call volume, response times, and error tracking not captured in database; only console error output
 - **Health Monitoring Dashboard**: No backend uptime tracking, database health status, or service dependency monitoring
 - **IP/Device Management**: No IP address logging on admin actions; no suspicious login detection or device trust tracking
-- **Bulk User/Vendor Operations**: All moderation operations are single-entity; no batch block, batch role assignment, or bulk vendor state changes
+- **Bulk Moderation Safety Controls**: No dry-run preview, approval-chain, or rollback workflow for high-impact bulk actions
+- **Bulk User Moderation Audit Parity**: Batch user block/role operations currently return success/error results but do not persist per-user admin log entries at the same depth as single-entity moderation paths
 - **Vendor SLA & Performance Tracking**: No prep time targets, delivery SLA compliance metrics, or vendor quality scoring
 - **Payment & Refund Management**: Admin lacking capabilities to issue refunds, adjust order totals, or manage chargeback disputes
 - **Data Retention & Compliance**: No configurable log retention policy; no GDPR-compliant data export or deletion workflows
@@ -55,6 +58,7 @@
 - **Bulk Moderation Without Preview**: Single-action UI prevents mass mistakes, but no scheduled/deferred action queue; admin errors (reject wrong vendor) cannot be queued for review
 - **Database Query Scaling Risk**: Audit log queries load full result set then paginate in memory (potential memory spike); no query indexes noted for `admin_logs.created_at` or `.admin_id`
 - **Analytics Blind Spot**: No monitoring of admin action error rates; failed vendor rejections, failed user blocks logged only to console, not persisted for audit
+- **Bulk Action Traceability Gap**: Bulk user role/block operations need structured per-user audit inserts (actor, before/after, reason, request-id) to support forensic review and compliance audits
 - **No Fraud Detection Signals**: Admin can block any user without restriction; no cross-check against transaction history, no hold-for-review pattern on bulk actions
 - **Payout Export Data Integrity**: CSV export endpoint returns data snapshot without hash or signature; no detection of offline tampering; no audit trail of who exported and when
 - **Settings Update Persistence Question**: `updateAdminSettings` endpoint enforces `super_admin` role but confirms receipt with request body echo, not persisted values; actual persistence logic unclear

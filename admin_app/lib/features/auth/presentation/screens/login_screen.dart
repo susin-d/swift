@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../providers/auth_provider.dart';
 
@@ -77,16 +78,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         padding: const EdgeInsets.all(36),
-                        child: const Column(
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CircleAvatar(
                               radius: 30,
                               backgroundColor: Colors.white,
-                              child: Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF0F766E), size: 30),
+                              child: Padding(
+                                padding: EdgeInsets.all(8),
+                                child: SvgPicture.asset(
+                                  'assets/branding/admin_swift_logo.svg',
+                                  width: 30,
+                                  height: 30,
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 28),
-                            Text(
+                            const SizedBox(height: 28),
+                            const Text(
                               'Admin Login',
                               style: TextStyle(
                                 color: Colors.white,
@@ -95,8 +103,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 letterSpacing: -1.1,
                               ),
                             ),
-                            SizedBox(height: 14),
-                            Text(
+                            const SizedBox(height: 14),
+                            const Text(
                               'Oversee live orders, vendor quality, platform health, and revenue from one control surface built for fast decisions.',
                               style: TextStyle(
                                 color: Color(0xFFDDF7F2),
@@ -104,13 +112,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 1.6,
                               ),
                             ),
-                            Spacer(),
-                            _FeatureCallout(
+                            const Spacer(),
+                            const _FeatureCallout(
                               title: 'Live Operations',
                               subtitle: 'Track delayed orders, vendor issues, and conversion shifts in real time.',
                             ),
-                            SizedBox(height: 16),
-                            _FeatureCallout(
+                            const SizedBox(height: 16),
+                            const _FeatureCallout(
                               title: 'Safer Admin Flows',
                               subtitle: 'Role-based access keeps finance, support, and approvals separated.',
                             ),
@@ -141,10 +149,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       color: const Color(0xFFE8F7F4),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
-                                    child: const Icon(
-                                      Icons.shield_rounded,
-                                      color: Color(0xFF0F766E),
-                                      size: 32,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12),
+                                      child: SvgPicture.asset(
+                                        'assets/branding/admin_swift_logo.svg',
+                                        width: 32,
+                                        height: 32,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 20),

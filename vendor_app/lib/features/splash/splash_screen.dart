@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -63,7 +64,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(32),
                       ),
-                      child: const Icon(Icons.storefront_rounded, size: 64, color: Colors.white),
+                      child: SvgPicture.asset(
+                        'assets/branding/vendor_swift_logo.svg',
+                        width: 64,
+                        height: 64,
+                      ),
                     ),
                     const SizedBox(height: 32),
                     Text(
