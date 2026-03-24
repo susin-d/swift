@@ -154,38 +154,65 @@ describe('Order Controller — updateOrderStatus', () => {
         Sinon.restore();
     });
 
+    const stubOrderStatusUpdate = (fromStatus: string, toStatus: string) => {
+        const existingOrder = {
+            id: 'ord-1',
+            status: fromStatus,
+            user_id: 'u-1',
+            vendor_id: 'v-1',
+            created_at: NOW_ISO,
+        };
+
+        const updatedOrder = {
+            ...existingOrder,
+            status: toStatus,
+        };
+
+        const vendorSingle = Sinon.stub().resolves({ data: { id: 'v-1' }, error: null });
+        const vendorEq = Sinon.stub().returns({ single: vendorSingle });
+        const vendorSelect = Sinon.stub().returns({ eq: vendorEq });
+
+        const fetchSingle = Sinon.stub().resolves({ data: existingOrder, error: null });
+        const fetchEqVendor = Sinon.stub().returns({ single: fetchSingle });
+        const fetchEqId = Sinon.stub().returns({ eq: fetchEqVendor });
+        const fetchSelect = Sinon.stub().returns({ eq: fetchEqId });
+
+        const updateSingle = Sinon.stub().resolves({ data: updatedOrder, error: null });
+        const updateSelect = Sinon.stub().returns({ single: updateSingle });
+        const updateEqVendor = Sinon.stub().returns({ select: updateSelect });
+        const updateEqId = Sinon.stub().returns({ eq: updateEqVendor });
+        const update = Sinon.stub().returns({ eq: updateEqId });
+
+        fromStub.onCall(0).returns({ select: vendorSelect } as any);
+        fromStub.onCall(1).returns({ select: fetchSelect } as any);
+        fromStub.onCall(2).returns({ update } as any);
+    };
+
     it('updates order status and returns record with eta field', async () => {
-        const updated = { id: 'ord-1', status: 'preparing', total_amount: 80, created_at: NOW_ISO };
+        stubOrderStatusUpdate('accepted', 'preparing');
 
-        const singleStub = Sinon.stub().resolves({ data: updated, error: null });
-        const selectStub = Sinon.stub().returns({ single: singleStub });
-        const eqStub = Sinon.stub().returns({ select: selectStub });
-        const updateStub = Sinon.stub().returns({ eq: eqStub });
-
-        fromStub.withArgs('orders').returns({ update: updateStub } as any);
-
-        const request: any = { params: { id: 'ord-1' }, body: { status: 'preparing' } };
+        const request: any = {
+            user: { sub: 'owner-1', role: 'vendor' },
+            params: { id: 'ord-1' },
+            body: { status: 'preparing' },
+        };
         const reply: any = { send: Sinon.stub() };
 
         await updateOrderStatus(request, reply);
 
-        Sinon.assert.calledOnce(updateStub);
         const sent = reply.send.firstCall.args[0];
         expect(sent).toHaveProperty('eta');
-        expect(sent.eta.confidence).toBe('medium'); // 'preparing' → medium
+        expect(sent.eta.confidence).toBe('medium');
     });
 
     it('eta confidence is high for accepted status', async () => {
-        const updated = { id: 'ord-2', status: 'accepted', created_at: NOW_ISO };
+        stubOrderStatusUpdate('pending', 'accepted');
 
-        const singleStub = Sinon.stub().resolves({ data: updated, error: null });
-        const selectStub = Sinon.stub().returns({ single: singleStub });
-        const eqStub = Sinon.stub().returns({ select: selectStub });
-        const updateStub = Sinon.stub().returns({ eq: eqStub });
-
-        fromStub.withArgs('orders').returns({ update: updateStub } as any);
-
-        const request: any = { params: { id: 'ord-2' }, body: { status: 'accepted' } };
+        const request: any = {
+            user: { sub: 'owner-1', role: 'vendor' },
+            params: { id: 'ord-2' },
+            body: { status: 'accepted' },
+        };
         const reply: any = { send: Sinon.stub() };
 
         await updateOrderStatus(request, reply);
@@ -194,16 +221,13 @@ describe('Order Controller — updateOrderStatus', () => {
     });
 
     it('eta confidence is low for cancelled status', async () => {
-        const updated = { id: 'ord-3', status: 'cancelled', created_at: NOW_ISO };
+        stubOrderStatusUpdate('pending', 'cancelled');
 
-        const singleStub = Sinon.stub().resolves({ data: updated, error: null });
-        const selectStub = Sinon.stub().returns({ single: singleStub });
-        const eqStub = Sinon.stub().returns({ select: selectStub });
-        const updateStub = Sinon.stub().returns({ eq: eqStub });
-
-        fromStub.withArgs('orders').returns({ update: updateStub } as any);
-
-        const request: any = { params: { id: 'ord-3' }, body: { status: 'cancelled' } };
+        const request: any = {
+            user: { sub: 'owner-1', role: 'vendor' },
+            params: { id: 'ord-3' },
+            body: { status: 'cancelled' },
+        };
         const reply: any = { send: Sinon.stub() };
 
         await updateOrderStatus(request, reply);
@@ -211,17 +235,48 @@ describe('Order Controller — updateOrderStatus', () => {
         expect(reply.send.firstCall.args[0].eta.confidence).toBe('low');
     });
 
-    it('throws on Supabase error', async () => {
+    it('throws conflict for invalid transition', async () => {
+        stubOrderStatusUpdate('pending', 'ready');
+
+        const request: any = {
+            user: { sub: 'owner-1', role: 'vendor' },
+            params: { id: 'ord-4' },
+            body: { status: 'ready' },
+        };
+        const reply: any = { send: Sinon.stub() };
+
+        await expect(updateOrderStatus(request, reply)).rejects.toMatchObject({ statusCode: 409 });
+    });
+
+    it('throws on update error', async () => {
+        const vendorSingle = Sinon.stub().resolves({ data: { id: 'v-1' }, error: null });
+        const vendorEq = Sinon.stub().returns({ single: vendorSingle });
+        const vendorSelect = Sinon.stub().returns({ eq: vendorEq });
+
+        const fetchSingle = Sinon.stub().resolves({
+            data: { id: 'ord-x', status: 'accepted', vendor_id: 'v-1', user_id: 'u-1', created_at: NOW_ISO },
+            error: null,
+        });
+        const fetchEqVendor = Sinon.stub().returns({ single: fetchSingle });
+        const fetchEqId = Sinon.stub().returns({ eq: fetchEqVendor });
+        const fetchSelect = Sinon.stub().returns({ eq: fetchEqId });
+
         const dbError = new Error('update failed');
+        const updateSingle = Sinon.stub().resolves({ data: null, error: dbError });
+        const updateSelect = Sinon.stub().returns({ single: updateSingle });
+        const updateEqVendor = Sinon.stub().returns({ select: updateSelect });
+        const updateEqId = Sinon.stub().returns({ eq: updateEqVendor });
+        const update = Sinon.stub().returns({ eq: updateEqId });
 
-        const singleStub = Sinon.stub().resolves({ data: null, error: dbError });
-        const selectStub = Sinon.stub().returns({ single: singleStub });
-        const eqStub = Sinon.stub().returns({ select: selectStub });
-        const updateStub = Sinon.stub().returns({ eq: eqStub });
+        fromStub.onCall(0).returns({ select: vendorSelect } as any);
+        fromStub.onCall(1).returns({ select: fetchSelect } as any);
+        fromStub.onCall(2).returns({ update } as any);
 
-        fromStub.withArgs('orders').returns({ update: updateStub } as any);
-
-        const request: any = { params: { id: 'ord-x' }, body: { status: 'ready' } };
+        const request: any = {
+            user: { sub: 'owner-1', role: 'vendor' },
+            params: { id: 'ord-x' },
+            body: { status: 'preparing' },
+        };
         const reply: any = { send: Sinon.stub() };
 
         await expect(updateOrderStatus(request, reply)).rejects.toThrow('update failed');

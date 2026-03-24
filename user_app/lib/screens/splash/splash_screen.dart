@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(32),
                       ),
-                      child: SvgPicture.asset(
+                      child: Image.asset(
                         'assets/branding/swift_logo.png',
                         
                         width: 64,

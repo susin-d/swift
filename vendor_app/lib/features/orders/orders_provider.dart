@@ -15,7 +15,7 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<dynamic>>> {
   Future<void> fetchOrders() async {
     state = const AsyncValue.loading();
     try {
-      final response = await _api.get('/vendor-ops/orders');
+      final response = await _api.get('/vendor-ops/orders/active');
       if (response.statusCode == 200) {
         state = AsyncValue.data(response.data);
       } else {
@@ -28,7 +28,30 @@ class OrdersNotifier extends StateNotifier<AsyncValue<List<dynamic>>> {
 
   Future<bool> updateStatus(String orderId, String status) async {
     try {
-      await _api.patch('/orders/$orderId/status', data: {'status': status});
+      await _api.post('/vendor-ops/orders/$orderId/status',
+          data: {'status': status});
+      await fetchOrders();
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e.toString(), st);
+      return false;
+    }
+  }
+
+  Future<bool> acceptOrder(String orderId) async {
+    try {
+      await _api.post('/vendor-ops/orders/$orderId/accept');
+      await fetchOrders();
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e.toString(), st);
+      return false;
+    }
+  }
+
+  Future<bool> rejectOrder(String orderId) async {
+    try {
+      await _api.post('/vendor-ops/orders/$orderId/reject');
       await fetchOrders();
       return true;
     } catch (e, st) {

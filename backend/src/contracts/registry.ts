@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.4';
+export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.5';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -151,6 +151,91 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: '[].pacing.sla_risk', type: 'string', required: true, description: 'Pacing risk grade: low|medium|high.' },
                 { name: '[].pacing.pace_label', type: 'string', required: true, description: 'Readable pacing label such as on_track/watch/urgent.' },
                 { name: '[].items', type: 'array<object>', required: false, description: 'Line items when requested.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.active',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/orders/active',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Active vendor order queue only (pending, accepted, preparing, ready, out_for_delivery).',
+            fields: [
+                { name: '[].id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
+                { name: '[].status', type: 'string', required: true, description: 'Current order status.' },
+                { name: '[].eta.min_minutes', type: 'number', required: true, description: 'Estimated lower-bound prep/delivery minutes remaining.' },
+                { name: '[].eta.max_minutes', type: 'number', required: true, description: 'Estimated upper-bound prep/delivery minutes remaining.' },
+                { name: '[].pacing.sla_risk', type: 'string', required: true, description: 'Pacing risk grade low|medium|high.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.detail',
+        method: 'GET',
+        path: '/api/v1/vendor-ops/orders/:id',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Vendor order detail payload with line items and lifecycle pacing fields.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
+                { name: 'status', type: 'string', required: true, description: 'Current order status.' },
+                { name: 'order_items', type: 'array<object>', required: true, description: 'Order line items and linked menu item metadata when available.' },
+                { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' },
+                { name: 'pacing.pace_label', type: 'string', required: true, description: 'Readable pacing label.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.accept',
+        method: 'POST',
+        path: '/api/v1/vendor-ops/orders/:id/accept',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Order status update response for vendor accept action.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
+                { name: 'status', type: 'string', required: true, description: 'Updated status, expected accepted.' },
+                { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.reject',
+        method: 'POST',
+        path: '/api/v1/vendor-ops/orders/:id/reject',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        response: {
+            description: 'Order status update response for vendor reject action.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
+                { name: 'status', type: 'string', required: true, description: 'Updated status, expected cancelled.' },
+                { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' }
+            ]
+        }
+    },
+    {
+        id: 'vendor.orders.status.update',
+        method: 'POST',
+        path: '/api/v1/vendor-ops/orders/:id/status',
+        owner: 'vendor_app',
+        auth: 'vendor',
+        request: {
+            description: 'Advance vendor order lifecycle status with transition validation.',
+            fields: [
+                { name: 'status', type: 'string', required: true, description: 'Target status in lifecycle progression.' }
+            ]
+        },
+        response: {
+            description: 'Order status update response after valid transition.',
+            fields: [
+                { name: 'id', type: 'string(uuid)', required: true, description: 'Order identifier.' },
+                { name: 'status', type: 'string', required: true, description: 'Updated order status.' },
+                { name: 'eta.confidence', type: 'string', required: true, description: 'Confidence grade: low|medium|high.' }
             ]
         }
     },

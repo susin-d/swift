@@ -57,12 +57,31 @@ describe('API - Orders Expansion', () => {
     });
 
     it('PATCH /:id/status - updates status (Vendor Only)', async () => {
-        const updatedOrder = { id: 'ord_123', status: 'preparing' };
+        const updatedOrder = {
+            id: 'ord_123',
+            status: 'preparing',
+            vendor_id: 'vendor-1',
+            user_id: 'user-1',
+        };
+
+        mockSupabase.from.withArgs('vendors').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            single: Sinon.stub().resolves({ data: { id: 'vendor-1' }, error: null }),
+        } as any);
+
         mockSupabase.from.withArgs('orders').returns({
+            select: Sinon.stub().returnsThis(),
             update: Sinon.stub().returnsThis(),
             eq: Sinon.stub().returnsThis(),
-            select: Sinon.stub().returnsThis(),
-            single: Sinon.stub().resolves({ data: updatedOrder, error: null })
+            single: Sinon.stub()
+                .onFirstCall()
+                .resolves({
+                    data: { ...updatedOrder, status: 'accepted' },
+                    error: null,
+                })
+                .onSecondCall()
+                .resolves({ data: updatedOrder, error: null }),
         } as any);
 
         const response = await supertest(app.server as any)

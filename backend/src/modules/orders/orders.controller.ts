@@ -364,31 +364,222 @@ export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) 
     return reply.send(normalized.map((order: any) => attachVendorPacing(order)));
 };
 
-export const updateOrderStatus = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as any;
-    const { status } = request.body as any;
+const allowedOrderStatuses = new Set([
+    'pending',
+    'accepted',
+    'preparing',
+    'ready',
+    'out_for_delivery',
+    'completed',
+    'cancelled',
+]);
 
-    const { data, error } = await supabase
+const allowedVendorTransitions: Record<string, Set<string>> = {
+    pending: new Set(['accepted', 'cancelled']),
+    accepted: new Set(['preparing', 'cancelled']),
+    preparing: new Set(['ready']),
+    ready: new Set(['out_for_delivery', 'completed']),
+    out_for_delivery: new Set(['completed']),
+    completed: new Set(),
+    cancelled: new Set(),
+};
+
+const activeVendorStatuses = ['pending', 'accepted', 'preparing', 'ready', 'out_for_delivery'];
+
+const normalizeStatus = (value: unknown) => (typeof value === 'string' ? value.trim().toLowerCase() : '');
+
+const assertVendorTransition = (fromStatus: string, toStatus: string) => {
+    if (!allowedOrderStatuses.has(toStatus)) {
+        const err = new Error('Invalid order status') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if (fromStatus === toStatus) return;
+
+    const allowedNext = allowedVendorTransitions[fromStatus] || new Set<string>();
+    if (!allowedNext.has(toStatus)) {
+        const err = new Error(`Invalid status transition: ${fromStatus} -> ${toStatus}`) as any;
+        err.statusCode = 409;
+        throw err;
+    }
+};
+
+const resolveVendorIdForUser = async (user: any) => {
+    const role = normalizeStatus(user?.role);
+    if (role === 'admin') {
+        return null;
+    }
+
+    const { data: vendor, error: vendorError } = await supabase
+        .from('vendors')
+        .select('id')
+        .eq('owner_id', user?.sub)
+        .single();
+
+    if (vendorError || !vendor?.id) {
+        const err = new Error('Vendor not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    return vendor.id as string;
+};
+
+const fetchScopedOrder = async (orderId: string, vendorId: string | null) => {
+    let query = supabase
         .from('orders')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .select('*')
+        .eq('id', orderId);
+
+    if (vendorId) {
+        query = query.eq('vendor_id', vendorId);
+    }
+
+    const { data: order, error } = await query.single();
+    if (error || !order) {
+        const err = new Error('Order not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    return order;
+};
+
+const updateScopedOrderStatus = async (orderId: string, toStatus: string, vendorId: string | null) => {
+    const currentOrder = await fetchScopedOrder(orderId, vendorId);
+    const fromStatus = normalizeStatus(currentOrder.status);
+    assertVendorTransition(fromStatus, toStatus);
+
+    let query = supabase
+        .from('orders')
+        .update({ status: toStatus, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+
+    if (vendorId) {
+        query = query.eq('vendor_id', vendorId);
+    }
+
+    const { data, error } = await query
         .select()
         .single();
 
-    if (error) throw error;
+    if (error || !data) {
+        throw error ?? new Error('Unable to update order status');
+    }
 
     if (data?.user_id) {
         const compactId = data.id.substring(0, 8).toUpperCase();
-        await createNotification({
-            userId: data.user_id,
-            audience: 'user',
-            type: 'order_status',
-            title: 'Order status updated',
-            body: `Order #${compactId} is now ${status.toUpperCase()}`,
-            metadata: { order_id: data.id, status },
-        });
+        try {
+            await createNotification({
+                userId: data.user_id,
+                audience: 'user',
+                type: 'order_status',
+                title: 'Order status updated',
+                body: `Order #${compactId} is now ${toStatus.toUpperCase()}`,
+                metadata: { order_id: data.id, status: toStatus },
+            });
+        } catch (notificationError) {
+            // Notification write failures should not block lifecycle progression.
+            // Keep update response successful and surface warning in logs.
+            // eslint-disable-next-line no-console
+            console.warn('orders.status: notification publish failed', notificationError);
+        }
     }
-    return reply.send(attachEtaTrust(data));
+
+    return data;
+};
+
+export const updateOrderStatus = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { id } = request.params as any;
+    const nextStatus = normalizeStatus((request.body as any)?.status);
+    const vendorId = user ? await resolveVendorIdForUser(user) : null;
+
+    const updated = await updateScopedOrderStatus(id, nextStatus, vendorId);
+    return reply.send(attachEtaTrust(updated));
+};
+
+export const getVendorOrderById = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { id } = request.params as any;
+    const vendorId = await resolveVendorIdForUser(user);
+    const order = await fetchScopedOrder(id, vendorId);
+
+    const { data: orderItems } = await supabase
+        .from('order_items')
+        .select('*, menu_items(name, image_url, description)')
+        .eq('order_id', id);
+
+    return reply.send(attachVendorPacing(attachEtaTrust({
+        ...order,
+        order_items: orderItems || [],
+    })));
+};
+
+export const getVendorActiveOrders = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const vendorId = await resolveVendorIdForUser(user);
+
+    let query = supabase
+        .from('orders')
+        .select('*')
+        .in('status', activeVendorStatuses)
+        .order('created_at', { ascending: false });
+
+    if (vendorId) {
+        query = query.eq('vendor_id', vendorId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return reply.send((data || []).map((order: any) => attachVendorPacing(attachEtaTrust(order))));
+};
+
+export const acceptVendorOrder = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { id } = request.params as any;
+    const vendorId = await resolveVendorIdForUser(user);
+    const updated = await updateScopedOrderStatus(id, 'accepted', vendorId);
+    return reply.send(attachEtaTrust(updated));
+};
+
+export const rejectVendorOrder = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { id } = request.params as any;
+    const vendorId = await resolveVendorIdForUser(user);
+    const updated = await updateScopedOrderStatus(id, 'cancelled', vendorId);
+    return reply.send(attachEtaTrust(updated));
+};
+
+export const updateVendorOrderStatusAction = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const { id } = request.params as any;
+    const nextStatus = normalizeStatus((request.body as any)?.status);
+    const vendorId = await resolveVendorIdForUser(user);
+    const updated = await updateScopedOrderStatus(id, nextStatus, vendorId);
+    return reply.send(attachEtaTrust(updated));
+};
+
+export const getVendorOrders = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
+    const vendorId = await resolveVendorIdForUser(user);
+
+    if (!vendorId) {
+        const { data: adminOrders, error: adminOrdersError } = await supabase
+            .from('orders')
+            .select('*, order_items(*, menu_items(name, image_url))')
+            .order('created_at', { ascending: false });
+
+        if (adminOrdersError) throw adminOrdersError;
+        return reply.send((adminOrders || []).map((order: any) => attachVendorPacing(attachEtaTrust(order))));
+    }
+
+    const { data, error } = await listVendorOrdersWithFallback(vendorId);
+
+    if (error) throw error;
+    return reply.send((data || []).map((order: any) => attachVendorPacing(attachEtaTrust(order))));
 };
 
 export const cancelUserOrder = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -597,25 +788,3 @@ export const updateOrderHandoff = async (request: FastifyRequest, reply: Fastify
     return reply.send(data);
 };
 
-export const getVendorOrders = async (request: FastifyRequest, reply: FastifyReply) => {
-    const user = request.user as any;
-
-    // 1. Find the vendor ID for this owner
-    const { data: vendor, error: vendorError } = await supabase
-        .from('vendors')
-        .select('id')
-        .eq('owner_id', user.sub)
-        .single();
-
-    if (vendorError || !vendor) {
-        const err = new Error('Vendor not found') as any;
-        err.statusCode = 404;
-        throw err;
-    }
-
-    // 2. Get orders for this vendor
-    const { data, error } = await listVendorOrdersWithFallback(vendor.id);
-
-    if (error) throw error;
-    return reply.send((data || []).map((order: any) => attachEtaTrust(order)));
-};

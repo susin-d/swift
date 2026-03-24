@@ -426,6 +426,13 @@ Update order status (Vendor only).
   ```json
   { "status": "preparing" }
   ```
+- **Lifecycle transition rules**:
+  - `pending -> accepted | cancelled`
+  - `accepted -> preparing | cancelled`
+  - `preparing -> ready`
+  - `ready -> out_for_delivery | completed`
+  - `out_for_delivery -> completed`
+  - Invalid transitions return `409 Conflict`.
 
 
 ### `GET /orders/slots`
@@ -680,6 +687,32 @@ Implementation note:
     }
   ]
   ```
+
+### `GET /vendor-ops/orders/active`
+Fetch active vendor queue only.
+- **Headers**: `Authorization: Bearer <JWT>`
+- Active statuses: `pending`, `accepted`, `preparing`, `ready`, `out_for_delivery`.
+
+### `GET /vendor-ops/orders/:id`
+Fetch full details for a single vendor order (includes `order_items`).
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /vendor-ops/orders/:id/accept`
+Accept a pending order.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /vendor-ops/orders/:id/reject`
+Reject/cancel a pending order.
+- **Headers**: `Authorization: Bearer <JWT>`
+
+### `POST /vendor-ops/orders/:id/status`
+Advance order lifecycle from vendor operations surface.
+- **Headers**: `Authorization: Bearer <JWT>`
+- **Request Body**:
+  ```json
+  { "status": "ready" }
+  ```
+- Uses the same transition rules as `PATCH /orders/:id/status`.
 
 ### `GET /vendor-ops/stats`
 Fetch vendor performance statistics.
