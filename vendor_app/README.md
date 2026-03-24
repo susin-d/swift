@@ -13,7 +13,7 @@ Flutter client for vendor operations in the Campus Pulse monorepo.
 - Scheduled order visibility in the queue
 - Productivity-focused queue interactions
 
-## Sprint 6 Productivity Baseline (Current)
+## Productivity Baseline (Current)
 
 - Rush Mode toggle for high-throughput queue handling
 - Prep-time suggestion chips for faster pacing decisions

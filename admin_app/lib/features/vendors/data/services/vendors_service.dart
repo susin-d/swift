@@ -47,4 +47,37 @@ class VendorsService {
       );
     }
   }
+
+  Future<Map<String, dynamic>> approveManyVendors(List<String> vendorIds) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/admin/vendors/approve-many',
+        data: {'vendorIds': vendorIds},
+      );
+      return response.data ?? {'successCount': 0, 'errors': {}};
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to approve vendors',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> rejectManyVendors(
+    List<String> vendorIds, {
+    required String reason,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/admin/vendors/reject-many',
+        data: {'vendorIds': vendorIds, 'reason': reason},
+      );
+      return response.data ?? {'successCount': 0, 'errors': {}};
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to reject vendors',
+      );
+    }
+  }
 }

@@ -3,6 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/admin_user.dart';
 import '../../data/services/users_service.dart';
 
+class UserBulkActionResult {
+  const UserBulkActionResult({required this.successCount, required this.errors});
+
+  final int successCount;
+  final Map<String, String> errors;
+}
+
 class UsersState {
   const UsersState({
     required this.users,
@@ -91,6 +98,49 @@ class UsersNotifier extends AsyncNotifier<UsersState> {
       return null;
     } catch (e) {
       return e.toString();
+    }
+  }
+
+  Future<UserBulkActionResult> setBlockedMany(
+    List<String> userIds, {
+    required bool blocked,
+    String? reason,
+  }) async {
+    try {
+      final result = await UsersService.instance.blockManyUsers(
+        userIds,
+        blocked: blocked,
+        reason: reason,
+      );
+      await refresh();
+      return UserBulkActionResult(
+        successCount: (result['successCount'] as num?)?.toInt() ?? 0,
+        errors: Map<String, String>.from(result['errors'] as Map? ?? {}),
+      );
+    } catch (e) {
+      return UserBulkActionResult(
+        successCount: 0,
+        errors: {'all': e.toString()},
+      );
+    }
+  }
+
+  Future<UserBulkActionResult> changeRoleMany(
+    List<String> userIds,
+    String role,
+  ) async {
+    try {
+      final result = await UsersService.instance.updateRoleManyUsers(userIds, role);
+      await refresh();
+      return UserBulkActionResult(
+        successCount: (result['successCount'] as num?)?.toInt() ?? 0,
+        errors: Map<String, String>.from(result['errors'] as Map? ?? {}),
+      );
+    } catch (e) {
+      return UserBulkActionResult(
+        successCount: 0,
+        errors: {'all': e.toString()},
+      );
     }
   }
 }

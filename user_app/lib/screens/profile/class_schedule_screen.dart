@@ -25,7 +25,10 @@ class ClassScheduleScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Saved classes', style: TextStyle(fontWeight: FontWeight.w800)),
+                  const Text(
+                    'Saved classes',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   ElevatedButton.icon(
                     onPressed: () => _openCreate(context, ref),
                     icon: const Icon(Icons.add),
@@ -37,7 +40,7 @@ class ClassScheduleScreen extends ConsumerWidget {
               if (sessions.isEmpty)
                 const Center(child: Text('No classes saved yet.'))
               else
-                ...sessions.map((s) => _SessionCard(session: s)).toList(),
+                ...sessions.map((s) => _SessionCard(session: s)),
             ],
           );
         },
@@ -49,7 +52,9 @@ class ClassScheduleScreen extends ConsumerWidget {
     final buildingsAsync = await ref.read(campusBuildingsProvider.future);
     if (!context.mounted) return;
 
-    final buildingController = ValueNotifier<CampusBuilding>(buildingsAsync.first);
+    final buildingController = ValueNotifier<CampusBuilding>(
+      buildingsAsync.first,
+    );
     final roomController = TextEditingController();
     final courseController = TextEditingController();
     final startsController = TextEditingController();
@@ -67,13 +72,20 @@ class ClassScheduleScreen extends ConsumerWidget {
                   valueListenable: buildingController,
                   builder: (context, selected, _) {
                     return DropdownButtonFormField<String>(
-                      value: selected.id,
+                      initialValue: selected.id,
                       decoration: const InputDecoration(labelText: 'Building'),
                       items: buildingsAsync
-                          .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
+                          .map(
+                            (b) => DropdownMenuItem(
+                              value: b.id,
+                              child: Text(b.name),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
-                        final next = buildingsAsync.firstWhere((b) => b.id == value);
+                        final next = buildingsAsync.firstWhere(
+                          (b) => b.id == value,
+                        );
                         buildingController.value = next;
                       },
                     );
@@ -87,24 +99,36 @@ class ClassScheduleScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 TextField(
                   controller: courseController,
-                  decoration: const InputDecoration(labelText: 'Course label (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Course label (optional)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: startsController,
-                  decoration: const InputDecoration(labelText: 'Start time (YYYY-MM-DD HH:MM)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Start time (YYYY-MM-DD HH:MM)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: endsController,
-                  decoration: const InputDecoration(labelText: 'End time (YYYY-MM-DD HH:MM)'),
+                  decoration: const InputDecoration(
+                    labelText: 'End time (YYYY-MM-DD HH:MM)',
+                  ),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Save')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Save'),
+            ),
           ],
         );
       },
@@ -124,7 +148,9 @@ class ClassScheduleScreen extends ConsumerWidget {
     await service.createSession(
       buildingId: buildingController.value.id,
       room: roomController.text.trim(),
-      courseLabel: courseController.text.trim().isEmpty ? null : courseController.text.trim(),
+      courseLabel: courseController.text.trim().isEmpty
+          ? null
+          : courseController.text.trim(),
       startsAt: startsAt,
       endsAt: endsAt,
     );
@@ -139,17 +165,25 @@ class _SessionCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final start = session.startsAt == null ? 'Anytime' : DateFormat('MMM dd, hh:mm a').format(session.startsAt);
-    final end = session.endsAt == null ? '' : ' - ${DateFormat('hh:mm a').format(session.endsAt)}';
+    final start = session.startsAt == null
+        ? 'Anytime'
+        : DateFormat('MMM dd, hh:mm a').format(session.startsAt);
+    final end = session.endsAt == null
+        ? ''
+        : ' - ${DateFormat('hh:mm a').format(session.endsAt)}';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         title: Text('${session.buildingName ?? 'Building'} • ${session.room}'),
-        subtitle: Text('$start$end${session.courseLabel == null ? '' : ' • ${session.courseLabel}'}'),
+        subtitle: Text(
+          '$start$end${session.courseLabel == null ? '' : ' • ${session.courseLabel}'}',
+        ),
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline),
           onPressed: () async {
-            await ref.read(classSessionServiceProvider).deleteSession(session.id);
+            await ref
+                .read(classSessionServiceProvider)
+                .deleteSession(session.id);
             ref.invalidate(classSessionsProvider);
           },
         ),

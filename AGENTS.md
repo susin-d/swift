@@ -24,7 +24,6 @@ This includes (when applicable):
 - `README.md`
 - `API_REFERENCE.md`
 - `DEVELOPER_GUIDE.md`
-- sprint and planning docs (`sprints_master.md`, `sprints_kanban.md`)
 - runbooks, setup steps, and architecture notes
 
 Do not merge changes with stale docs. Documentation updates are a required acceptance criterion.

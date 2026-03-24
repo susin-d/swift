@@ -18,14 +18,17 @@ class ClassSessionService {
     String? courseLabel,
     String? notes,
   }) async {
-    final response = await _api.post('/class-sessions', data: {
-      'building_id': buildingId,
-      'room': room,
-      if (startsAt != null) 'starts_at': startsAt.toIso8601String(),
-      if (endsAt != null) 'ends_at': endsAt.toIso8601String(),
-      if (courseLabel != null) 'course_label': courseLabel,
-      if (notes != null) 'notes': notes,
-    });
+    final response = await _api.post(
+      '/class-sessions',
+      data: {
+        'building_id': buildingId,
+        'room': room,
+        if (startsAt != null) 'starts_at': startsAt.toIso8601String(),
+        if (endsAt != null) 'ends_at': endsAt.toIso8601String(),
+        'course_label': ?courseLabel,
+        'notes': ?notes,
+      },
+    );
     return ClassSession.fromJson(response.data as Map<String, dynamic>);
   }
 

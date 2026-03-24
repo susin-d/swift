@@ -146,8 +146,52 @@ Notes:
 - `revenue` is the canonical contract field for admin consumers.
 - `gmv` remains as a backward-compatible alias and mirrors `revenue`.
 
+### `GET /admin/dashboard/summary`
+Returns dashboard summary totals used by admin stat cards.
 
-## Sensitive Action Safeguards (Sprint 8.2)
+- **Response** `200 OK`:
+  ```json
+  {
+    "summary": {
+      "total_users": 120,
+      "total_vendors": 18,
+      "active_orders": 542,
+      "completed_orders": 510,
+      "revenue": 128450
+    }
+  }
+  ```
+
+### `GET /admin/charts`
+Returns 7-day trend points for dashboard charts.
+
+- **Response** `200 OK`:
+  ```json
+  {
+    "chartData": [
+      { "name": "Mon", "orders": 42, "revenue": 12840 },
+      { "name": "Tue", "orders": 39, "revenue": 11790 }
+    ]
+  }
+  ```
+
+### `GET /admin/finance/summary`
+Returns finance summary totals for admin finance cards.
+
+- **Response** `200 OK`:
+  ```json
+  {
+    "summary": {
+      "total_revenue": 128450,
+      "today_revenue": 4300,
+      "week_revenue": 25200,
+      "month_revenue": 101100
+    }
+  }
+  ```
+
+
+## Sensitive Action Safeguards
 
 The following admin mutation endpoints require a `reason` string in their request body (minimum 10 characters). The reason is validated server-side (returns `400 ValidationError` if absent or blank) and stored in the audit log, retrievable via `GET /admin/audit`.
 
@@ -228,7 +272,7 @@ Implementation note:
 
 All endpoints under `/auth` manage session handling.
 
-Security hardening notes (Sprint 8):
+Security hardening notes:
 - Blocked or actively banned accounts are denied with `403 Forbidden` on authenticated session flows.
 - Malformed `Authorization` header values (non-bearer or empty bearer token) are rejected with `401 Unauthorized`.
 - Dedicated admin and vendor surfaces reject restored or newly created sessions when the resolved role does not match the app.
@@ -725,7 +769,7 @@ Fetch the current location of a delivery.
 ### `POST /delivery/location` (Vendor/Admin)
 Update the delivery location.
 
-## RBAC Parity Hardening (Sprint 8.3)
+## RBAC Parity Hardening
 
 - Customer mutations now require a `user` role token and return `403 Forbidden` for vendor/admin principals:
   - `POST /orders`
@@ -758,8 +802,90 @@ List vendors awaiting approval.
 ### `PATCH /admin/vendors/:id/approve`
 Approve a pending vendor account.
 
+### `PATCH /admin/vendors/:id/reject`
+Reject a pending vendor account.
+
+### `POST /admin/vendors/approve-many`
+Bulk approve multiple vendors in a single request.
+- **Request Body**:
+  ```json
+  {
+    "vendorIds": ["vendor-id-1", "vendor-id-2"]
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "successCount": 2,
+    "errors": {}
+  }
+  ```
+
+### `POST /admin/vendors/reject-many`
+Bulk reject multiple vendors in a single request.
+- **Request Body**:
+  ```json
+  {
+    "vendorIds": ["vendor-id-1", "vendor-id-2"],
+    "reason": "Compliance policy violation"
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "successCount": 2,
+    "errors": {}
+  }
+  ```
+- **Error Response** (partial failure) `200 OK`:
+  ```json
+  {
+    "successCount": 1,
+    "errors": {
+      "vendor-id-2": "Vendor not found"
+    }
+  }
+  ```
+
 ### `POST /admin/users/role`
 Update a user's role (e.g., promote to admin).
+
+### `POST /admin/users/block-many`
+Bulk block or unblock users.
+- **Request Body**:
+  ```json
+  {
+    "userIds": ["user-id-1", "user-id-2"],
+    "blocked": true,
+    "reason": "Repeated abuse reports"
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "successCount": 2,
+    "errors": {},
+    "blocked": true
+  }
+  ```
+
+### `POST /admin/users/role-many`
+Bulk update user roles.
+- **Request Body**:
+  ```json
+  {
+    "userIds": ["user-id-1", "user-id-2"],
+    "role": "vendor"
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "successCount": 2,
+    "errors": {},
+    "role": "vendor"
+  }
+  ```
 
 ### `POST /admin/vendors`
 Directly create a vendor account.

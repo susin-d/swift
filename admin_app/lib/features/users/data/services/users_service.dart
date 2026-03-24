@@ -69,4 +69,48 @@ class UsersService {
       );
     }
   }
+
+  Future<Map<String, dynamic>> blockManyUsers(
+    List<String> userIds, {
+    required bool blocked,
+    String? reason,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/admin/users/block-many',
+        data: {
+          'userIds': userIds,
+          'blocked': blocked,
+          if (reason != null) 'reason': reason,
+        },
+      );
+      return response.data ?? {'successCount': 0, 'errors': {}};
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to update users block status',
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> updateRoleManyUsers(
+    List<String> userIds,
+    String role,
+  ) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/admin/users/role-many',
+        data: {
+          'userIds': userIds,
+          'role': role,
+        },
+      );
+      return response.data ?? {'successCount': 0, 'errors': {}};
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to update users role',
+      );
+    }
+  }
 }

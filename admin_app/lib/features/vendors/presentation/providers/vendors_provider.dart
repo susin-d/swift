@@ -41,32 +41,36 @@ class VendorsNotifier extends AsyncNotifier<List<VendorItem>> {
     }
   }
 
-  Future<VendorBulkActionResult> approveMany(List<String> vendorIds) {
-    return _bulkAction(vendorIds, (id) => VendorsService.instance.approveVendor(id));
-  }
-
-  Future<VendorBulkActionResult> rejectMany(List<String> vendorIds, {required String reason}) {
-    return _bulkAction(vendorIds, (id) => VendorsService.instance.rejectVendor(id, reason: reason));
-  }
-
-  Future<VendorBulkActionResult> _bulkAction(
-    List<String> vendorIds,
-    Future<void> Function(String vendorId) action,
-  ) async {
-    var successCount = 0;
-    final errors = <String, String>{};
-
-    for (final id in vendorIds) {
-      try {
-        await action(id);
-        successCount += 1;
-      } catch (e) {
-        errors[id] = e.toString();
-      }
+  Future<VendorBulkActionResult> approveMany(List<String> vendorIds) async {
+    try {
+      final result = await VendorsService.instance.approveManyVendors(vendorIds);
+      await refreshList();
+      return VendorBulkActionResult(
+        successCount: (result['successCount'] as num?)?.toInt() ?? 0,
+        errors: Map<String, String>.from(result['errors'] as Map? ?? {}),
+      );
+    } catch (e) {
+      return VendorBulkActionResult(
+        successCount: 0,
+        errors: {'all': e.toString()},
+      );
     }
+  }
 
-    await refreshList();
-    return VendorBulkActionResult(successCount: successCount, errors: errors);
+  Future<VendorBulkActionResult> rejectMany(List<String> vendorIds, {required String reason}) async {
+    try {
+      final result = await VendorsService.instance.rejectManyVendors(vendorIds, reason: reason);
+      await refreshList();
+      return VendorBulkActionResult(
+        successCount: (result['successCount'] as num?)?.toInt() ?? 0,
+        errors: Map<String, String>.from(result['errors'] as Map? ?? {}),
+      );
+    } catch (e) {
+      return VendorBulkActionResult(
+        successCount: 0,
+        errors: {'all': e.toString()},
+      );
+    }
   }
 }
 

@@ -91,6 +91,116 @@ export const updateVendorStatus = async (request: FastifyRequest, reply: Fastify
     return reply.send(data);
 };
 
+export const approveVendorsMany = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { vendorIds } = request.body as { vendorIds?: string[] };
+
+    if (!Array.isArray(vendorIds) || vendorIds.length === 0) {
+        return reply.code(400).send({ error: 'vendorIds array is required and must not be empty' });
+    }
+
+    const adminId = (request.user as any).sub;
+    const results: { successCount: number; errors: Record<string, string> } = {
+        successCount: 0,
+        errors: {}
+    };
+
+    for (const vendorId of vendorIds) {
+        try {
+            const { data: vendor, error: fetchError } = await supabase
+                .from('vendors')
+                .select('*')
+                .eq('id', vendorId)
+                .single();
+
+            if (fetchError || !vendor) {
+                results.errors[vendorId] = 'Vendor not found';
+                continue;
+            }
+
+            const { error: updateError } = await supabase
+                .from('vendors')
+                .update({ status: 'approved', updated_at: new Date().toISOString() })
+                .eq('id', vendorId);
+
+            if (updateError) {
+                results.errors[vendorId] = updateError.message;
+                continue;
+            }
+
+            // Log the action
+            await supabase.from('admin_logs').insert({
+                admin_id: adminId,
+                action: 'APPROVE_VENDOR',
+                entity_id: vendorId,
+                details: { previous_status: vendor.status }
+            });
+
+            results.successCount += 1;
+        } catch (e: any) {
+            results.errors[vendorId] = e?.message || 'Unknown error';
+        }
+    }
+
+    return reply.send(results);
+};
+
+export const rejectVendorsMany = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { vendorIds, reason } = request.body as { vendorIds?: string[]; reason?: string };
+
+    if (!Array.isArray(vendorIds) || vendorIds.length === 0) {
+        return reply.code(400).send({ error: 'vendorIds array is required and must not be empty' });
+    }
+
+    if (!reason || reason.length < 10) {
+        return reply.code(400).send({ error: 'A minimum 10-character reason is required for rejection' });
+    }
+
+    const adminId = (request.user as any).sub;
+    const results: { successCount: number; errors: Record<string, string> } = {
+        successCount: 0,
+        errors: {}
+    };
+
+    for (const vendorId of vendorIds) {
+        try {
+            const { data: vendor, error: fetchError } = await supabase
+                .from('vendors')
+                .select('*')
+                .eq('id', vendorId)
+                .single();
+
+            if (fetchError || !vendor) {
+                results.errors[vendorId] = 'Vendor not found';
+                continue;
+            }
+
+            const { error: updateError } = await supabase
+                .from('vendors')
+                .update({ status: 'rejected', updated_at: new Date().toISOString() })
+                .eq('id', vendorId);
+
+            if (updateError) {
+                results.errors[vendorId] = updateError.message;
+                continue;
+            }
+
+            // Log the action
+            await supabase.from('admin_logs').insert({
+                admin_id: adminId,
+                action: 'REJECT_VENDOR',
+                entity_id: vendorId,
+                details: { reason, previous_status: vendor.status }
+            });
+
+            results.successCount += 1;
+        } catch (e: any) {
+            results.errors[vendorId] = e?.message || 'Unknown error';
+        }
+    }
+
+    return reply.send(results);
+};
+
 export const getAuditLogs = async (request: FastifyRequest, reply: FastifyReply) => {
     const { limit = 50, offset = 0 } = request.query as any;
     const { data, error } = await supabase

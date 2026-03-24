@@ -15,7 +15,9 @@ class UsersScreen extends ConsumerStatefulWidget {
 
 class _UsersScreenState extends ConsumerState<UsersScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final Set<String> _selectedIds = <String>{};
   String _query = '';
+  bool _isBulkProcessing = false;
 
   @override
   void dispose() {
@@ -34,10 +36,13 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
         onRetry: () => ref.read(usersProvider.notifier).refresh(),
       ),
       data: (state) {
+        final allIds = state.users.map((e) => e.id).toSet();
+        _selectedIds.removeWhere((id) => !allIds.contains(id));
         final filtered = state.users.where((u) {
           final q = _query.trim().toLowerCase();
           if (q.isEmpty) return true;
-          return u.name.toLowerCase().contains(q) || u.email.toLowerCase().contains(q);
+          return u.name.toLowerCase().contains(q) ||
+              u.email.toLowerCase().contains(q);
         }).toList();
 
         return RefreshIndicator(
@@ -73,14 +78,62 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
               if (filtered.isEmpty)
                 const _UsersEmpty()
               else ...[
-                ...filtered.map((u) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _UserCard(user: u),
-                    )),
+                _UsersBulkActionBar(
+                  selectedCount: _selectedIds.length,
+                  allVisibleSelected:
+                      filtered.isNotEmpty &&
+                      filtered.every((user) => _selectedIds.contains(user.id)),
+                  processing: _isBulkProcessing,
+                  onSelectVisible: () {
+                    setState(() {
+                      for (final user in filtered) {
+                        _selectedIds.add(user.id);
+                      }
+                    });
+                  },
+                  onClearSelection: () => setState(_selectedIds.clear),
+                  onToggleSelectVisible: (value) {
+                    setState(() {
+                      if (value) {
+                        for (final user in filtered) {
+                          _selectedIds.add(user.id);
+                        }
+                      } else {
+                        for (final user in filtered) {
+                          _selectedIds.remove(user.id);
+                        }
+                      }
+                    });
+                  },
+                  onBlockSelected: () => _bulkSetBlocked(context, blocked: true),
+                  onUnblockSelected: () => _bulkSetBlocked(context, blocked: false),
+                  onChangeRoleSelected: (role) => _bulkChangeRole(context, role),
+                ),
+                const SizedBox(height: 12),
+                ...filtered.map(
+                  (u) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _UserCard(
+                      user: u,
+                      selected: _selectedIds.contains(u.id),
+                      onSelectedChanged: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedIds.add(u.id);
+                          } else {
+                            _selectedIds.remove(u.id);
+                          }
+                        });
+                      },
+                      onViewDetails: () => _showUserDetails(context, u),
+                    ),
+                  ),
+                ),
                 if (state.hasMore)
                   Center(
                     child: OutlinedButton.icon(
-                      onPressed: () => ref.read(usersProvider.notifier).loadMore(),
+                      onPressed: () =>
+                          ref.read(usersProvider.notifier).loadMore(),
                       icon: const Icon(Icons.expand_more_rounded),
                       label: const Text('Load more'),
                     ),
@@ -92,12 +145,199 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
       },
     );
   }
+
+  Future<void> _bulkSetBlocked(
+    BuildContext context, {
+    required bool blocked,
+  }) async {
+    if (_selectedIds.isEmpty || _isBulkProcessing) return;
+
+    String? reason;
+    if (blocked) {
+      reason = await ReasonCaptureDialog.show(
+        context,
+        title: 'Block selected users',
+        actionLabel: 'Block all',
+        warningText:
+            'You are about to block ${_selectedIds.length} users. Provide a reason for audit logging.',
+      );
+      if (reason == null || !context.mounted) return;
+    } else {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Unblock selected users'),
+          content: Text(
+            'Unblock ${_selectedIds.length} users and restore their access?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Unblock all'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+    }
+
+    setState(() => _isBulkProcessing = true);
+    final result = await ref.read(usersProvider.notifier).setBlockedMany(
+          _selectedIds.toList(),
+          blocked: blocked,
+          reason: reason,
+        );
+
+    if (!context.mounted) return;
+    setState(() {
+      _isBulkProcessing = false;
+      _selectedIds.clear();
+    });
+
+    _showBulkResultSnackBar(
+      context,
+      success: result.successCount,
+      failed: result.errors.length,
+      successVerb: blocked ? 'blocked' : 'unblocked',
+      firstError: result.errors.values.isNotEmpty
+          ? result.errors.values.first
+          : null,
+    );
+  }
+
+  Future<void> _bulkChangeRole(BuildContext context, String role) async {
+    if (_selectedIds.isEmpty || _isBulkProcessing) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Change selected users role'),
+        content: Text(
+          'Set role of ${_selectedIds.length} users to $role?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    setState(() => _isBulkProcessing = true);
+    final result = await ref
+        .read(usersProvider.notifier)
+        .changeRoleMany(_selectedIds.toList(), role);
+
+    if (!context.mounted) return;
+    setState(() {
+      _isBulkProcessing = false;
+      _selectedIds.clear();
+    });
+
+    _showBulkResultSnackBar(
+      context,
+      success: result.successCount,
+      failed: result.errors.length,
+      successVerb: 'updated',
+      firstError: result.errors.values.isNotEmpty
+          ? result.errors.values.first
+          : null,
+    );
+  }
+
+  void _showBulkResultSnackBar(
+    BuildContext context, {
+    required int success,
+    required int failed,
+    required String successVerb,
+    String? firstError,
+  }) {
+    final messenger = ScaffoldMessenger.of(context);
+    if (failed == 0) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('$success users $successVerb successfully.')),
+      );
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          '$success succeeded, $failed failed. First error: ${firstError ?? 'Unknown error'}',
+        ),
+        backgroundColor: const Color(0xFFB45309),
+      ),
+    );
+  }
+
+  Future<void> _showUserDetails(BuildContext context, AdminUser user) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user.name,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    user.email,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 18),
+                  _UserDetailRow(label: 'User ID', value: user.id),
+                  _UserDetailRow(label: 'Role', value: user.role.toUpperCase()),
+                  _UserDetailRow(
+                    label: 'Blocked',
+                    value: user.blocked ? 'Yes' : 'No',
+                  ),
+                  _UserDetailRow(label: 'Joined', value: _date(user.createdAt)),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Note: order count is not exposed by the current users endpoint.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _UserCard extends ConsumerWidget {
-  const _UserCard({required this.user});
+  const _UserCard({
+    required this.user,
+    required this.onViewDetails,
+    required this.selected,
+    required this.onSelectedChanged,
+  });
 
   final AdminUser user;
+  final VoidCallback onViewDetails;
+  final bool selected;
+  final ValueChanged<bool> onSelectedChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,13 +349,23 @@ class _UserCard extends ConsumerWidget {
           children: [
             Row(
               children: [
+                Checkbox(
+                  value: selected,
+                  onChanged: (value) => onSelectedChanged(value ?? false),
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(user.name, style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        user.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 4),
-                      Text(user.email, style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        user.email,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -123,26 +373,40 @@ class _UserCard extends ConsumerWidget {
                 if (user.blocked) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEE2E2),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: const Text(
                       'BLOCKED',
-                      style: TextStyle(color: Color(0xFFB91C1C), fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Color(0xFFB91C1C),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
               ],
             ),
             const SizedBox(height: 8),
-            Text('Joined ${_date(user.createdAt)}', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              'Joined ${_date(user.createdAt)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
+                TextButton.icon(
+                  onPressed: onViewDetails,
+                  icon: const Icon(Icons.info_outline_rounded),
+                  label: const Text('Details'),
+                ),
                 DropdownButton<String>(
                   value: user.role,
                   items: const [
@@ -158,7 +422,11 @@ class _UserCard extends ConsumerWidget {
                 ),
                 FilledButton.tonalIcon(
                   onPressed: () => _confirmToggleBlock(context, ref),
-                  icon: Icon(user.blocked ? Icons.lock_open_rounded : Icons.block_rounded),
+                  icon: Icon(
+                    user.blocked
+                        ? Icons.lock_open_rounded
+                        : Icons.block_rounded,
+                  ),
                   label: Text(user.blocked ? 'Unblock' : 'Block'),
                 ),
               ],
@@ -169,15 +437,25 @@ class _UserCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmRoleChange(BuildContext context, WidgetRef ref, String role) async {
+  Future<void> _confirmRoleChange(
+    BuildContext context,
+    WidgetRef ref,
+    String role,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Change role'),
         content: Text('Change ${user.name} role to $role?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Confirm')),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Confirm'),
+          ),
         ],
       ),
     );
@@ -209,7 +487,9 @@ class _UserCard extends ConsumerWidget {
       );
       if (reason == null || !context.mounted) return;
 
-      final error = await ref.read(usersProvider.notifier).toggleBlocked(user, reason: reason);
+      final error = await ref
+          .read(usersProvider.notifier)
+          .toggleBlocked(user, reason: reason);
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -226,8 +506,14 @@ class _UserCard extends ConsumerWidget {
           title: const Text('Unblock user'),
           content: Text('Unblock ${user.name} and restore their access?'),
           actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Unblock')),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Unblock'),
+            ),
           ],
         ),
       );
@@ -244,6 +530,113 @@ class _UserCard extends ConsumerWidget {
         ),
       );
     }
+  }
+}
+
+class _UsersBulkActionBar extends StatelessWidget {
+  const _UsersBulkActionBar({
+    required this.selectedCount,
+    required this.allVisibleSelected,
+    required this.processing,
+    required this.onSelectVisible,
+    required this.onClearSelection,
+    required this.onToggleSelectVisible,
+    required this.onBlockSelected,
+    required this.onUnblockSelected,
+    required this.onChangeRoleSelected,
+  });
+
+  final int selectedCount;
+  final bool allVisibleSelected;
+  final bool processing;
+  final VoidCallback onSelectVisible;
+  final VoidCallback onClearSelection;
+  final ValueChanged<bool> onToggleSelectVisible;
+  final VoidCallback onBlockSelected;
+  final VoidCallback onUnblockSelected;
+  final ValueChanged<String> onChangeRoleSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text('$selectedCount selected'),
+            FilterChip(
+              label: const Text('Select visible'),
+              selected: allVisibleSelected,
+              onSelected: processing ? null : onToggleSelectVisible,
+            ),
+            OutlinedButton(
+              onPressed: processing ? null : onSelectVisible,
+              child: const Text('Select all filtered'),
+            ),
+            OutlinedButton(
+              onPressed: processing ? null : onClearSelection,
+              child: const Text('Clear'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: processing || selectedCount == 0 ? null : onBlockSelected,
+              icon: const Icon(Icons.block_rounded),
+              label: const Text('Block selected'),
+            ),
+            FilledButton.tonalIcon(
+              onPressed:
+                  processing || selectedCount == 0 ? null : onUnblockSelected,
+              icon: const Icon(Icons.lock_open_rounded),
+              label: const Text('Unblock selected'),
+            ),
+            PopupMenuButton<String>(
+              enabled: !processing && selectedCount > 0,
+              onSelected: onChangeRoleSelected,
+              itemBuilder: (context) => const [
+                PopupMenuItem(value: 'user', child: Text('Set role: user')),
+                PopupMenuItem(value: 'vendor', child: Text('Set role: vendor')),
+                PopupMenuItem(value: 'admin', child: Text('Set role: admin')),
+              ],
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.admin_panel_settings_rounded),
+                    SizedBox(width: 6),
+                    Text('Change role'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UserDetailRow extends StatelessWidget {
+  const _UserDetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+          const SizedBox(height: 4),
+          Text(value, style: Theme.of(context).textTheme.bodyLarge),
+        ],
+      ),
+    );
   }
 }
 
@@ -288,9 +681,16 @@ class _UsersEmpty extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.group_off_rounded, size: 36, color: Color(0xFF475569)),
+                const Icon(
+                  Icons.group_off_rounded,
+                  size: 36,
+                  color: Color(0xFF475569),
+                ),
                 const SizedBox(height: 12),
-                Text('No users found', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'No users found',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Try a different search query.',
@@ -323,9 +723,16 @@ class _UsersError extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Color(0xFFB91C1C), size: 36),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFB91C1C),
+                  size: 36,
+                ),
                 const SizedBox(height: 12),
-                Text('Failed to load users', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Failed to load users',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   message,

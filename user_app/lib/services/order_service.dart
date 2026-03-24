@@ -35,22 +35,27 @@ class OrderService {
     DateTime? classStartAt,
     DateTime? classEndAt,
   }) async {
-    final response = await _api.post('/orders', data: {
-      'vendor_id': vendorId,
-      'items': items,
-      'total_amount': totalAmount,
-      if (promoCode != null && promoCode.isNotEmpty) 'promo_code': promoCode,
-      if (scheduledFor != null) 'scheduled_for': scheduledFor.toIso8601String(),
-      if (deliveryMode != null) 'delivery_mode': deliveryMode,
-      if (deliveryBuildingId != null) 'delivery_building_id': deliveryBuildingId,
-      if (deliveryRoom != null) 'delivery_room': deliveryRoom,
-      if (deliveryZoneId != null) 'delivery_zone_id': deliveryZoneId,
-      if (quietMode != null) 'quiet_mode': quietMode,
-      if (deliveryInstructions != null) 'delivery_instructions': deliveryInstructions,
-      if (deliveryLocationLabel != null) 'delivery_location_label': deliveryLocationLabel,
-      if (classStartAt != null) 'class_start_at': classStartAt.toIso8601String(),
-      if (classEndAt != null) 'class_end_at': classEndAt.toIso8601String(),
-    });
+    final response = await _api.post(
+      '/orders',
+      data: {
+        'vendor_id': vendorId,
+        'items': items,
+        'total_amount': totalAmount,
+        if (promoCode != null && promoCode.isNotEmpty) 'promo_code': promoCode,
+        if (scheduledFor != null)
+          'scheduled_for': scheduledFor.toIso8601String(),
+        'delivery_mode': ?deliveryMode,
+        'delivery_building_id': ?deliveryBuildingId,
+        'delivery_room': ?deliveryRoom,
+        'delivery_zone_id': ?deliveryZoneId,
+        'quiet_mode': ?quietMode,
+        'delivery_instructions': ?deliveryInstructions,
+        'delivery_location_label': ?deliveryLocationLabel,
+        if (classStartAt != null)
+          'class_start_at': classStartAt.toIso8601String(),
+        if (classEndAt != null) 'class_end_at': classEndAt.toIso8601String(),
+      },
+    );
 
     // Backend returns the created order object directly.
     return OrderModel.fromJson(response.data as Map<String, dynamic>);
@@ -68,9 +73,10 @@ class OrderService {
   }
 
   Future<List<Map<String, dynamic>>> getOrderSlots({int days = 3}) async {
-    final response = await _api.get('/orders/slots', queryParameters: {
-      'days': days,
-    });
+    final response = await _api.get(
+      '/orders/slots',
+      queryParameters: {'days': days},
+    );
     final data = response.data as Map<String, dynamic>? ?? {};
     final slots = data['slots'] as List? ?? [];
     return slots.cast<Map<String, dynamic>>();

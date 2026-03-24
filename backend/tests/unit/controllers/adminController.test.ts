@@ -3,6 +3,7 @@ import Sinon from 'sinon';
 import { supabase } from '../../../src/services/supabase';
 import {
     approveVendor,
+    blockAdminUsersMany,
     blockAdminUser,
     cancelAdminOrder,
     getAdminAuditLogs,
@@ -17,6 +18,7 @@ import {
     getPendingVendors,
     rejectVendor,
     updateAdminSettings,
+    updateAdminUsersRoleMany,
     updateAdminUserRole,
 } from '../../../src/controllers/adminController';
 
@@ -533,5 +535,50 @@ describe('Admin Controller - Vendor Moderation', () => {
         const reply: any = { send: Sinon.stub() };
 
         await expect(blockAdminUser(request, reply)).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    // Bulk operation validation tests
+
+    it('approveVendorsMany returns 400 when vendorIds is empty', async () => {
+        // Simpler test: validation on empty vendorIds
+        const request: any = { body: { vendorIds: [] }, user: { sub: 'admin-1' } };
+        const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
+
+        const admin = await import('../../../src/modules/admin/admin.controller');
+        await admin.approveVendorsMany(request, reply);
+
+        Sinon.assert.calledWithExactly(reply.code, 400);
+    });
+
+    it('rejectVendorsMany returns 400 when reason is missing', async () => {
+        const { rejectVendorsMany } = await import('../../../src/modules/admin/admin.controller');
+        
+        const request: any = { body: { vendorIds: ['vendor-1'] } };
+        const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
+
+        await rejectVendorsMany(request, reply);
+
+        Sinon.assert.calledWithExactly(reply.code, 400);
+    });
+
+    it('blockAdminUsersMany rejects with 400 when userIds are missing', async () => {
+        const request: any = { body: { blocked: true, reason: 'valid reason text' } };
+        const reply: any = { send: Sinon.stub() };
+
+        await expect(blockAdminUsersMany(request, reply)).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('blockAdminUsersMany rejects with 400 when blocking reason is too short', async () => {
+        const request: any = { body: { userIds: ['u-1'], blocked: true, reason: 'short' } };
+        const reply: any = { send: Sinon.stub() };
+
+        await expect(blockAdminUsersMany(request, reply)).rejects.toMatchObject({ statusCode: 400 });
+    });
+
+    it('updateAdminUsersRoleMany rejects with 400 when role is invalid', async () => {
+        const request: any = { body: { userIds: ['u-1'], role: 'owner' } };
+        const reply: any = { send: Sinon.stub() };
+
+        await expect(updateAdminUsersRoleMany(request, reply)).rejects.toMatchObject({ statusCode: 400 });
     });
 });

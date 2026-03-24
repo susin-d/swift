@@ -256,6 +256,119 @@ export const updateAdminUserRole = async (request: FastifyRequest, reply: Fastif
     return reply.send({ message: `User ${id} role updated to ${role} successfully` });
 };
 
+export const blockAdminUsersMany = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { userIds, blocked, reason } = (request.body as {
+        userIds?: string[];
+        blocked?: boolean;
+        reason?: string;
+    }) || {};
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+        throw httpError(400, 'userIds array is required');
+    }
+
+    if (typeof blocked !== 'boolean') {
+        throw httpError(400, 'blocked boolean is required');
+    }
+
+    if (blocked && (!reason || reason.trim().length < 10)) {
+        throw httpError(400, 'Reason is required and must be at least 10 characters when blocking users');
+    }
+
+    const errors: Record<string, string> = {};
+    let successCount = 0;
+
+    for (const id of userIds) {
+        try {
+            const current = await supabase.auth.admin.getUserById(id);
+            if (current.error || !current.data?.user) {
+                errors[id] = current.error?.message || 'User not found';
+                continue;
+            }
+
+            const existingMeta = (current.data.user as any)?.user_metadata || {};
+            const update = await supabase.auth.admin.updateUserById(id, {
+                user_metadata: {
+                    ...existingMeta,
+                    is_blocked: blocked,
+                },
+            });
+
+            if (update.error) {
+                errors[id] = update.error.message;
+                continue;
+            }
+
+            successCount += 1;
+        } catch (error: any) {
+            errors[id] = error?.message || 'Unexpected error';
+        }
+    }
+
+    return reply.send({
+        successCount,
+        errors,
+        blocked,
+    });
+};
+
+export const updateAdminUsersRoleMany = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { userIds, role } = (request.body as {
+        userIds?: string[];
+        role?: string;
+    }) || {};
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+        throw httpError(400, 'userIds array is required');
+    }
+
+    if (!role || !['user', 'vendor', 'admin'].includes(role)) {
+        throw httpError(400, 'role must be one of: user, vendor, admin');
+    }
+
+    const errors: Record<string, string> = {};
+    let successCount = 0;
+
+    for (const id of userIds) {
+        try {
+            const { error } = await supabase.from('users').update({ role }).eq('id', id);
+            if (error) {
+                errors[id] = error.message;
+                continue;
+            }
+
+            const current = await supabase.auth.admin.getUserById(id);
+            if (current.error || !current.data?.user) {
+                errors[id] = current.error?.message || 'User not found';
+                continue;
+            }
+
+            const existingMeta = (current.data.user as any)?.user_metadata || {};
+            const update = await supabase.auth.admin.updateUserById(id, {
+                user_metadata: {
+                    ...existingMeta,
+                    role,
+                },
+            });
+
+            if (update.error) {
+                errors[id] = update.error.message;
+                continue;
+            }
+
+            successCount += 1;
+        } catch (error: any) {
+            errors[id] = error?.message || 'Unexpected error';
+        }
+    }
+
+    return reply.send({
+        successCount,
+        errors,
+        role,
+    });
+};
+
 export const getFinanceSummary = async (_request: FastifyRequest, reply: FastifyReply) => {
     const { data, error } = await supabase
         .from('orders')

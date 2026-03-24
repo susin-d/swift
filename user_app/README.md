@@ -16,7 +16,7 @@ Flutter client for end-user food discovery, ordering, and delivery tracking in t
 - Live courier tracking map with delivery location polling
 - Shared contracts feed support (registry, changelog, flags)
 
-## Sprint 5 Home Experience (Current)
+## Home Experience (Current)
 
 - Mood-to-Meal chips on Home to guide intent-based vendor discovery
 - Reorder Studio card driven by latest user order for faster repeat entry

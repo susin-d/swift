@@ -25,19 +25,6 @@ class VendorApp extends ConsumerStatefulWidget {
 class _VendorAppState extends ConsumerState<VendorApp> {
   bool _registeredToken = false;
 
-  @override
-  void initState() {
-    super.initState();
-    ref.listen<AuthState>(authProvider, (previous, next) async {
-      if (next.isAuthenticated && !_registeredToken) {
-        await _registerDeviceToken();
-      }
-      if (!next.isAuthenticated) {
-        _registeredToken = false;
-      }
-    });
-  }
-
   Future<void> _registerDeviceToken() async {
     try {
       final token = await DeviceTokenService().getOrCreateToken();
@@ -56,6 +43,15 @@ class _VendorAppState extends ConsumerState<VendorApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) async {
+      if (next.isAuthenticated && !_registeredToken) {
+        await _registerDeviceToken();
+      }
+      if (!next.isAuthenticated) {
+        _registeredToken = false;
+      }
+    });
+
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

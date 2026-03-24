@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_app/models/order_model.dart';
-import 'package:mobile_app/providers/order_provider.dart';
 
 void main() {
   group('OrderModel — order creation and status', () {
@@ -35,7 +33,7 @@ void main() {
       for (var i = 0; i < statuses.length - 1; i++) {
         final currentStatus = statuses[i];
         final nextStatus = statuses[i + 1];
-        
+
         expect(currentStatus.index, lessThan(nextStatus.index));
       }
     });
@@ -100,7 +98,10 @@ void main() {
         status: OrderStatus.preparing,
         items: [],
         createdAt: DateTime.now(),
-        eta: OrderEta.derivedFromStatus(status: OrderStatus.preparing, createdAt: DateTime.now()),
+        eta: OrderEta.derivedFromStatus(
+          status: OrderStatus.preparing,
+          createdAt: DateTime.now(),
+        ),
       );
 
       expect(order.eta, isNotNull);
@@ -138,4 +139,3 @@ void main() {
     });
   });
 }
-

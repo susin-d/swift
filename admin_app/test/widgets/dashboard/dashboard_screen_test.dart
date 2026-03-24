@@ -25,7 +25,9 @@ final _testSnapshot = DashboardSnapshot(
 );
 
 void main() {
-  testWidgets('DashboardBody renders stat cards when data is available', (tester) async {
+  testWidgets('DashboardBody renders stat cards when data is available', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -44,7 +46,9 @@ void main() {
     expect(find.text('Revenue'), findsOneWidget);
   });
 
-  testWidgets('DashboardBody shows shimmer loading while data is loading', (tester) async {
+  testWidgets('DashboardBody shows shimmer loading while data is loading', (
+    tester,
+  ) async {
     final completer = Completer<DashboardSnapshot>();
 
     await tester.pumpWidget(
@@ -64,7 +68,9 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('DashboardBody shows error widget on provider failure', (tester) async {
+  testWidgets('DashboardBody shows error widget on provider failure', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -81,7 +87,9 @@ void main() {
     expect(find.textContaining('unavailable'), findsOneWidget);
   });
 
-  testWidgets('DashboardBody renders pending vendor count in stat card', (tester) async {
+  testWidgets('DashboardBody renders pending vendor count in stat card', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -95,5 +103,33 @@ void main() {
 
     // Pending vendors (3) should be reflected in vendor card hint area
     expect(find.textContaining('3'), findsWidgets);
+  });
+
+  testWidgets('DashboardBody pull-to-refresh reloads snapshot provider', (
+    tester,
+  ) async {
+    var fetchCount = 0;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          dashboardSnapshotProvider.overrideWith((ref) async {
+            fetchCount += 1;
+            return _testSnapshot;
+          }),
+        ],
+        child: const MaterialApp(home: Scaffold(body: DashboardBody())),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(fetchCount, 1);
+
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, 300));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+
+    expect(fetchCount, greaterThanOrEqualTo(2));
   });
 }

@@ -35,28 +35,39 @@ class DashboardBody extends ConsumerWidget {
   }
 }
 
-class _DashboardContent extends StatelessWidget {
+class _DashboardContent extends ConsumerWidget {
   const _DashboardContent({required this.snapshot});
 
   final DashboardSnapshot snapshot;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth > 1180;
         final cardCount = constraints.maxWidth > 1300
             ? 4
             : constraints.maxWidth > 820
-                ? 2
-                : 1;
+            ? 2
+            : 1;
 
-        final revenueDelta = _percentChange(snapshot.todayRevenue, snapshot.yesterdayRevenue);
-        final orderDelta = _percentChange(snapshot.todayOrders.toDouble(), snapshot.yesterdayOrders.toDouble());
-        final vendorDelta = snapshot.pendingVendorCount == 0 ? '+0' : '+${snapshot.pendingVendorCount} pending';
+        final revenueDelta = _percentChange(
+          snapshot.todayRevenue,
+          snapshot.yesterdayRevenue,
+        );
+        final orderDelta = _percentChange(
+          snapshot.todayOrders.toDouble(),
+          snapshot.yesterdayOrders.toDouble(),
+        );
+        final vendorDelta = snapshot.pendingVendorCount == 0
+            ? '+0'
+            : '+${snapshot.pendingVendorCount} pending';
 
         return RefreshIndicator(
-          onRefresh: () async {},
+          onRefresh: () async {
+            ref.invalidate(dashboardSnapshotProvider);
+            await ref.read(dashboardSnapshotProvider.future);
+          },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -64,7 +75,9 @@ class _DashboardContent extends StatelessWidget {
               children: [
                 _HeroBanner(snapshot: snapshot),
                 const SizedBox(height: 20),
-                _QuickActionsRail(pendingVendorCount: snapshot.pendingVendorCount),
+                _QuickActionsRail(
+                  pendingVendorCount: snapshot.pendingVendorCount,
+                ),
                 const SizedBox(height: 20),
                 _GovernanceDeckPanel(snapshot: snapshot),
                 const SizedBox(height: 20),
@@ -118,9 +131,15 @@ class _DashboardContent extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 7, child: _OperationsPanel(snapshot: snapshot)),
+                      Expanded(
+                        flex: 7,
+                        child: _OperationsPanel(snapshot: snapshot),
+                      ),
                       const SizedBox(width: 16),
-                      Expanded(flex: 5, child: _WatchlistPanel(snapshot: snapshot)),
+                      Expanded(
+                        flex: 5,
+                        child: _WatchlistPanel(snapshot: snapshot),
+                      ),
                     ],
                   )
                 else
@@ -241,7 +260,10 @@ class _GovernanceDeckPanel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Governance Command Deck', style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        'Governance Command Deck',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 6),
                       Text(
                         'Fast routes for the highest-cost admin decisions this shift.',
@@ -251,14 +273,20 @@ class _GovernanceDeckPanel extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFE9F7F3),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: const Text(
                     'Sprint 7',
-                    style: TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: Color(0xFF0F766E),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -314,7 +342,10 @@ class _GovernanceCommandCard extends StatelessWidget {
                   child: Icon(card.icon, color: card.accent),
                 ),
                 const Spacer(),
-                const Icon(Icons.arrow_forward_rounded, color: Color(0xFF64748B)),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Color(0xFF64748B),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -322,7 +353,9 @@ class _GovernanceCommandCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               card.value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
             Text(card.subtitle, style: Theme.of(context).textTheme.bodyMedium),
@@ -421,7 +454,10 @@ class _HeroBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Critical queue', style: TextStyle(color: Color(0xFFDDF7F2))),
+                const Text(
+                  'Critical queue',
+                  style: TextStyle(color: Color(0xFFDDF7F2)),
+                ),
                 const SizedBox(height: 10),
                 Text(
                   '${snapshot.criticalQueue} items',
@@ -471,13 +507,13 @@ class _StatCard extends StatelessWidget {
     final deltaBg = isNegative
         ? const Color(0xFFFEE2E2)
         : isWarning
-            ? const Color(0xFFFFF6E8)
-            : const Color(0xFFE9F7F3);
+        ? const Color(0xFFFFF6E8)
+        : const Color(0xFFE9F7F3);
     final deltaColor = isNegative
         ? const Color(0xFFB91C1C)
         : isWarning
-            ? const Color(0xFF9A6200)
-            : const Color(0xFF0F766E);
+        ? const Color(0xFF9A6200)
+        : const Color(0xFF0F766E);
 
     return Card(
       child: Padding(
@@ -510,7 +546,10 @@ class _StatCard extends StatelessWidget {
               ),
               child: Text(
                 delta,
-                style: TextStyle(color: deltaColor, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: deltaColor,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             const Spacer(),
@@ -534,8 +573,14 @@ class _OperationsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final revenueTrend = _percentChange(snapshot.todayRevenue, snapshot.yesterdayRevenue);
-    final orderTrend = _percentChange(snapshot.todayOrders.toDouble(), snapshot.yesterdayOrders.toDouble());
+    final revenueTrend = _percentChange(
+      snapshot.todayRevenue,
+      snapshot.yesterdayRevenue,
+    );
+    final orderTrend = _percentChange(
+      snapshot.todayOrders.toDouble(),
+      snapshot.yesterdayOrders.toDouble(),
+    );
 
     return Card(
       child: Padding(
@@ -543,7 +588,10 @@ class _OperationsPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Operations Pulse', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Operations Pulse',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               'Live chart and queue data from admin endpoints.',
@@ -552,21 +600,28 @@ class _OperationsPanel extends StatelessWidget {
             const SizedBox(height: 20),
             _TimelineItem(
               title: 'Revenue trend today',
-              subtitle: '${_deltaLabel(revenueTrend)} compared with yesterday (${_currency(snapshot.yesterdayRevenue)} baseline).',
+              subtitle:
+                  '${_deltaLabel(revenueTrend)} compared with yesterday (${_currency(snapshot.yesterdayRevenue)} baseline).',
               badge: revenueTrend < 0 ? 'Down' : 'Up',
-              badgeColor: revenueTrend < 0 ? const Color(0xFFB91C1C) : const Color(0xFF0F766E),
+              badgeColor: revenueTrend < 0
+                  ? const Color(0xFFB91C1C)
+                  : const Color(0xFF0F766E),
             ),
             _TimelineItem(
               title: 'Order flow',
-              subtitle: '${snapshot.todayOrders} orders today, ${_deltaLabel(orderTrend)} vs previous day.',
+              subtitle:
+                  '${snapshot.todayOrders} orders today, ${_deltaLabel(orderTrend)} vs previous day.',
               badge: snapshot.todayOrders > 0 ? 'Live' : 'Idle',
               badgeColor: const Color(0xFF1D4ED8),
             ),
             _TimelineItem(
               title: 'Vendor approval queue',
-              subtitle: '${snapshot.pendingVendorCount} vendors currently waiting for admin decision.',
+              subtitle:
+                  '${snapshot.pendingVendorCount} vendors currently waiting for admin decision.',
               badge: snapshot.pendingVendorCount > 0 ? 'Action' : 'Clear',
-              badgeColor: snapshot.pendingVendorCount > 0 ? const Color(0xFFB45309) : const Color(0xFF0F766E),
+              badgeColor: snapshot.pendingVendorCount > 0
+                  ? const Color(0xFFB45309)
+                  : const Color(0xFF0F766E),
             ),
           ],
         ),
@@ -657,14 +712,20 @@ class _TimelineItem extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         badge,
-                        style: TextStyle(color: badgeColor, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          color: badgeColor,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -709,9 +770,9 @@ class _WatchlistRow extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: const Color(0xFF10201F),
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(color: const Color(0xFF10201F)),
         ),
       ],
     );
@@ -788,9 +849,16 @@ class _DashboardError extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Color(0xFFB91C1C), size: 36),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFB91C1C),
+                  size: 36,
+                ),
                 const SizedBox(height: 12),
-                Text('Failed to load dashboard', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Failed to load dashboard',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   message,
@@ -818,7 +886,11 @@ String _compactNumber(int value) {
 }
 
 String _currency(double value) {
-  final formatter = NumberFormat.currency(locale: 'en_IN', symbol: 'Rs ', decimalDigits: 1);
+  final formatter = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: 'Rs ',
+    decimalDigits: 1,
+  );
   if (value >= 1000) {
     final compact = formatter.format(value / 1000).replaceAll('Rs ', 'Rs ');
     return '${compact}k';

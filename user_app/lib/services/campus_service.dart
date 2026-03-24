@@ -12,9 +12,10 @@ class CampusService {
   }
 
   Future<List<DeliveryZone>> getZones({String? buildingId}) async {
-    final response = await _api.get('/public/zones', queryParameters: {
-      if (buildingId != null) 'building_id': buildingId,
-    });
+    final response = await _api.get(
+      '/public/zones',
+      queryParameters: {'building_id': ?buildingId},
+    );
     final data = response.data as List? ?? [];
     return data.map((json) => DeliveryZone.fromJson(json)).toList();
   }

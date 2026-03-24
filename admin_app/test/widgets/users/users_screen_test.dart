@@ -6,6 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeUsersNotifier extends UsersNotifier {
+  static List<String>? lastBulkBlockedIds;
+  static bool? lastBulkBlockedState;
+  static String? lastBulkBlockReason;
+
   @override
   Future<UsersState> build() async {
     return UsersState(
@@ -24,16 +28,34 @@ class _FakeUsersNotifier extends UsersNotifier {
       total: 1,
     );
   }
+
+  @override
+  Future<UserBulkActionResult> setBlockedMany(
+    List<String> userIds, {
+    required bool blocked,
+    String? reason,
+  }) async {
+    lastBulkBlockedIds = List<String>.from(userIds);
+    lastBulkBlockedState = blocked;
+    lastBulkBlockReason = reason;
+    return const UserBulkActionResult(successCount: 1, errors: {});
+  }
 }
 
 void main() {
+  setUp(() {
+    _FakeUsersNotifier.lastBulkBlockedIds = null;
+    _FakeUsersNotifier.lastBulkBlockedState = null;
+    _FakeUsersNotifier.lastBulkBlockReason = null;
+  });
+
   testWidgets('UsersScreen supports client-side search', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           usersProvider.overrideWith(_FakeUsersNotifier.new),
         ],
-        child: const MaterialApp(home: UsersScreen()),
+        child: const MaterialApp(home: Scaffold(body: UsersScreen())),
       ),
     );
 
@@ -45,5 +67,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No users found'), findsOneWidget);
+  });
+
+  testWidgets('UsersScreen bulk block selected users captures reason', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          usersProvider.overrideWith(_FakeUsersNotifier.new),
+        ],
+        child: const MaterialApp(home: Scaffold(body: UsersScreen())),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Select all filtered'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Block selected'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).last, 'Blocking for policy violation');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Block all'));
+    await tester.pumpAndSettle();
+
+    expect(_FakeUsersNotifier.lastBulkBlockedIds, ['u-1']);
+    expect(_FakeUsersNotifier.lastBulkBlockedState, isTrue);
+    expect(_FakeUsersNotifier.lastBulkBlockReason, contains('policy'));
   });
 }

@@ -58,7 +58,8 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
     final normalizedQuery = _query.trim().toLowerCase();
 
     final filtered = widget.vendors.where((vendor) {
-      final matchesSearch = normalizedQuery.isEmpty ||
+      final matchesSearch =
+          normalizedQuery.isEmpty ||
           vendor.name.toLowerCase().contains(normalizedQuery) ||
           vendor.ownerName.toLowerCase().contains(normalizedQuery) ||
           vendor.ownerEmail.toLowerCase().contains(normalizedQuery);
@@ -74,12 +75,20 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
 
     filtered.sort((a, b) {
       return switch (_sortMode) {
-        _VendorSortMode.newest => (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-            .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
-        _VendorSortMode.oldest => (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
-            .compareTo(b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
-        _VendorSortMode.nameAsc => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        _VendorSortMode.nameDesc => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+        _VendorSortMode.newest =>
+          (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+          ),
+        _VendorSortMode.oldest =>
+          (a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0)).compareTo(
+            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+          ),
+        _VendorSortMode.nameAsc => a.name.toLowerCase().compareTo(
+          b.name.toLowerCase(),
+        ),
+        _VendorSortMode.nameDesc => b.name.toLowerCase().compareTo(
+          a.name.toLowerCase(),
+        ),
       };
     });
 
@@ -109,9 +118,16 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.verified_rounded, color: Color(0xFF0F766E), size: 36),
+                  const Icon(
+                    Icons.verified_rounded,
+                    color: Color(0xFF0F766E),
+                    size: 36,
+                  ),
                   const SizedBox(height: 12),
-                  Text('No pending vendors', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'No pending vendors',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'All vendor applications are currently processed. New requests will appear here.',
@@ -171,8 +187,11 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
           else ...[
             _BulkActionBar(
               selectedCount: _selectedIds.length,
-              allVisibleSelected: visibleVendors.isNotEmpty &&
-                  visibleVendors.every((vendor) => _selectedIds.contains(vendor.id)),
+              allVisibleSelected:
+                  visibleVendors.isNotEmpty &&
+                  visibleVendors.every(
+                    (vendor) => _selectedIds.contains(vendor.id),
+                  ),
               processing: _isBulkProcessing,
               onSelectVisible: () {
                 setState(() {
@@ -202,7 +221,11 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
             ...List.generate(visibleVendors.length, (index) {
               final vendor = visibleVendors[index];
               return Padding(
-                padding: EdgeInsets.only(bottom: index == visibleVendors.length - 1 && !hasMore ? 0 : 12),
+                padding: EdgeInsets.only(
+                  bottom: index == visibleVendors.length - 1 && !hasMore
+                      ? 0
+                      : 12,
+                ),
                 child: _VendorCard(
                   vendor: vendor,
                   selected: _selectedIds.contains(vendor.id),
@@ -215,6 +238,7 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
                       }
                     });
                   },
+                  onViewDetails: () => _showVendorDetails(context, vendor),
                 ),
               );
             }),
@@ -223,11 +247,16 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     setState(() {
-                      _visibleCount = (_visibleCount + _pageSize).clamp(0, filteredVendors.length);
+                      _visibleCount = (_visibleCount + _pageSize).clamp(
+                        0,
+                        filteredVendors.length,
+                      );
                     });
                   },
                   icon: const Icon(Icons.expand_more_rounded),
-                  label: Text('Load more (${filteredVendors.length - visibleVendors.length} remaining)'),
+                  label: Text(
+                    'Load more (${filteredVendors.length - visibleVendors.length} remaining)',
+                  ),
                 ),
               ),
           ],
@@ -236,7 +265,10 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
     );
   }
 
-  Future<void> _bulkModerate(BuildContext context, {required bool approved}) async {
+  Future<void> _bulkModerate(
+    BuildContext context, {
+    required bool approved,
+  }) async {
     if (_selectedIds.isEmpty || _isBulkProcessing) return;
 
     String? reason;
@@ -294,7 +326,11 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
 
     if (failed == 0) {
       messenger.showSnackBar(
-        SnackBar(content: Text('$success vendors ${approved ? 'approved' : 'rejected'} successfully.')),
+        SnackBar(
+          content: Text(
+            '$success vendors ${approved ? 'approved' : 'rejected'} successfully.',
+          ),
+        ),
       );
       return;
     }
@@ -309,6 +345,72 @@ class _VendorsContentState extends ConsumerState<_VendorsContent> {
       ),
     );
   }
+
+  Future<void> _showVendorDetails(BuildContext context, VendorItem vendor) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        final dateLabel = _formatDate(vendor.createdAt);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      _VendorAvatar(
+                        imageUrl: vendor.imageUrl,
+                        name: vendor.name,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              vendor.name,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              vendor.isOpen
+                                  ? 'Store is currently open'
+                                  : 'Store is currently closed',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  _DetailRow(label: 'Owner', value: vendor.ownerName),
+                  _DetailRow(label: 'Owner email', value: vendor.ownerEmail),
+                  _DetailRow(label: 'Applied on', value: dateLabel),
+                  _DetailRow(
+                    label: 'Description',
+                    value: vendor.description?.trim().isNotEmpty == true
+                        ? vendor.description!
+                        : 'No description provided.',
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Note: menu count, order count, and cuisine are not returned by the pending vendor endpoint yet.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _VendorCard extends ConsumerWidget {
@@ -316,11 +418,13 @@ class _VendorCard extends ConsumerWidget {
     required this.vendor,
     required this.selected,
     required this.onSelectedChanged,
+    required this.onViewDetails,
   });
 
   final VendorItem vendor;
   final bool selected;
   final ValueChanged<bool> onSelectedChanged;
+  final VoidCallback onViewDetails;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -346,7 +450,10 @@ class _VendorCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(vendor.name, style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        vendor.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 4),
                       Text(
                         vendor.description?.trim().isNotEmpty == true
@@ -359,13 +466,31 @@ class _VendorCard extends ConsumerWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _Tag(label: 'Owner: ${vendor.ownerName}', tone: const Color(0xFFE6F4F2), text: const Color(0xFF0F766E)),
-                          _Tag(label: vendor.ownerEmail, tone: const Color(0xFFF3F5F8), text: const Color(0xFF475569)),
-                          _Tag(label: 'Applied $dateLabel', tone: const Color(0xFFFFF4E6), text: const Color(0xFFB45309)),
                           _Tag(
-                            label: vendor.isOpen ? 'Currently open' : 'Currently closed',
-                            tone: vendor.isOpen ? const Color(0xFFE7F8EE) : const Color(0xFFFEE2E2),
-                            text: vendor.isOpen ? const Color(0xFF166534) : const Color(0xFFB91C1C),
+                            label: 'Owner: ${vendor.ownerName}',
+                            tone: const Color(0xFFE6F4F2),
+                            text: const Color(0xFF0F766E),
+                          ),
+                          _Tag(
+                            label: vendor.ownerEmail,
+                            tone: const Color(0xFFF3F5F8),
+                            text: const Color(0xFF475569),
+                          ),
+                          _Tag(
+                            label: 'Applied $dateLabel',
+                            tone: const Color(0xFFFFF4E6),
+                            text: const Color(0xFFB45309),
+                          ),
+                          _Tag(
+                            label: vendor.isOpen
+                                ? 'Currently open'
+                                : 'Currently closed',
+                            tone: vendor.isOpen
+                                ? const Color(0xFFE7F8EE)
+                                : const Color(0xFFFEE2E2),
+                            text: vendor.isOpen
+                                ? const Color(0xFF166534)
+                                : const Color(0xFFB91C1C),
                           ),
                         ],
                       ),
@@ -377,6 +502,12 @@ class _VendorCard extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               children: [
+                TextButton.icon(
+                  onPressed: onViewDetails,
+                  icon: const Icon(Icons.info_outline_rounded),
+                  label: const Text('Details'),
+                ),
+                const SizedBox(width: 10),
                 FilledButton.icon(
                   onPressed: () => _approveVendor(context, ref, vendor),
                   icon: const Icon(Icons.check_circle_outline_rounded),
@@ -396,15 +527,27 @@ class _VendorCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _approveVendor(BuildContext context, WidgetRef ref, VendorItem vendor) async {
+  Future<void> _approveVendor(
+    BuildContext context,
+    WidgetRef ref,
+    VendorItem vendor,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Approve vendor'),
-        content: Text('Approve ${vendor.name} and allow this store on the platform?'),
+        content: Text(
+          'Approve ${vendor.name} and allow this store on the platform?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Approve')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Approve'),
+          ),
         ],
       ),
     );
@@ -421,12 +564,19 @@ class _VendorCard extends ConsumerWidget {
       );
     } else {
       messenger.showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: const Color(0xFFB91C1C)),
+        SnackBar(
+          content: Text(error),
+          backgroundColor: const Color(0xFFB91C1C),
+        ),
       );
     }
   }
 
-  Future<void> _rejectVendor(BuildContext context, WidgetRef ref, VendorItem vendor) async {
+  Future<void> _rejectVendor(
+    BuildContext context,
+    WidgetRef ref,
+    VendorItem vendor,
+  ) async {
     final reason = await ReasonCaptureDialog.show(
       context,
       title: 'Reject vendor',
@@ -438,7 +588,9 @@ class _VendorCard extends ConsumerWidget {
     if (reason == null || !context.mounted) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final error = await ref.read(vendorsProvider.notifier).reject(vendor.id, reason: reason);
+    final error = await ref
+        .read(vendorsProvider.notifier)
+        .reject(vendor.id, reason: reason);
     if (!context.mounted) return;
 
     messenger.showSnackBar(
@@ -468,6 +620,28 @@ class _Tag extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(color: text, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+          const SizedBox(height: 4),
+          Text(value, style: Theme.of(context).textTheme.bodyLarge),
+        ],
       ),
     );
   }
@@ -523,9 +697,18 @@ class _VendorControls extends StatelessWidget {
                 if (value != null) onFilterChanged(value);
               },
               items: const [
-                DropdownMenuItem(value: _VendorOpenFilter.all, child: Text('All stores')),
-                DropdownMenuItem(value: _VendorOpenFilter.open, child: Text('Open now')),
-                DropdownMenuItem(value: _VendorOpenFilter.closed, child: Text('Closed now')),
+                DropdownMenuItem(
+                  value: _VendorOpenFilter.all,
+                  child: Text('All stores'),
+                ),
+                DropdownMenuItem(
+                  value: _VendorOpenFilter.open,
+                  child: Text('Open now'),
+                ),
+                DropdownMenuItem(
+                  value: _VendorOpenFilter.closed,
+                  child: Text('Closed now'),
+                ),
               ],
             ),
             DropdownButton<_VendorSortMode>(
@@ -534,17 +717,31 @@ class _VendorControls extends StatelessWidget {
                 if (value != null) onSortChanged(value);
               },
               items: const [
-                DropdownMenuItem(value: _VendorSortMode.newest, child: Text('Newest first')),
-                DropdownMenuItem(value: _VendorSortMode.oldest, child: Text('Oldest first')),
-                DropdownMenuItem(value: _VendorSortMode.nameAsc, child: Text('Name A-Z')),
-                DropdownMenuItem(value: _VendorSortMode.nameDesc, child: Text('Name Z-A')),
+                DropdownMenuItem(
+                  value: _VendorSortMode.newest,
+                  child: Text('Newest first'),
+                ),
+                DropdownMenuItem(
+                  value: _VendorSortMode.oldest,
+                  child: Text('Oldest first'),
+                ),
+                DropdownMenuItem(
+                  value: _VendorSortMode.nameAsc,
+                  child: Text('Name A-Z'),
+                ),
+                DropdownMenuItem(
+                  value: _VendorSortMode.nameDesc,
+                  child: Text('Name Z-A'),
+                ),
               ],
             ),
             Text(
               '$filteredCount of $totalCount vendors',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (query.trim().isNotEmpty || openFilter != _VendorOpenFilter.all || sortMode != _VendorSortMode.newest)
+            if (query.trim().isNotEmpty ||
+                openFilter != _VendorOpenFilter.all ||
+                sortMode != _VendorSortMode.newest)
               TextButton.icon(
                 onPressed: () {
                   onQueryChanged('');
@@ -597,7 +794,9 @@ class _BulkActionBar extends StatelessWidget {
               children: [
                 Checkbox(
                   value: allVisibleSelected,
-                  onChanged: processing ? null : (v) => onToggleSelectVisible(v ?? false),
+                  onChanged: processing
+                      ? null
+                      : (v) => onToggleSelectVisible(v ?? false),
                 ),
                 const Text('Select visible'),
               ],
@@ -649,9 +848,16 @@ class _NoSearchResults extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.manage_search_rounded, size: 36, color: Color(0xFF475569)),
+                const Icon(
+                  Icons.manage_search_rounded,
+                  size: 36,
+                  color: Color(0xFF475569),
+                ),
                 const SizedBox(height: 12),
-                Text('No vendors match current filters', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'No vendors match current filters',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   'Try a different search query or reset the open/closed filter.',
@@ -684,11 +890,11 @@ class _VendorAvatar extends StatelessWidget {
     final initials = name.trim().isEmpty
         ? 'V'
         : name
-            .trim()
-            .split(RegExp(r'\s+'))
-            .take(2)
-            .map((p) => p.isEmpty ? '' : p[0].toUpperCase())
-            .join();
+              .trim()
+              .split(RegExp(r'\s+'))
+              .take(2)
+              .map((p) => p.isEmpty ? '' : p[0].toUpperCase())
+              .join();
 
     if (imageUrl != null && imageUrl!.trim().isNotEmpty) {
       return ClipRRect(
@@ -751,9 +957,16 @@ class _VendorsError extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline_rounded, color: Color(0xFFB91C1C), size: 36),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFB91C1C),
+                  size: 36,
+                ),
                 const SizedBox(height: 12),
-                Text('Failed to load vendors', style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Failed to load vendors',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   message,
