@@ -72,29 +72,9 @@ flutter run
 ```
 
 Payment configuration:
-- Razorpay key can be injected at build time: `--dart-define=RAZORPAY_KEY_ID=your_key_here`
 
-Supabase configuration (required):
-- `SUPABASE_URL` and `SUPABASE_ANON_KEY` must be provided via `--dart-define`.
-- Do not embed Supabase keys in source files.
 
-Example run command:
-
-```bash
-flutter run \
-	--dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
-	--dart-define=SUPABASE_ANON_KEY=your_anon_key \
-	--dart-define=RAZORPAY_KEY_ID=your_key_here
-```
-
-Example release build:
-
-```bash
-flutter build apk --release \
-	--dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
-	--dart-define=SUPABASE_ANON_KEY=your_anon_key \
-	--dart-define=RAZORPAY_KEY_ID=your_key_here
-```
+// Supabase configuration is now handled by the backend. No direct keys or dart-define needed in the app.
 
 ## Monorepo Verification Policy
 

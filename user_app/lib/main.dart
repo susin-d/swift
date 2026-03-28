@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:mobile_app/core/config/runtime_config.dart';
 import 'package:mobile_app/core/theme/app_theme.dart';
 import 'package:mobile_app/core/router/app_router.dart';
 import 'package:mobile_app/features/auth/providers/auth_provider.dart';
@@ -13,12 +11,7 @@ import 'package:mobile_app/services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
-  final config = RuntimeConfig.fromEnvironment();
-  
-  await Supabase.initialize(
-    url: config.supabaseUrl,
-    anonKey: config.supabaseAnonKey,
-  );
+
 
   runApp(
     const ProviderScope(
@@ -36,12 +29,12 @@ class CampusFoodApp extends ConsumerStatefulWidget {
 
 class _CampusFoodAppState extends ConsumerState<CampusFoodApp> {
   bool _registeredToken = false;
-  ProviderSubscription<User?>? _userSubscription;
+  ProviderSubscription<Map<String, dynamic>?>? _userSubscription;
 
   @override
   void initState() {
     super.initState();
-    _userSubscription = ref.listenManual<User?>(userProvider, (previous, next) async {
+    _userSubscription = ref.listenManual<Map<String, dynamic>?>(userProvider, (previous, next) async {
       if (next != null && !_registeredToken) {
         await _registerDeviceToken();
       }

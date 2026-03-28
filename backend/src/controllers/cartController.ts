@@ -81,9 +81,10 @@ export const setMyCart = async (request: FastifyRequest, reply: FastifyReply) =>
   const body = request.body as { items?: unknown };
 
   if (!Array.isArray(body?.items)) {
-    const err = new Error('items array is required') as any;
-    err.statusCode = 400;
-    throw err;
+    return reply.code(400).send({
+      error: 'ValidationError',
+      message: 'items array is required in request body',
+    });
   }
 
   const items = normalizeCartItems(body.items);
@@ -103,9 +104,10 @@ export const setMyCart = async (request: FastifyRequest, reply: FastifyReply) =>
 
   if (error) {
     if (isCartTableMissing(error)) {
-      const err = new Error('Cart storage is not configured yet') as any;
-      err.statusCode = 503;
-      throw err;
+      return reply.code(503).send({
+        error: 'ServiceUnavailable',
+        message: 'Cart storage is not configured yet',
+      });
     }
     throw error;
   }

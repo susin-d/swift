@@ -822,7 +822,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         'name': PaymentConfig.merchantName,
         'description': PaymentConfig.merchantDescription,
         'order_id': _pendingOrder!.razorpayOrderId,
-        'prefill': {'email': user?.email ?? ''},
+        'prefill': {'email': user != null ? user['email'] ?? '' : ''},
       };
 
       _razorpay.open(options);

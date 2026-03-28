@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'api_exception.dart';
 
 class ApiService {
@@ -87,21 +86,8 @@ class ApiService {
     );
   }
 
-  SupabaseClient? _safeSupabaseClient() {
-    try {
-      return Supabase.instance.client;
-    } catch (_) {
-      return null;
-    }
-  }
 
   Future<String?> _resolveAccessToken() async {
-    final sessionToken =
-        _safeSupabaseClient()?.auth.currentSession?.accessToken;
-    if (sessionToken != null && sessionToken.isNotEmpty) {
-      return sessionToken;
-    }
-
     try {
       final persisted = await _storage.read(key: 'jwt');
       if (persisted != null && persisted.isNotEmpty) {
@@ -112,32 +98,11 @@ class ApiService {
     } catch (_) {
       return null;
     }
-
     return null;
   }
 
+  // No-op for refresh, as backend handles session refresh
   Future<String?> _refreshAndPersistAccessToken() async {
-    final client = _safeSupabaseClient();
-    if (client == null) {
-      return null;
-    }
-
-    try {
-      final response = await client.auth.refreshSession();
-      final newToken = response.session?.accessToken;
-      if (newToken != null && newToken.isNotEmpty) {
-        try {
-          await _storage.write(key: 'jwt', value: newToken);
-        } on MissingPluginException {
-          // Secure storage plugin is unavailable in some test contexts.
-        } catch (_) {
-          // Persisting token is best effort; continue with in-memory token.
-        }
-        return newToken;
-      }
-    } catch (_) {
-      // Keep original 401 behavior when refresh is unavailable.
-    }
     return null;
   }
 

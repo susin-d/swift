@@ -31,7 +31,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void initState() {
     super.initState();
     final user = ref.read(userProvider);
-    final meta = user?.userMetadata ?? {};
+    final meta = user != null ? user['user_metadata'] : {};
     _nameController.text = (meta['name'] ?? '').toString();
   }
 

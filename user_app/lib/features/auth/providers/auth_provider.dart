@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// Removed direct Supabase dependency; all auth is now backend API only.
 import '../services/auth_service.dart';
 
+
 final authRefreshListenableProvider = Provider<Listenable>((ref) {
-  final notifier = ValueNotifier<User?>(ref.read(userProvider));
-  ref.listen<User?>(userProvider, (previous, next) {
+  final notifier = ValueNotifier<Map<String, dynamic>?>(ref.read(userProvider));
+  ref.listen<Map<String, dynamic>?>(userProvider, (previous, next) {
     notifier.value = next;
   });
   return notifier;
@@ -13,14 +14,27 @@ final authRefreshListenableProvider = Provider<Listenable>((ref) {
 
 final authServiceProvider = Provider((ref) => AuthService());
 
-final authStateProvider = StreamProvider<AuthState>((ref) {
-  return Supabase.instance.client.auth.onAuthStateChange;
+
+
+// Auth state stream using backend session endpoint (polling example)
+final authStateProvider = StreamProvider<Map<String, dynamic>?>((ref) async* {
+  // Poll backend session endpoint every 10 seconds (example)
+  while (true) {
+    try {
+      final session = await ref.read(authServiceProvider).fetchSession();
+      yield session;
+    } catch (_) {
+      yield null;
+    }
+    await Future.delayed(const Duration(seconds: 10));
+  }
 });
 
-final userProvider = Provider<User?>((ref) {
-  final authState = ref.watch(authStateProvider).value;
-  return authState?.session?.user ?? ref.watch(authServiceProvider).currentUser;
-});
+
+// User model fetched from backend session/profile endpoint
+final userProvider = Provider<Map<String, dynamic>?>(
+  (ref) => ref.watch(authStateProvider).value?['user'] as Map<String, dynamic>?,
+);
 
 class AuthNotifier extends StateNotifier<AsyncValue<void>> {
   final AuthService _authService;

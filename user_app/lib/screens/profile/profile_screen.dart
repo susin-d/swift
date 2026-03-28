@@ -13,8 +13,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
-    final name = user?.userMetadata?['name'] ?? 'Campus Student';
-    final email = user?.email ?? '';
+      final name = user?['user_metadata']?['name'] ?? 'Campus Student';
+      final email = user != null ? user['email'] : '';
     final initials = name.isNotEmpty
         ? name
               .split(' ')
