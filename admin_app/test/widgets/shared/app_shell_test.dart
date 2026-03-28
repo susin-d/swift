@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('AppShell shows bottom navigation on compact width', (tester) async {
+  testWidgets('AppShell shows bottom navigation on compact width', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: MaterialApp(
@@ -31,34 +33,37 @@ void main() {
     expect(find.text('Swift Control'), findsNothing);
   });
 
-  testWidgets('AppShell shows trust warning banner for untrusted admin session', (tester) async {
-    final fakeService = _FakeSessionPostureService();
+  testWidgets(
+    'AppShell shows trust warning banner for untrusted admin session',
+    (tester) async {
+      final fakeService = _FakeSessionPostureService();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authProvider.overrideWith(_FakeAuthNotifier.new),
-          sessionPostureServiceProvider.overrideWithValue(fakeService),
-        ],
-        child: const MaterialApp(
-          home: SizedBox(
-            width: 1200,
-            height: 900,
-            child: AppShell(
-              title: 'Dashboard',
-              selectedIndex: 0,
-              child: SizedBox.shrink(),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_FakeAuthNotifier.new),
+            sessionPostureServiceProvider.overrideWithValue(fakeService),
+          ],
+          child: const MaterialApp(
+            home: SizedBox(
+              width: 1200,
+              height: 900,
+              child: AppShell(
+                title: 'Dashboard',
+                selectedIndex: 0,
+                child: SizedBox.shrink(),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    expect(find.text('Untrusted device'), findsOneWidget);
-    expect(find.text('Trust this device'), findsOneWidget);
-  });
+      expect(find.text('Untrusted device'), findsOneWidget);
+      expect(find.text('Trust this device'), findsOneWidget);
+    },
+  );
 }
 
 class _FakeAuthNotifier extends AuthNotifier {

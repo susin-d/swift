@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +11,8 @@ import 'menu_models.dart';
 import 'menu_provider.dart';
 
 typedef MenuImagePicker = Future<String?> Function(BuildContext context);
+const String menuCategoryCardSemanticPrefix = 'Menu category';
+const String menuItemCardSemanticPrefix = 'Menu item';
 
 class MenuManagementScreen extends ConsumerStatefulWidget {
   const MenuManagementScreen({super.key, this.imagePicker});
@@ -17,7 +20,8 @@ class MenuManagementScreen extends ConsumerStatefulWidget {
   final MenuImagePicker? imagePicker;
 
   @override
-  ConsumerState<MenuManagementScreen> createState() => _MenuManagementScreenState();
+  ConsumerState<MenuManagementScreen> createState() =>
+      _MenuManagementScreenState();
 }
 
 class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
@@ -33,12 +37,16 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Menu Management', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Menu Management',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
         actions: [
           IconButton(
+            tooltip: 'Add category',
             icon: const Icon(Icons.add_rounded),
             onPressed: () => _showAddCategory(context),
           ),
@@ -73,15 +81,22 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                   onAddItem: () => _showAddItem(context, categories),
                 ),
                 const SizedBox(height: 12),
-                ...categories.map((category) => _CategoryCard(
-                      category: category,
-                      onEdit: () => _showEditCategory(context, category),
-                      onDelete: () => _confirmDeleteCategory(context, category),
-                      onAddItem: () => _showAddItem(context, categories, preselected: category),
-                      onEditItem: (item) => _showEditItem(context, category, item),
-                      onDeleteItem: (item) => _confirmDeleteItem(context, item),
-                      onToggleAvailability: (item) => _toggleAvailability(item),
-                    )),
+                ...categories.map(
+                  (category) => _CategoryCard(
+                    category: category,
+                    onEdit: () => _showEditCategory(context, category),
+                    onDelete: () => _confirmDeleteCategory(context, category),
+                    onAddItem: () => _showAddItem(
+                      context,
+                      categories,
+                      preselected: category,
+                    ),
+                    onEditItem: (item) =>
+                        _showEditItem(context, category, item),
+                    onDeleteItem: (item) => _confirmDeleteItem(context, item),
+                    onToggleAvailability: (item) => _toggleAvailability(item),
+                  ),
+                ),
               ],
             ),
           );
@@ -101,18 +116,29 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Category name')),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Category name'),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: sortController,
-              decoration: const InputDecoration(labelText: 'Sort order (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Sort order (optional)',
+              ),
               keyboardType: TextInputType.number,
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
@@ -123,11 +149,13 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
 
     await ref.read(menuProvider.notifier).createMenu({
       'category_name': name,
-      if (sortController.text.trim().isNotEmpty) 'sort_order': int.tryParse(sortController.text.trim()) ?? 0,
+      if (sortController.text.trim().isNotEmpty)
+        'sort_order': int.tryParse(sortController.text.trim()) ?? 0,
     });
   }
 
-  static bool _isDataImageUrl(String value) => value.toLowerCase().startsWith('data:image/');
+  static bool _isDataImageUrl(String value) =>
+      value.toLowerCase().startsWith('data:image/');
 
   static bool _isValidImageUrl(String value) {
     final trimmed = value.trim();
@@ -147,9 +175,29 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     return 'image/jpeg';
   }
 
-  Future<String?> _pickImageUrl(BuildContext context) async {
+  /// Pick an image from gallery and return base64-encoded bytes.
+  /// Compatible with backend upload endpoint.
+  ///
+  /// If testable imagePicker is injected, expects it to return base64 data.
+  Future<({String base64, String mimeType})> _pickImageBase64(
+    BuildContext context,
+  ) async {
     if (widget.imagePicker != null) {
-      return widget.imagePicker!(context);
+      // For testing: injected picker returns full data URL
+      final dataUrl = await widget.imagePicker!(context);
+      if (dataUrl == null) throw Exception('No image selected');
+
+      // Extract base64 and MIME type from data URL
+      final marker = ';base64,';
+      final mimeEnd = dataUrl.indexOf(';');
+      if (mimeEnd < 6) throw Exception('Invalid data URL format');
+
+      final mimeType = dataUrl.substring(5, mimeEnd);
+      final index = dataUrl.indexOf(marker);
+      if (index <= 0) throw Exception('Invalid base64 data');
+
+      final base64 = dataUrl.substring(index + marker.length);
+      return (base64: base64, mimeType: mimeType);
     }
 
     final picker = ImagePicker();
@@ -158,11 +206,13 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
       imageQuality: 85,
       maxWidth: 1600,
     );
-    if (image == null) return null;
+    if (image == null) throw Exception('No image selected');
 
     final bytes = await image.readAsBytes();
-    final mime = image.mimeType ?? _mimeFromPath(image.name);
-    return 'data:$mime;base64,${base64Encode(bytes)}';
+    final mimeType = image.mimeType ?? _mimeFromPath(image.name);
+    final base64 = base64Encode(bytes);
+
+    return (base64: base64, mimeType: mimeType);
   }
 
   Uint8List? _decodeDataImage(String? value) {
@@ -177,9 +227,87 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     }
   }
 
-  Future<void> _showEditCategory(BuildContext context, MenuCategory category) async {
+  /// Client-side validation for file size and MIME type (before upload).
+  /// Returns error message if validation fails, null if valid.
+  String? _validateImageFile(String base64Data, String mimeType) {
+    // Validate MIME type
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedMimes.contains(mimeType)) {
+      return 'Invalid image type. Allowed: JPEG, PNG, WebP, GIF';
+    }
+
+    // Validate file size (5 MB max)
+    final bytes = base64Data.codeUnits.length;
+    const maxBytes = 5 * 1024 * 1024;
+    if (bytes > maxBytes) {
+      final sizeMB = (bytes / (1024 * 1024)).toStringAsFixed(2);
+      return 'File too large ($sizeMB MB). Maximum: 5 MB';
+    }
+
+    return null;
+  }
+
+  /// Upload image to backend storage endpoint and return HTTPS URL.
+  ///
+  /// This replaces client-side data URL generation with server-backed storage,
+  /// which reduces payload size and enables proper caching.
+  ///
+  /// Returns the HTTPS URL from Supabase CDN, or null if upload fails.
+  Future<String?> _uploadImageToBackend(
+    String base64Data,
+    String mimeType,
+    BuildContext context,
+  ) async {
+    // Validate before uploading
+    final error = _validateImageFile(base64Data, mimeType);
+    if (error != null) {
+      if (!context.mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+      return null;
+    }
+
+    try {
+      // Get Dio client from menu provider's HTTP service
+      final menuNotifier = ref.read(menuProvider.notifier);
+      final dio = menuNotifier.getDio();
+
+      // POST to /vendor-ops/menu/upload-image
+      final response = await dio.post(
+        '/vendor-ops/menu/upload-image',
+        data: {'imageData': base64Data, 'mimeType': mimeType},
+      );
+
+      if (response.statusCode == 201) {
+        final url = response.data['url'] as String?;
+        if (url != null && url.trim().isNotEmpty) {
+          return url;
+        }
+      }
+      throw Exception('Upload failed: invalid response');
+    } catch (e) {
+      if (!context.mounted) return null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Upload failed: ${e is DioException ? e.message : e.toString()}',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<void> _showEditCategory(
+    BuildContext context,
+    MenuCategory category,
+  ) async {
     final nameController = TextEditingController(text: category.name);
-    final sortController = TextEditingController(text: category.sortOrder?.toString() ?? '');
+    final sortController = TextEditingController(
+      text: category.sortOrder?.toString() ?? '',
+    );
 
     final result = await showDialog<bool>(
       context: context,
@@ -188,7 +316,10 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Category name')),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Category name'),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: sortController,
@@ -198,8 +329,14 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Update')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Update'),
+          ),
         ],
       ),
     );
@@ -207,19 +344,29 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     if (result != true) return;
     await ref.read(menuProvider.notifier).updateMenu(category.id, {
       'category_name': nameController.text.trim(),
-      if (sortController.text.trim().isNotEmpty) 'sort_order': int.tryParse(sortController.text.trim()) ?? 0,
+      if (sortController.text.trim().isNotEmpty)
+        'sort_order': int.tryParse(sortController.text.trim()) ?? 0,
     });
   }
 
-  Future<void> _confirmDeleteCategory(BuildContext context, MenuCategory category) async {
+  Future<void> _confirmDeleteCategory(
+    BuildContext context,
+    MenuCategory category,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete category'),
         content: Text('Delete ${category.name} and all items inside?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -229,7 +376,11 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     }
   }
 
-  Future<void> _showAddItem(BuildContext context, List<MenuCategory> categories, {MenuCategory? preselected}) async {
+  Future<void> _showAddItem(
+    BuildContext context,
+    List<MenuCategory> categories, {
+    MenuCategory? preselected,
+  }) async {
     if (categories.isEmpty) return;
     MenuCategory selected = preselected ?? categories.first;
     final nameController = TextEditingController();
@@ -250,12 +401,19 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
               children: [
                 DropdownButton<MenuCategory>(
                   value: selected,
-                  onChanged: (value) => setState(() => selected = value ?? selected),
+                  onChanged: (value) =>
+                      setState(() => selected = value ?? selected),
                   items: categories
-                      .map((cat) => DropdownMenuItem(value: cat, child: Text(cat.name)))
+                      .map(
+                        (cat) =>
+                            DropdownMenuItem(value: cat, child: Text(cat.name)),
+                      )
                       .toList(),
                 ),
-                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Item name')),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Item name'),
+                ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: descController,
@@ -271,16 +429,38 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                   title: const Text('Item image (optional)'),
                   subtitle: Text(
                     imageUrl == null ? 'No image selected' : 'Image selected',
-                    style: TextStyle(color: imageError == null ? Colors.grey : Colors.red),
+                    style: TextStyle(
+                      color: imageError == null ? Colors.grey : Colors.red,
+                    ),
                   ),
                   trailing: OutlinedButton.icon(
                     onPressed: () async {
-                      final nextImageUrl = await _pickImageUrl(context);
-                      if (nextImageUrl == null) return;
-                      setState(() {
-                        imageUrl = nextImageUrl;
-                        imageError = _isValidImageUrl(nextImageUrl) ? null : 'Invalid image URL format.';
-                      });
+                      try {
+                        final data = await _pickImageBase64(context);
+                        if (!context.mounted) return;
+
+                        // Upload to backend
+                        final uploadedUrl = await _uploadImageToBackend(
+                          data.base64,
+                          data.mimeType,
+                          context,
+                        );
+
+                        if (uploadedUrl != null) {
+                          setState(() {
+                            imageUrl = uploadedUrl;
+                            imageError = null;
+                          });
+                        }
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to pick image: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.upload_rounded),
                     label: const Text('Upload'),
@@ -311,8 +491,14 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
@@ -339,10 +525,16 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
     });
   }
 
-  Future<void> _showEditItem(BuildContext context, MenuCategory category, MenuItem item) async {
+  Future<void> _showEditItem(
+    BuildContext context,
+    MenuCategory category,
+    MenuItem item,
+  ) async {
     final nameController = TextEditingController(text: item.name);
     final descController = TextEditingController(text: item.description ?? '');
-    final priceController = TextEditingController(text: item.price.toStringAsFixed(0));
+    final priceController = TextEditingController(
+      text: item.price.toStringAsFixed(0),
+    );
     String? imageUrl = item.imageUrl;
     String? imageError;
     bool isAvailable = item.isAvailable;
@@ -356,11 +548,20 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(category.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  category.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
-                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Item name')),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Item name'),
+                ),
                 const SizedBox(height: 8),
-                TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description')),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(labelText: 'Description'),
+                ),
                 const SizedBox(height: 8),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -371,19 +572,41 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
                   title: const Text('Item image (optional)'),
                   subtitle: Text(
                     imageUrl == null ? 'No image selected' : 'Image selected',
-                    style: TextStyle(color: imageError == null ? Colors.grey : Colors.red),
+                    style: TextStyle(
+                      color: imageError == null ? Colors.grey : Colors.red,
+                    ),
                   ),
                   trailing: Wrap(
                     spacing: 8,
                     children: [
                       OutlinedButton.icon(
                         onPressed: () async {
-                          final nextImageUrl = await _pickImageUrl(context);
-                          if (nextImageUrl == null) return;
-                          setState(() {
-                            imageUrl = nextImageUrl;
-                            imageError = _isValidImageUrl(nextImageUrl) ? null : 'Invalid image URL format.';
-                          });
+                          try {
+                            final data = await _pickImageBase64(context);
+                            if (!context.mounted) return;
+
+                            // Upload to backend
+                            final uploadedUrl = await _uploadImageToBackend(
+                              data.base64,
+                              data.mimeType,
+                              context,
+                            );
+
+                            if (uploadedUrl != null) {
+                              setState(() {
+                                imageUrl = uploadedUrl;
+                                imageError = null;
+                              });
+                            }
+                          } catch (e) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to pick image: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(Icons.upload_rounded),
                         label: const Text('Upload'),
@@ -424,8 +647,14 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Update')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Update'),
+          ),
         ],
       ),
     );
@@ -455,8 +684,14 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
         title: const Text('Delete menu item'),
         content: Text('Delete ${item.name}?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -522,32 +757,76 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(category.name, style: Theme.of(context).textTheme.titleMedium),
-                ),
-                IconButton(onPressed: onAddItem, icon: const Icon(Icons.add_rounded)),
-                IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
-                IconButton(onPressed: onDelete, icon: const Icon(Icons.delete_outline_rounded)),
-              ],
-            ),
-            const SizedBox(height: 6),
-            if (category.items.isEmpty)
-              Text('No items in this category yet.', style: Theme.of(context).textTheme.bodySmall)
-            else
-              ...category.items.map((item) => _ItemRow(
+      child: Semantics(
+        container: true,
+        label: '$menuCategoryCardSemanticPrefix ${category.name}',
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          category.name,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        if (category.createdAt != null ||
+                            category.updatedAt != null)
+                          Text(
+                            [
+                              if (category.createdAt != null)
+                                'Created: ${category.createdAt!.toLocal()}',
+                              if (category.updatedAt != null)
+                                'Updated: ${category.updatedAt!.toLocal()}',
+                            ].join(' | '),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Add item to ${category.name}',
+                    onPressed: onAddItem,
+                    icon: const Icon(Icons.add_rounded),
+                  ),
+                  IconButton(
+                    tooltip: 'Edit ${category.name}',
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete ${category.name}',
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              if (category.items.isEmpty)
+                Text(
+                  'No items in this category yet.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else
+                ...category.items.map(
+                  (item) => _ItemRow(
                     item: item,
                     onEdit: () => onEditItem(item),
                     onDelete: () => onDeleteItem(item),
                     onToggleAvailability: () => onToggleAvailability(item),
-                  )),
-          ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -571,76 +850,98 @@ class _ItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final dataBytes = _decodeDataImage(item.imageUrl);
     final hasImage = item.imageUrl != null && item.imageUrl!.trim().isNotEmpty;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 52,
-              height: 52,
-              color: const Color(0xFFE2E8F0),
+    return Semantics(
+      container: true,
+      label:
+          '$menuItemCardSemanticPrefix ${item.name}, Rs ${item.price.toStringAsFixed(0)}',
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 52,
+                height: 52,
+                color: const Color(0xFFE2E8F0),
                 child: dataBytes != null
-                  ? Image.memory(dataBytes, fit: BoxFit.cover)
-                  : hasImage
-                  ? Image.network(
-                      item.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined),
-                    )
-                  : const Icon(Icons.image_outlined),
+                    ? Image.memory(dataBytes, fit: BoxFit.cover)
+                    : hasImage
+                    ? Image.network(
+                        item.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.image_not_supported_outlined),
+                      )
+                    : const Icon(Icons.image_outlined),
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 2),
-                Text('Rs ${item.price.toStringAsFixed(0)}', style: const TextStyle(color: Colors.grey)),
-                if ((item.description ?? '').trim().isNotEmpty)
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    item.description!.trim(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Rs ${item.price.toStringAsFixed(0)}',
                     style: const TextStyle(color: Colors.grey),
                   ),
-                Text(
-                  'Item ID: ${item.id}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                if (item.updatedAt != null)
+                  if ((item.description ?? '').trim().isNotEmpty)
+                    Text(
+                      item.description!.trim(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
                   Text(
-                    'Updated: ${item.updatedAt!.toLocal()}',
+                    'Item ID: ${item.id}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
-              ],
+                  if (item.updatedAt != null)
+                    Text(
+                      'Updated: ${item.updatedAt!.toLocal()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Switch(
-            value: item.isAvailable,
-            onChanged: (_) => onToggleAvailability(),
-          ),
-          IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
-          IconButton(onPressed: onDelete, icon: const Icon(Icons.delete_outline_rounded)),
-        ],
+            Switch(
+              value: item.isAvailable,
+              onChanged: (_) => onToggleAvailability(),
+            ),
+            IconButton(
+              tooltip: 'Edit ${item.name}',
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined),
+            ),
+            IconButton(
+              tooltip: 'Delete ${item.name}',
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline_rounded),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   static Uint8List? _decodeDataImage(String? value) {
-    if (value == null || !value.toLowerCase().startsWith('data:image/')) return null;
+    if (value == null || !value.toLowerCase().startsWith('data:image/')) {
+      return null;
+    }
     final marker = ';base64,';
     final index = value.indexOf(marker);
     if (index <= 0) return null;
@@ -671,12 +972,13 @@ class _DialogImageThumb extends StatelessWidget {
         child: bytes != null
             ? Image.memory(bytes, fit: BoxFit.cover)
             : hasUrl
-                ? Image.network(
-                    imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported_outlined),
-                  )
-                : const Icon(Icons.image_outlined, size: 20),
+            ? Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.image_not_supported_outlined),
+              )
+            : const Icon(Icons.image_outlined, size: 20),
       ),
     );
   }
@@ -707,7 +1009,11 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            Text(subtitle, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 18),
             FilledButton(onPressed: onAction, child: Text(actionLabel)),
           ],

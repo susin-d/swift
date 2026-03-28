@@ -30,6 +30,9 @@ When `-All` is used, the script builds `vendor_app`, `admin_app`, and `user_app`
 |-----------|------|----------|-------------|
 | `-AppName` | string | No | Name of the app to build: `vendor_app`, `admin_app`, or `user_app` |
 | `-BuildType` | string | No | Build type: `release` (default) or `debug` |
+| `-UserSupabaseUrl` | string | No | Required when building `user_app`; passed as `SUPABASE_URL` dart define |
+| `-UserSupabaseAnonKey` | string | No | Required when building `user_app`; passed as `SUPABASE_ANON_KEY` dart define |
+| `-UserRazorpayKeyId` | string | No | Optional when building `user_app`; passed as `RAZORPAY_KEY_ID` dart define |
 | `-All` | switch | No | Build all three apps sequentially |
 
 ## Examples
@@ -37,7 +40,7 @@ When `-All` is used, the script builds `vendor_app`, `admin_app`, and `user_app`
 ### Build All Apps
 
 ```powershell
-.\build-app.ps1 -All
+\.\build-app.ps1 -All -UserSupabaseUrl "https://your-project-id.supabase.co" -UserSupabaseAnonKey "your_anon_key"
 ```
 
 This builds:
@@ -52,7 +55,16 @@ Note: The three builds are started in parallel to reduce total build time.
 ```powershell
 .\build-app.ps1 -AppName vendor_app
 .\build-app.ps1 -AppName admin_app
-.\build-app.ps1 -AppName user_app
+\.\build-app.ps1 -AppName user_app -UserSupabaseUrl "https://your-project-id.supabase.co" -UserSupabaseAnonKey "your_anon_key"
+```
+
+### Build User App With Payment Key
+
+```powershell
+\.\build-app.ps1 -AppName user_app -BuildType release `
+	-UserSupabaseUrl "https://your-project-id.supabase.co" `
+	-UserSupabaseAnonKey "your_anon_key" `
+	-UserRazorpayKeyId "rzp_live_xxxxx"
 ```
 
 ### Build Single App (Debug)
@@ -71,9 +83,10 @@ Note: The three builds are started in parallel to reduce total build time.
 
 The script:
 1. **Runs** `flutter build apk --release` or `flutter build apk --debug`
-2. **Verifies** the APK exists at `build\app\outputs\flutter-apk\app-<type>.apk`
-3. **Moves** the APK to the `apps` folder
-4. **Renames** it using the app folder name (e.g., `vendor_app.apk`)
+2. **Adds required dart defines** for `user_app` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, optional `RAZORPAY_KEY_ID`)
+3. **Verifies** the APK exists at `build\app\outputs\flutter-apk\app-<type>.apk`
+4. **Moves** the APK to the `apps` folder
+5. **Renames** it using the app folder name (e.g., `vendor_app.apk`)
 
 ## Output Locations
 

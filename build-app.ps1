@@ -8,6 +8,15 @@
         [Parameter(Mandatory=$false)]
         [ValidateSet("release", "debug")]
         [string]$BuildType = "release",
+
+        [Parameter(Mandatory=$false)]
+        [string]$UserSupabaseUrl = "",
+
+        [Parameter(Mandatory=$false)]
+        [string]$UserSupabaseAnonKey = "",
+
+        [Parameter(Mandatory=$false)]
+        [string]$UserRazorpayKeyId = "",
         
         [Parameter(Mandatory=$false)]
         [switch]$All
@@ -58,7 +67,10 @@
             [string]$Name,
             [string]$BuildType,
             [string]$ProjectRoot,
-            [string]$AppsFolder
+            [string]$AppsFolder,
+            [string]$UserSupabaseUrl,
+            [string]$UserSupabaseAnonKey,
+            [string]$UserRazorpayKeyId
         )
 
         $AppDir = Join-Path $ProjectRoot $Name
@@ -71,11 +83,32 @@
         $logLines.Add("Building $Name Flutter App")
         $logLines.Add("========================================")
         $logLines.Add("[1/3] Building Flutter APK...")
-        $logLines.Add("Running: flutter build apk --$BuildType")
+
+        $buildArgs = @("build", "apk", "--$BuildType")
+        if ($Name -eq "user_app") {
+            if ([string]::IsNullOrWhiteSpace($UserSupabaseUrl) -or [string]::IsNullOrWhiteSpace($UserSupabaseAnonKey)) {
+                $logLines.Add("ERROR: user_app build requires -UserSupabaseUrl and -UserSupabaseAnonKey.")
+                return [PSCustomObject]@{
+                    App = $Name
+                    Success = $false
+                    ApkPath = $null
+                    ApkSizeMB = $null
+                    Log = $logLines
+                }
+            }
+
+            $buildArgs += "--dart-define=SUPABASE_URL=$UserSupabaseUrl"
+            $buildArgs += "--dart-define=SUPABASE_ANON_KEY=$UserSupabaseAnonKey"
+            if (-not [string]::IsNullOrWhiteSpace($UserRazorpayKeyId)) {
+                $buildArgs += "--dart-define=RAZORPAY_KEY_ID=$UserRazorpayKeyId"
+            }
+        }
+
+        $logLines.Add("Running: flutter $($buildArgs -join ' ')")
 
         Push-Location $AppDir
         try {
-            $buildResult = & flutter build apk --$BuildType 2>&1
+            $buildResult = & flutter @buildArgs 2>&1
             $buildExitCode = $LASTEXITCODE
         }
         finally {
@@ -153,10 +186,24 @@
         Write-Host "========================================" -ForegroundColor Cyan
         Write-Host "Building $Name Flutter App" -ForegroundColor Cyan
         Write-Host "========================================" -ForegroundColor Cyan
+
+        $buildArgs = @("build", "apk", "--$BuildType")
+        if ($Name -eq "user_app") {
+            if ([string]::IsNullOrWhiteSpace($UserSupabaseUrl) -or [string]::IsNullOrWhiteSpace($UserSupabaseAnonKey)) {
+                Write-Host "ERROR: user_app build requires -UserSupabaseUrl and -UserSupabaseAnonKey." -ForegroundColor Red
+                return $false
+            }
+
+            $buildArgs += "--dart-define=SUPABASE_URL=$UserSupabaseUrl"
+            $buildArgs += "--dart-define=SUPABASE_ANON_KEY=$UserSupabaseAnonKey"
+            if (-not [string]::IsNullOrWhiteSpace($UserRazorpayKeyId)) {
+                $buildArgs += "--dart-define=RAZORPAY_KEY_ID=$UserRazorpayKeyId"
+            }
+        }
         
         # Step 1: Build the Flutter APK
         Write-Host "`n[1/3] Building Flutter APK..." -ForegroundColor Yellow
-        Write-Host "Running: flutter build apk --$BuildType" -ForegroundColor Gray
+        Write-Host "Running: flutter $($buildArgs -join ' ')" -ForegroundColor Gray
 
         if (-not (Test-SymlinkCapability)) {
             Show-SymlinkFixSteps -Name $Name
@@ -172,7 +219,7 @@
             }
 
             try {
-                $buildResult = & flutter build apk --$BuildType 2>&1
+                $buildResult = & flutter @buildArgs 2>&1
                 $buildExitCode = $LASTEXITCODE
             }
             finally {
@@ -258,7 +305,7 @@
         $jobs = @()
         foreach ($app in $apps) {
             $jobs += Start-Job -Name $app -ScriptBlock {
-                param($Name, $BuildType, $ProjectRoot, $AppsFolder)
+                param($Name, $BuildType, $ProjectRoot, $AppsFolder, $UserSupabaseUrl, $UserSupabaseAnonKey, $UserRazorpayKeyId)
 
                 $ErrorActionPreference = "Stop"
 
@@ -267,7 +314,10 @@
                         [string]$Name,
                         [string]$BuildType,
                         [string]$ProjectRoot,
-                        [string]$AppsFolder
+                        [string]$AppsFolder,
+                        [string]$UserSupabaseUrl,
+                        [string]$UserSupabaseAnonKey,
+                        [string]$UserRazorpayKeyId
                     )
 
                     $AppDir = Join-Path $ProjectRoot $Name
@@ -280,11 +330,32 @@
                     $logLines.Add("Building $Name Flutter App")
                     $logLines.Add("========================================")
                     $logLines.Add("[1/3] Building Flutter APK...")
-                    $logLines.Add("Running: flutter build apk --$BuildType")
+
+                    $buildArgs = @("build", "apk", "--$BuildType")
+                    if ($Name -eq "user_app") {
+                        if ([string]::IsNullOrWhiteSpace($UserSupabaseUrl) -or [string]::IsNullOrWhiteSpace($UserSupabaseAnonKey)) {
+                            $logLines.Add("ERROR: user_app build requires -UserSupabaseUrl and -UserSupabaseAnonKey.")
+                            return [PSCustomObject]@{
+                                App = $Name
+                                Success = $false
+                                ApkPath = $null
+                                ApkSizeMB = $null
+                                Log = $logLines
+                            }
+                        }
+
+                        $buildArgs += "--dart-define=SUPABASE_URL=$UserSupabaseUrl"
+                        $buildArgs += "--dart-define=SUPABASE_ANON_KEY=$UserSupabaseAnonKey"
+                        if (-not [string]::IsNullOrWhiteSpace($UserRazorpayKeyId)) {
+                            $buildArgs += "--dart-define=RAZORPAY_KEY_ID=$UserRazorpayKeyId"
+                        }
+                    }
+
+                    $logLines.Add("Running: flutter $($buildArgs -join ' ')")
 
                     Push-Location $AppDir
                     try {
-                        $buildResult = & flutter build apk --$BuildType 2>&1
+                        $buildResult = & flutter @buildArgs 2>&1
                         $buildExitCode = $LASTEXITCODE
                     }
                     finally {
@@ -347,8 +418,8 @@
                     }
                 }
 
-                Build-AppJob -Name $Name -BuildType $BuildType -ProjectRoot $ProjectRoot -AppsFolder $AppsFolder
-            } -ArgumentList $app, $BuildType, $ProjectRoot, $AppsFolder
+                Build-AppJob -Name $Name -BuildType $BuildType -ProjectRoot $ProjectRoot -AppsFolder $AppsFolder -UserSupabaseUrl $UserSupabaseUrl -UserSupabaseAnonKey $UserSupabaseAnonKey -UserRazorpayKeyId $UserRazorpayKeyId
+            } -ArgumentList $app, $BuildType, $ProjectRoot, $AppsFolder, $UserSupabaseUrl, $UserSupabaseAnonKey, $UserRazorpayKeyId
         }
 
         Wait-Job -Job $jobs | Out-Null

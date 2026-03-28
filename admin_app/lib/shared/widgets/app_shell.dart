@@ -52,13 +52,15 @@ class AppShell extends ConsumerWidget {
                           ListTile(
                             leading: Icon(item.icon),
                             title: Text(item.label),
-                            onTap: () => Navigator.of(sheetContext).pop(item.route),
+                            onTap: () =>
+                                Navigator.of(sheetContext).pop(item.route),
                           ),
                         const Divider(height: 8),
                         ListTile(
                           leading: const Icon(Icons.logout_rounded),
                           title: const Text('Sign out'),
-                          onTap: () => Navigator.of(sheetContext).pop('__logout__'),
+                          onTap: () =>
+                              Navigator.of(sheetContext).pop('__logout__'),
                         ),
                       ],
                     ),
@@ -116,10 +118,16 @@ class AppShell extends ConsumerWidget {
                       _SessionPostureBanner(
                         detail: sessionPosture.value!.detail,
                         onTrustDevice: () async {
-                          await ref.read(sessionPostureProvider.notifier).markTrusted();
+                          await ref
+                              .read(sessionPostureProvider.notifier)
+                              .markTrusted();
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('This device is now marked as trusted.')),
+                            const SnackBar(
+                              content: Text(
+                                'This device is now marked as trusted.',
+                              ),
+                            ),
                           );
                         },
                       ),
@@ -170,7 +178,10 @@ class _Sidebar extends StatelessWidget {
                 CircleAvatar(
                   radius: 24,
                   backgroundColor: Colors.white,
-                  child: Icon(Icons.admin_panel_settings_rounded, color: Color(0xFF0F766E)),
+                  child: Icon(
+                    Icons.admin_panel_settings_rounded,
+                    color: Color(0xFF0F766E),
+                  ),
                 ),
                 SizedBox(width: 14),
                 Expanded(
@@ -188,7 +199,10 @@ class _Sidebar extends StatelessWidget {
                       SizedBox(height: 2),
                       Text(
                         'Operations cockpit',
-                        style: TextStyle(color: Color(0xFFCCF5EF), fontSize: 12),
+                        style: TextStyle(
+                          color: Color(0xFFCCF5EF),
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -207,27 +221,35 @@ class _Sidebar extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          GestureDetector(
-            onTap: () => ref.read(authProvider.notifier).logout(),
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                color: const Color(0xFF173838),
-                border: Border.all(color: const Color(0xFF295151)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.logout_rounded, color: Color(0xFF8FB8B2), size: 18),
-                  SizedBox(width: 10),
-                  Text(
-                    'Sign out',
-                    style: TextStyle(
+          Semantics(
+            button: true,
+            label: 'Sign out',
+            child: GestureDetector(
+              onTap: () => ref.read(authProvider.notifier).logout(),
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  color: const Color(0xFF173838),
+                  border: Border.all(color: const Color(0xFF295151)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
                       color: Color(0xFF8FB8B2),
-                      fontWeight: FontWeight.w600,
+                      size: 18,
                     ),
-                  ),
-                ],
+                    SizedBox(width: 10),
+                    Text(
+                      'Sign out',
+                      style: TextStyle(
+                        color: Color(0xFF8FB8B2),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -261,7 +283,10 @@ class _SidebarItem extends StatelessWidget {
       child: ListTile(
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        leading: Icon(icon, color: active ? Colors.white : const Color(0xFF93B5B0)),
+        leading: Icon(
+          icon,
+          color: active ? Colors.white : const Color(0xFF93B5B0),
+        ),
         title: Text(
           label,
           style: TextStyle(
@@ -316,54 +341,73 @@ class _TopBar extends StatelessWidget {
                   Text(title, style: Theme.of(context).textTheme.headlineSmall),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
-                    Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ],
               ),
             ),
             if (!compact)
-              Container(
-                width: 260,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F7F6),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: const Row(
-                  children: [
-                    Icon(Icons.search_rounded, size: 20, color: Color(0xFF6A8180)),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Search users, vendors, orders',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: Color(0xFF6A8180)),
+              Semantics(
+                container: true,
+                label: 'Search users, vendors, and orders',
+                child: Container(
+                  width: 260,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F7F6),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.search_rounded,
+                        size: 20,
+                        color: Color(0xFF6A8180),
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Search users, vendors, orders',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: Color(0xFF6A8180)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             const SizedBox(width: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: postureTrusted ? const Color(0xFFE8F7F4) : const Color(0xFFFFF3E0),
+                color: postureTrusted
+                    ? const Color(0xFFE8F7F4)
+                    : const Color(0xFFFFF3E0),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
                 children: [
                   Icon(
-                    postureTrusted ? Icons.verified_user_rounded : Icons.shield_outlined,
-                    color: postureTrusted ? const Color(0xFF0F766E) : const Color(0xFFAD6800),
+                    postureTrusted
+                        ? Icons.verified_user_rounded
+                        : Icons.shield_outlined,
+                    color: postureTrusted
+                        ? const Color(0xFF0F766E)
+                        : const Color(0xFFAD6800),
                     size: 18,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     postureLabel,
                     style: TextStyle(
-                      color: postureTrusted ? const Color(0xFF0F766E) : const Color(0xFFAD6800),
+                      color: postureTrusted
+                          ? const Color(0xFF0F766E)
+                          : const Color(0xFFAD6800),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -378,7 +422,10 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SessionPostureBanner extends StatelessWidget {
-  const _SessionPostureBanner({required this.detail, required this.onTrustDevice});
+  const _SessionPostureBanner({
+    required this.detail,
+    required this.onTrustDevice,
+  });
 
   final String detail;
   final Future<void> Function() onTrustDevice;
@@ -399,16 +446,20 @@ class _SessionPostureBanner extends StatelessWidget {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.security_update_warning_rounded, color: Color(0xFFAD6800), size: 20),
+            child: Icon(
+              Icons.security_update_warning_rounded,
+              color: Color(0xFFAD6800),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               detail,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF734A00),
-                    height: 1.3,
-                  ),
+                color: const Color(0xFF734A00),
+                height: 1.3,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -429,7 +480,11 @@ class _SessionPostureBanner extends StatelessWidget {
 }
 
 class _NavItem {
-  const _NavItem({required this.icon, required this.label, required this.route});
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.route,
+  });
 
   final IconData icon;
   final String label;
@@ -437,10 +492,18 @@ class _NavItem {
 }
 
 const _navigationItems = <_NavItem>[
-  _NavItem(icon: Icons.dashboard_rounded, label: 'Dashboard', route: '/dashboard'),
+  _NavItem(
+    icon: Icons.dashboard_rounded,
+    label: 'Dashboard',
+    route: '/dashboard',
+  ),
   _NavItem(icon: Icons.storefront_rounded, label: 'Vendors', route: '/vendors'),
   _NavItem(icon: Icons.receipt_long_rounded, label: 'Orders', route: '/orders'),
-  _NavItem(icon: Icons.location_city_rounded, label: 'Campus', route: '/campus'),
+  _NavItem(
+    icon: Icons.location_city_rounded,
+    label: 'Campus',
+    route: '/campus',
+  ),
   _NavItem(icon: Icons.group_rounded, label: 'Users', route: '/users'),
   _NavItem(icon: Icons.payments_rounded, label: 'Finance', route: '/finance'),
   _NavItem(icon: Icons.local_offer_rounded, label: 'Promos', route: '/promos'),

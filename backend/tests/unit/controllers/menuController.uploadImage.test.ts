@@ -14,7 +14,7 @@ describe('menuController.uploadMenuItemImageEndpoint', () => {
     };
     
     mockRequest = {
-      user: { id: 'vendor-123' },
+      user: { sub: 'vendor-123', role: 'vendor' },
       body: {
         imageData: Buffer.alloc(1000).toString('base64'),
         mimeType: 'image/jpeg',

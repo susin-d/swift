@@ -52,7 +52,7 @@ Current implementation behavior:
 - Dedicated section screens are now available for finance, analytics, staff/access control, reports, and preferences.
 - Dedicated item-level sub-routes are now available for those sections (for example finance earnings, payouts, transactions, tax reports).
 - Finance, analytics, staff, reports, and preferences sub-routes are wired to dedicated Riverpod providers backed by vendor-ops API endpoints.
-- Remaining not-yet-built modules still route to a dedicated placeholder page so every listed sidebar item is discoverable and clickable.
+- Remaining modules now open an interactive feature workspace with readiness checklist, quick actions, and operator notes capture.
 
 ## Production Readiness Updates
 
@@ -68,14 +68,21 @@ The following vendor operations are now wired to backend write endpoints with in
 	- Add and update role definitions with permissions
 - Menu data completeness:
 	- Vendor menu snapshots now map all menu category and menu item columns from DB-backed payloads
-	- Menu item create/edit forms support optional gallery upload and persist generated image URLs (`image_url`)
-	- Image URL validation accepts only `https://` and `data:image/...;base64,...` values
-	- Menu payload models expose `created_at` and `updated_at` for audit-friendly timelines
-	- Menu list rows now show image preview, description, and item identifier for quick audit
+	- Menu item create/edit forms support optional gallery upload with **backend storage** integration
+	- Images are uploaded to Supabase Storage via `POST /vendor-ops/menu/upload-image`
+	- Backend validates file size (max 5MB) and MIME type (JPEG, PNG, WebP, GIF) before storage
+	- Returned HTTPS URLs point to Supabase CDN for efficient caching and delivery
+	- Vendor app parses and displays `created_at` and `updated_at` for audit-friendly timelines
+	- Category cards now show audit timestamps in headers
+	- Menu list rows show image preview, description, and item identifier for quick audit
 - Reports:
 	- Download center includes CSV metadata and one-tap CSV clipboard export
+- UX/A11y hardening:
+	- Menu category/item controls now include clearer tooltips and semantic labels for assistive technologies
+	- Queue triage rails in dashboard now expose selected-state semantics for screen readers
+	- Vendor profile load failures now show actionable retry state instead of raw error text
 
-These flows are covered by provider-level tests in `test/providers/ops_services_test.dart`.
+These flows are covered by provider-level tests in `test/providers/ops_services_test.dart` and widget/copy contracts under `test/widgets/`.
 
 ## Development Commands
 

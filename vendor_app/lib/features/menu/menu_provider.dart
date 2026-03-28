@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vendor_app/core/api_service.dart';
 import 'menu_models.dart';
@@ -10,6 +11,9 @@ class MenuNotifier extends StateNotifier<AsyncValue<MenuSnapshot>> {
   final ApiService _api;
 
   MenuNotifier(this._api) : super(const AsyncValue.loading());
+
+  /// Expose Dio client for direct uploads (e.g., image upload endpoint).
+  Dio getDio() => _api.dio;
 
   Future<void> fetchMenus() async {
     state = const AsyncValue.loading();

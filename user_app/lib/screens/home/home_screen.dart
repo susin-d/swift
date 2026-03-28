@@ -12,6 +12,34 @@ import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const List<String> homeBottomNavLabels = ['Home', 'Orders', 'Cart', 'Profile'];
+const String homeHeroPrimaryCtaLabel = 'Order Now';
+const String homeCategoriesErrorText = 'Unable to load categories right now.';
+const String homeReorderErrorText = 'Reorder Studio is unavailable right now.';
+const String homeFeaturedErrorText = 'Featured items could not be loaded.';
+const String homeReorderFailureText = 'Quick reorder failed. Please try again.';
+const String homeTipPrimaryText =
+    'Tip: mood chips filter discovery, and Reorder Studio repeats your latest order quickly.';
+const String homeTipSecondaryText =
+    'Use Home, Orders, Cart, and Profile tabs below to move through your order flow faster.';
+const Duration homeMicroAnimationDuration = Duration(milliseconds: 180);
+
+String moodDescriptionForLabel(String label) {
+  switch (label) {
+    case 'Comfort':
+      return 'Hearty and filling meals';
+    case 'Quick':
+      return 'Fast bites and snacks';
+    case 'Sweet':
+      return 'Desserts and bakery picks';
+    case 'Light':
+      return 'Fresh and lighter options';
+    default:
+      return 'Browse every available item';
+  }
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -23,14 +51,61 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _selectedMood = 'All';
   bool _isReordering = false;
+  bool _showHomeTips = false;
+  int _homeTipStep = 0;
+  static const String _homeTipsSeenKey = 'home_tips_seen_v1';
 
   static const List<_MoodChip> _moodChips = [
     _MoodChip(label: 'All', icon: Icons.restaurant_rounded, keywords: []),
-    _MoodChip(label: 'Comfort', icon: Icons.ramen_dining_rounded, keywords: ['north', 'indian', 'meal', 'comfort']),
-    _MoodChip(label: 'Quick', icon: Icons.flash_on_rounded, keywords: ['quick', 'snack', 'fast']),
-    _MoodChip(label: 'Sweet', icon: Icons.icecream_rounded, keywords: ['dessert', 'sweet', 'bakery']),
-    _MoodChip(label: 'Light', icon: Icons.eco_rounded, keywords: ['healthy', 'salad', 'light']),
+    _MoodChip(
+      label: 'Comfort',
+      icon: Icons.ramen_dining_rounded,
+      keywords: ['north', 'indian', 'meal', 'comfort'],
+    ),
+    _MoodChip(
+      label: 'Quick',
+      icon: Icons.flash_on_rounded,
+      keywords: ['quick', 'snack', 'fast'],
+    ),
+    _MoodChip(
+      label: 'Sweet',
+      icon: Icons.icecream_rounded,
+      keywords: ['dessert', 'sweet', 'bakery'],
+    ),
+    _MoodChip(
+      label: 'Light',
+      icon: Icons.eco_rounded,
+      keywords: ['healthy', 'salad', 'light'],
+    ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHomeTipsState();
+  }
+
+  Future<void> _loadHomeTipsState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenTips = prefs.getBool(_homeTipsSeenKey) ?? false;
+    if (!mounted || hasSeenTips) return;
+    setState(() => _showHomeTips = true);
+  }
+
+  Future<void> _dismissHomeTips() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_homeTipsSeenKey, true);
+    if (!mounted) return;
+    setState(() => _showHomeTips = false);
+  }
+
+  void _nextHomeTip() {
+    if (_homeTipStep == 0) {
+      setState(() => _homeTipStep = 1);
+      return;
+    }
+    _dismissHomeTips();
+  }
 
   bool _matchesMood(RecommendedItem item, _MoodChip mood) {
     if (mood.label == 'All') return true;
@@ -46,7 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   OrderModel? _latestOrder(List<OrderModel> orders) {
     if (orders.isEmpty) return null;
-    final sorted = [...orders]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sorted = [...orders]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.first;
   }
 
@@ -55,17 +131,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     setState(() => _isReordering = true);
     try {
-      final placed = await ref.read(orderServiceProvider).placeOrder(
-        vendorId: order.vendorId,
-        items: order.items.map((item) {
-          return {
-            'menu_item_id': item.menuItemId,
-            'quantity': item.quantity,
-            'unit_price': item.unitPrice,
-          };
-        }).toList(),
-        totalAmount: order.totalAmount,
-      );
+      final placed = await ref
+          .read(orderServiceProvider)
+          .placeOrder(
+            vendorId: order.vendorId,
+            items: order.items.map((item) {
+              return {
+                'menu_item_id': item.menuItemId,
+                'quantity': item.quantity,
+                'unit_price': item.unitPrice,
+              };
+            }).toList(),
+            totalAmount: order.totalAmount,
+          );
 
       if (!mounted) return;
       ref.invalidate(userOrdersProvider);
@@ -76,11 +154,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       );
       context.push('/order-status/${placed.id}');
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Quick reorder failed: $e'),
+          content: const Text(homeReorderFailureText),
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: () => _quickRepeatOrder(order),
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -93,6 +176,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isCompactWidth = MediaQuery.sizeOf(context).width < 360;
+    final pagePadding = isCompactWidth ? 16.0 : 24.0;
+    final heroTopPadding = isCompactWidth ? 52.0 : 64.0;
+    final heroBottomPadding = isCompactWidth ? 22.0 : 28.0;
+    final floatingNavInset = isCompactWidth ? 16.0 : 24.0;
+    final floatingNavBottom = isCompactWidth ? 20.0 : 32.0;
     final recommendedItemsAsync = ref.watch(allFoodItemsProvider);
     final userOrdersAsync = ref.watch(userOrdersProvider);
 
@@ -111,10 +200,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Vibrant Hero Section
                 SliverToBoxAdapter(
                   child: Container(
-                    padding: const EdgeInsets.only(top: 80, left: 24, right: 24, bottom: 40),
+                    padding: EdgeInsets.only(
+                      top: heroTopPadding,
+                      left: pagePadding,
+                      right: pagePadding,
+                      bottom: heroBottomPadding,
+                    ),
                     decoration: const BoxDecoration(
                       gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(28),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 Text(
                                   'Swift Delivery',
                                   style: GoogleFonts.outfit(
-                                    color: Colors.white.withValues(alpha: 0.8),
+                                    color: Colors.white.withValues(alpha: 0.92),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 1,
@@ -151,38 +247,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: IconButton(
+                                tooltip: 'Open notifications',
                                 onPressed: () => context.push('/notifications'),
-                                icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.notifications_none_rounded,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/search');
+                          },
+                          icon: const Icon(Icons.shopping_bag_outlined),
+                          label: const Text(homeHeroPrimaryCtaLabel),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: AppColors.primaryDark,
+                            minimumSize: const Size(140, 48),
+                            textStyle: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
                         // Search Bar Placeholder
                         GestureDetector(
                           onTap: () => context.push('/search'),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 6),
                                 ),
                               ],
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.search_rounded, color: AppColors.primary),
+                                const Icon(
+                                  Icons.search_rounded,
+                                  color: AppColors.primary,
+                                ),
                                 const SizedBox(width: 12),
                                 Text(
                                   'Search for a vendor or dish...',
                                   style: GoogleFonts.inter(
-                                    color: AppColors.textMuted,
+                                    color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
+                                    fontSize: isCompactWidth ? 13 : 14,
                                   ),
                                 ),
                               ],
@@ -191,6 +316,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 14),
                         _EtaConfidenceBand(),
+                        if (_showHomeTips) ...[
+                          const SizedBox(height: 14),
+                          _HomeTipsCard(
+                            step: _homeTipStep,
+                            onNext: _nextHomeTip,
+                            onDismiss: _dismissHomeTips,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -199,7 +332,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Categories Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 32, left: 24, right: 24, bottom: 16),
+                    padding: EdgeInsets.only(
+                      top: 32,
+                      left: pagePadding,
+                      right: pagePadding,
+                      bottom: 16,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -207,12 +345,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           'Categories',
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
-                        Text(
-                          'See All',
-                          style: GoogleFonts.outfit(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
+                        TextButton(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => _selectedMood = 'All');
+                            context.push('/search');
+                          },
+                          child: Text(
+                            'See All',
+                            style: GoogleFonts.outfit(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ],
@@ -227,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: recommendedItemsAsync.when(
                       data: (_) => ListView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: EdgeInsets.symmetric(horizontal: pagePadding),
                         children: List.generate(_moodChips.length, (index) {
                           final mood = _moodChips[index];
                           return _buildCategoryItem(
@@ -244,18 +389,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       loading: () => ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: EdgeInsets.symmetric(horizontal: pagePadding),
                         itemCount: 5,
-                        itemBuilder: (context, index) => const CategoryShimmer(),
+                        itemBuilder: (context, index) =>
+                            const CategoryShimmer(),
                       ),
-                      error: (error, stackTrace) => const SizedBox.shrink(),
+                      error: (_, _) => _InlineLoadStateCard(
+                        icon: Icons.category_outlined,
+                        message: homeCategoriesErrorText,
+                        actionLabel: 'Retry',
+                        onAction: () => ref.invalidate(allFoodItemsProvider),
+                      ),
                     ),
                   ),
                 ),
 
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 6, left: 24, right: 24, bottom: 16),
+                    padding: EdgeInsets.only(
+                      top: 6,
+                      left: pagePadding,
+                      right: pagePadding,
+                      bottom: 16,
+                    ),
                     child: userOrdersAsync.when(
                       data: (orders) => _ReorderStudioCard(
                         latestOrder: _latestOrder(orders),
@@ -268,7 +424,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onQuickRepeat: _quickRepeatOrder,
                       ),
                       loading: () => const VendorCardShimmer(),
-                      error: (_, _) => const SizedBox.shrink(),
+                      error: (_, _) => _InlineLoadStateCard(
+                        icon: Icons.history_toggle_off_rounded,
+                        message: homeReorderErrorText,
+                        actionLabel: 'Retry',
+                        onAction: () => ref.invalidate(userOrdersProvider),
+                      ),
                     ),
                   ),
                 ),
@@ -276,12 +437,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Featured Vendors Header
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 16),
-                    child: Text(
-                      _selectedMood == 'All'
-                          ? 'Featured Food Items'
-                          : '$_selectedMood Picks',
-                      style: Theme.of(context).textTheme.displaySmall,
+                    padding: EdgeInsets.only(
+                      top: 24,
+                      left: pagePadding,
+                      right: pagePadding,
+                      bottom: 16,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: homeMicroAnimationDuration,
+                      transitionBuilder: (child, animation) {
+                        final slide = Tween<Offset>(
+                          begin: const Offset(0, 0.14),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(position: slide, child: child),
+                        );
+                      },
+                      child: Text(
+                        _selectedMood == 'All'
+                            ? 'Featured Food Items'
+                            : '$_selectedMood Picks',
+                        key: ValueKey<String>(_selectedMood),
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
                     ),
                   ),
                 ),
@@ -289,64 +469,81 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // Recommended Food List
                 recommendedItemsAsync.when(
                   data: (items) {
-                    final mood = _moodChips.firstWhere((chip) => chip.label == _selectedMood);
-                    final filteredItems = items.where((item) => _matchesMood(item, mood)).toList();
+                    final mood = _moodChips.firstWhere(
+                      (chip) => chip.label == _selectedMood,
+                    );
+                    final filteredItems = items
+                        .where((item) => _matchesMood(item, mood))
+                        .toList();
 
                     if (filteredItems.isEmpty) {
-                      return const SliverPadding(
-                        padding: EdgeInsets.only(left: 24, right: 24, bottom: 120),
+                      return SliverPadding(
+                        padding: EdgeInsets.only(
+                          left: pagePadding,
+                          right: pagePadding,
+                          bottom: 120,
+                        ),
                         sliver: SliverToBoxAdapter(
-                          child: _NoMoodMatchesCard(),
+                          child: _NoMoodMatchesCard(
+                            onExploreAll: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _selectedMood = 'All');
+                              context.push('/search');
+                            },
+                          ),
                         ),
                       );
                     }
 
                     return SliverPadding(
-                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
+                      padding: EdgeInsets.only(
+                        left: pagePadding,
+                        right: pagePadding,
+                        bottom: 120,
+                      ),
                       sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 14,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.66,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final item = filteredItems[index];
-                            return AppAnimations.staggeredList(
-                              index,
-                              _RecommendedFoodGridCard(
-                                item: item,
-                                onTap: () {
-                                  context.push(
-                                    '/item',
-                                    extra: SearchResult(
-                                      id: item.id,
-                                      name: item.name,
-                                      description: item.description,
-                                      price: item.price,
-                                      imageUrl: item.imageUrl,
-                                      vendor: item.vendor == null
-                                          ? null
-                                          : SearchVendor(
-                                              id: item.vendor!.id,
-                                              name: item.vendor!.name,
-                                              description: item.vendor!.description,
-                                              imageUrl: item.vendor!.imageUrl,
-                                            ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                          childCount: filteredItems.length,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 0.66,
+                            ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final item = filteredItems[index];
+                          return AppAnimations.staggeredList(
+                            index,
+                            _RecommendedFoodGridCard(
+                              item: item,
+                              onTap: () {
+                                context.push(
+                                  '/item',
+                                  extra: SearchResult(
+                                    id: item.id,
+                                    name: item.name,
+                                    description: item.description,
+                                    price: item.price,
+                                    imageUrl: item.imageUrl,
+                                    vendor: item.vendor == null
+                                        ? null
+                                        : SearchVendor(
+                                            id: item.vendor!.id,
+                                            name: item.vendor!.name,
+                                            description:
+                                                item.vendor!.description,
+                                            imageUrl: item.vendor!.imageUrl,
+                                          ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        }, childCount: filteredItems.length),
                       ),
                     );
                   },
                   loading: () => SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: EdgeInsets.symmetric(horizontal: pagePadding),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => const VendorCardShimmer(),
@@ -354,19 +551,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  error: (e, _) => SliverFillRemaining(
-                    child: Center(child: Text('Error loading recommendations: $e')),
+                  error: (_, _) => SliverPadding(
+                    padding: EdgeInsets.only(
+                      left: pagePadding,
+                      right: pagePadding,
+                      bottom: 120,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: _InlineLoadStateCard(
+                        icon: Icons.cloud_off_rounded,
+                        message: homeFeaturedErrorText,
+                        actionLabel: 'Retry',
+                        onAction: () => ref.invalidate(allFoodItemsProvider),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Floating Bottom Navigation
           Positioned(
-            left: 24,
-            right: 24,
-            bottom: 32,
+            left: floatingNavInset,
+            right: floatingNavInset,
+            bottom: floatingNavBottom,
             child: _buildBottomNav(context, ref),
           ),
         ],
@@ -388,24 +597,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.only(right: 20),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: onTap,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: isActive ? AppColors.primaryGradient : null,
-                  color: isActive ? null : Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isActive ? AppColors.primary.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
+            Tooltip(
+              message: moodDescriptionForLabel(label),
+              child: Semantics(
+                button: true,
+                selected: isActive,
+                label: '$label mood. ${moodDescriptionForLabel(label)}',
+                child: GestureDetector(
+                  onTap: onTap,
+                  child: AnimatedContainer(
+                    duration: homeMicroAnimationDuration,
+                    constraints: const BoxConstraints(
+                      minWidth: 56,
+                      minHeight: 56,
                     ),
-                  ],
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: isActive ? AppColors.primaryGradient : null,
+                      color: isActive ? null : Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isActive
+                              ? AppColors.primary.withValues(alpha: 0.3)
+                              : Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isActive ? Colors.white : AppColors.primary,
+                      size: 28,
+                    ),
+                  ),
                 ),
-                child: Icon(icon, color: isActive ? Colors.white : AppColors.primary, size: 28),
               ),
             ),
             const SizedBox(height: 12),
@@ -442,68 +669,161 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.home_filled, true, () {}),
-          _buildNavItem(Icons.history_rounded, false, () {
-            HapticFeedback.lightImpact();
-            context.push('/order-history');
-          }),
-          _buildNavItemWithBadge(Icons.shopping_bag_rounded, cartCount, () {
-            HapticFeedback.lightImpact();
-            context.push('/cart');
-          }),
-          _buildNavItem(Icons.person_rounded, false, () {
-            HapticFeedback.lightImpact();
-            context.push('/profile');
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, bool isActive, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: isActive ? Colors.white : AppColors.textSecondary,
-          size: 24,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItemWithBadge(IconData icon, int count, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            child: Icon(icon, color: AppColors.textSecondary, size: 24),
+          _buildNavItem(Icons.home_filled, homeBottomNavLabels[0], true, () {}),
+          _buildNavItem(
+            Icons.history_rounded,
+            homeBottomNavLabels[1],
+            false,
+            () {
+              HapticFeedback.lightImpact();
+              context.push('/order-history');
+            },
           ),
-          if (count > 0)
-            Positioned(
-              right: 4,
-              top: 4,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                child: Text(
-                  '$count',
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+          _buildNavItemWithBadge(
+            Icons.shopping_bag_rounded,
+            homeBottomNavLabels[2],
+            cartCount,
+            () {
+              HapticFeedback.lightImpact();
+              context.push('/cart');
+            },
+          ),
+          _buildNavItem(
+            Icons.person_rounded,
+            homeBottomNavLabels[3],
+            false,
+            () {
+              HapticFeedback.lightImpact();
+              context.push('/profile');
+            },
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    IconData icon,
+    String label,
+    bool isActive,
+    VoidCallback onTap,
+  ) {
+    return Semantics(
+      button: true,
+      selected: isActive,
+      label: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.primary : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isActive ? Colors.white : AppColors.textSecondary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItemWithBadge(
+    IconData icon,
+    String label,
+    int count,
+    VoidCallback onTap,
+  ) {
+    final semanticLabel = count > 0 ? '$label, $count items in cart' : label;
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Icon(
+                        icon,
+                        color: AppColors.textSecondary,
+                        size: 24,
+                      ),
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -527,7 +847,7 @@ class _EtaConfidenceBand extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -537,9 +857,80 @@ class _EtaConfidenceBand extends StatelessWidget {
           Expanded(
             child: Text(
               'ETA confidence: high for 12-22 min routes this hour',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeTipsCard extends StatelessWidget {
+  final int step;
+  final VoidCallback onNext;
+  final VoidCallback onDismiss;
+
+  const _HomeTipsCard({
+    required this.step,
+    required this.onNext,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isFinalStep = step > 0;
+    final bodyText = isFinalStep ? homeTipSecondaryText : homeTipPrimaryText;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.lightbulb_outline_rounded,
+            color: Colors.white,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              bodyText,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onNext,
+            child: Text(
+              isFinalStep ? 'Done' : 'Next',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          if (!isFinalStep)
+            TextButton(
+              onPressed: onDismiss,
+              child: const Text(
+                'Skip',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -591,16 +982,35 @@ class _ReorderStudioCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Reorder Studio',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16),
+                Row(
+                  children: [
+                    Text(
+                      'Reorder Studio',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Tooltip(
+                      message: 'Repeat your latest order in one tap.',
+                      child: const Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   hasOrder
-                      ? 'Last order from ${latestOrder!.vendorName ?? 'your recent vendor'} • Rs ${latestOrder!.totalAmount.toStringAsFixed(0)}'
+                      ? 'Last order from ${latestOrder!.vendorName ?? 'your recent vendor'} \u2022 Rs ${latestOrder!.totalAmount.toStringAsFixed(0)}'
                       : 'No recent orders yet. Your repeats will show up here.',
-                  style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 12),
+                  style: GoogleFonts.inter(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 if (hasOrder) ...[
                   const SizedBox(height: 8),
@@ -625,16 +1035,24 @@ class _ReorderStudioCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               ElevatedButton(
-                onPressed: hasOrder && !isSubmitting ? () => onQuickRepeat(latestOrder) : null,
+                onPressed: hasOrder && !isSubmitting
+                    ? () => onQuickRepeat(latestOrder)
+                    : null,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   minimumSize: const Size(74, 36),
                 ),
                 child: isSubmitting
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Repeat'),
               ),
@@ -647,7 +1065,9 @@ class _ReorderStudioCard extends StatelessWidget {
 }
 
 class _NoMoodMatchesCard extends StatelessWidget {
-  const _NoMoodMatchesCard();
+  final VoidCallback onExploreAll;
+
+  const _NoMoodMatchesCard({required this.onExploreAll});
 
   @override
   Widget build(BuildContext context) {
@@ -659,94 +1079,173 @@ class _NoMoodMatchesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
-        children: const [
-          Icon(Icons.search_off_rounded, size: 28, color: AppColors.textMuted),
-          SizedBox(height: 10),
-          Text('No food items match this mood yet', style: TextStyle(fontWeight: FontWeight.w800)),
-          SizedBox(height: 4),
-          Text('Try a different mood chip to see more options.'),
+        children: [
+          const Icon(
+            Icons.search_off_rounded,
+            size: 28,
+            color: AppColors.textMuted,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'No food items match this mood yet',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          const Text('Try a different mood chip to see more options.'),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onExploreAll,
+            icon: const Icon(Icons.travel_explore_rounded),
+            label: const Text('Explore all food'),
+          ),
         ],
       ),
     );
   }
 }
 
-class _RecommendedFoodGridCard extends StatelessWidget {
+class _InlineLoadStateCard extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _InlineLoadStateCard({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.textSecondary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: GoogleFonts.inter(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton(onPressed: onAction, child: Text(actionLabel)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendedFoodGridCard extends StatefulWidget {
   const _RecommendedFoodGridCard({required this.item, required this.onTap});
 
   final RecommendedItem item;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final vendorName = item.vendor?.name ?? 'Campus Vendor';
+  State<_RecommendedFoodGridCard> createState() =>
+      _RecommendedFoodGridCardState();
+}
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                  image: DecorationImage(
-                    image: NetworkImage(
-                      item.imageUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200',
+class _RecommendedFoodGridCardState extends State<_RecommendedFoodGridCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final vendorName = widget.item.vendor?.name ?? 'Campus Vendor';
+
+    return AnimatedScale(
+      scale: _isPressed ? 0.98 : 1,
+      duration: homeMicroAnimationDuration,
+      child: InkWell(
+        onTap: widget.onTap,
+        onHighlightChanged: (value) {
+          if (_isPressed == value) return;
+          setState(() => _isPressed = value);
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isPressed ? 0.03 : 0.05),
+                blurRadius: _isPressed ? 8 : 14,
+                offset: Offset(0, _isPressed ? 4 : 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
                     ),
-                    fit: BoxFit.cover,
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        widget.item.imageUrl ??
+                            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 15),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vendorName,
-                    style: GoogleFonts.inter(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.item.name,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '₹${item.price.toStringAsFixed(0)}',
-                    style: GoogleFonts.outfit(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
+                    const SizedBox(height: 4),
+                    Text(
+                      vendorName,
+                      style: GoogleFonts.inter(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    Text(
+                      '\u20B9${widget.item.price.toStringAsFixed(0)}',
+                      style: GoogleFonts.outfit(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

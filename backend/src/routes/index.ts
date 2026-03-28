@@ -17,6 +17,8 @@ import { promoRoutes } from './promos';
 import { campusRoutes } from './campus';
 import { classSessionRoutes } from './class-sessions';
 
+import { chatRoutes } from './chat';
+
 export const setupRoutes = (app: FastifyInstance) => {
     app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
     app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -37,4 +39,7 @@ export const setupRoutes = (app: FastifyInstance) => {
     app.register(promoRoutes, { prefix: '/api/v1/promos' });
     app.register(campusRoutes, { prefix: '/api/v1' });
     app.register(classSessionRoutes, { prefix: '/api/v1/class-sessions' });
+
+    // Register chat and support endpoints
+    app.register(chatRoutes);
 };

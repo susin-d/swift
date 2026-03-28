@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../models/delivery_location.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/delivery_provider.dart';
@@ -24,19 +25,29 @@ class OrderTrackingScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Track Order'),
         leading: IconButton(
+          tooltip: 'Close tracking',
           icon: const Icon(Icons.close_rounded),
           onPressed: () => context.go('/'),
         ),
       ),
-      body: orderStream.when(
-        data: (order) => _buildTrackingContent(context, ref, order),
-        loading: () => const LoadingWidget(),
-        error: (e, _) => Center(child: Text('Error tracking order: $e')),
+      body: ResponsiveContent(
+        child: orderStream.when(
+          data: (order) => _buildTrackingContent(context, ref, order),
+          loading: () => const LoadingWidget(),
+          error: (e, _) => _TrackingErrorState(
+            message: e.toString(),
+            onBackHome: () => context.go('/'),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildTrackingContent(BuildContext context, WidgetRef ref, OrderModel order) {
+  Widget _buildTrackingContent(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -56,7 +67,7 @@ class OrderTrackingScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 48),
-          
+
           Text(
             _getStatusTitle(order.status),
             style: Theme.of(context).textTheme.displayLarge,
@@ -73,13 +84,33 @@ class OrderTrackingScreen extends ConsumerWidget {
           const SizedBox(height: 28),
           _buildLiveMapSection(context, ref, order),
           const SizedBox(height: 48),
-          
+
           // Stepper-like visualization
-          _buildStatusStep(context, 'Order Placed', 'We have received your order.', order.status.index >= 0),
-          _buildStatusStep(context, 'Preparing', 'The kitchen is working on your meal.', order.status.index >= 2),
-          _buildStatusStep(context, 'Ready for Pickup', 'Your meal is hot and ready!', order.status.index >= 3),
-          _buildStatusStep(context, 'Completed', 'Enjoy your meal!', order.status.index >= 4),
-          
+          _buildStatusStep(
+            context,
+            'Order Placed',
+            'We have received your order.',
+            order.status.index >= 0,
+          ),
+          _buildStatusStep(
+            context,
+            'Preparing',
+            'The kitchen is working on your meal.',
+            order.status.index >= 2,
+          ),
+          _buildStatusStep(
+            context,
+            'Ready for Pickup',
+            'Your meal is hot and ready!',
+            order.status.index >= 3,
+          ),
+          _buildStatusStep(
+            context,
+            'Completed',
+            'Enjoy your meal!',
+            order.status.index >= 4,
+          ),
+
           const SizedBox(height: 60),
           if (_canCancel(order))
             SizedBox(
@@ -91,7 +122,7 @@ class OrderTrackingScreen extends ConsumerWidget {
               ),
             ),
           if (_canCancel(order)) const SizedBox(height: 40),
-          
+
           // Order Details Card
           Container(
             padding: const EdgeInsets.all(24),
@@ -105,16 +136,31 @@ class OrderTrackingScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Order ID', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                    Text('#${order.id.substring(0, 8).toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.w900)),
+                    const Text(
+                      'Order ID',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '#${order.id.substring(0, 8).toUpperCase()}',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Scheduled', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Scheduled',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     Text(
                       order.scheduledFor == null
                           ? 'ASAP'
@@ -128,7 +174,13 @@ class OrderTrackingScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Class delivery', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                      const Text(
+                        'Class delivery',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       Text(
                         '${order.deliveryBuildingName ?? 'Building'}${order.deliveryRoom == null ? '' : ' • ${order.deliveryRoom}'}',
                         style: const TextStyle(fontWeight: FontWeight.w700),
@@ -140,18 +192,39 @@ class OrderTrackingScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Handoff code', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                        Text(order.handoffCode!, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        const Text(
+                          'Handoff code',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          order.handoffCode!,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ],
                     ),
                   ],
                 ],
-const Divider(height: 32),
+                const Divider(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total Paid', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                    Text('₹${order.totalAmount.toInt()}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primary)),
+                    const Text(
+                      'Total Paid',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '₹${order.totalAmount.toInt()}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -163,18 +236,29 @@ const Divider(height: 32),
   }
 
   bool _canCancel(OrderModel order) {
-    return order.status == OrderStatus.pending || order.status == OrderStatus.accepted;
+    return order.status == OrderStatus.pending ||
+        order.status == OrderStatus.accepted;
   }
 
-  Future<void> _confirmCancel(BuildContext context, WidgetRef ref, OrderModel order) async {
+  Future<void> _confirmCancel(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel order'),
         content: const Text('Cancel this order before it reaches the kitchen?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Keep order')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Cancel order')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep order'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Cancel order'),
+          ),
         ],
       ),
     );
@@ -185,18 +269,25 @@ const Divider(height: 32),
       await ref.read(orderServiceProvider).cancelOrder(order.id);
       if (!context.mounted) return;
       ref.invalidate(userOrdersProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order cancelled.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Order cancelled.')));
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cancel failed: $e'), backgroundColor: AppColors.error),
+        SnackBar(
+          content: Text('Cancel failed: $e'),
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
 
-  Widget _buildLiveMapSection(BuildContext context, WidgetRef ref, OrderModel order) {
+  Widget _buildLiveMapSection(
+    BuildContext context,
+    WidgetRef ref,
+    OrderModel order,
+  ) {
     final locationAsync = ref.watch(deliveryLocationProvider(order.id));
 
     return Column(
@@ -204,7 +295,9 @@ const Divider(height: 32),
       children: [
         Text(
           'Live Courier Tracking',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
         locationAsync.when(
@@ -239,7 +332,10 @@ const Divider(height: 32),
                 initialCenter: point,
                 initialZoom: 15,
                 interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom | InteractiveFlag.doubleTapZoom,
+                  flags:
+                      InteractiveFlag.drag |
+                      InteractiveFlag.pinchZoom |
+                      InteractiveFlag.doubleTapZoom,
                 ),
               ),
               children: [
@@ -265,7 +361,11 @@ const Divider(height: 32),
                             ),
                           ],
                         ),
-                        child: const Icon(Icons.delivery_dining_rounded, color: Colors.white, size: 24),
+                        child: const Icon(
+                          Icons.delivery_dining_rounded,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
                     ),
                   ],
@@ -277,7 +377,11 @@ const Divider(height: 32),
         const SizedBox(height: 8),
         Text(
           _formatUpdatedAt(location.updatedAt),
-          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -295,7 +399,11 @@ const Divider(height: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.location_searching_rounded, size: 32, color: AppColors.textMuted),
+          Icon(
+            Icons.location_searching_rounded,
+            size: 32,
+            color: AppColors.textMuted,
+          ),
           SizedBox(height: 12),
           Text(
             'Waiting for courier location',
@@ -306,7 +414,11 @@ const Divider(height: 32),
           Text(
             'Live tracking begins once delivery is in motion.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -328,12 +440,18 @@ const Divider(height: 32),
           SizedBox(
             width: 24,
             height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary,
+            ),
           ),
           SizedBox(height: 12),
           Text(
             'Loading live courier location...',
-            style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -352,7 +470,11 @@ const Divider(height: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 32, color: AppColors.textMuted),
+          const Icon(
+            Icons.wifi_off_rounded,
+            size: 32,
+            color: AppColors.textMuted,
+          ),
           const SizedBox(height: 12),
           const Text(
             'Unable to load courier location',
@@ -363,7 +485,10 @@ const Divider(height: 32),
           Text(
             error.toString(),
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -424,7 +549,12 @@ const Divider(height: 32),
     );
   }
 
-  Widget _buildStatusStep(BuildContext context, String title, String subtitle, bool isDone) {
+  Widget _buildStatusStep(
+    BuildContext context,
+    String title,
+    String subtitle,
+    bool isDone,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Row(
@@ -436,7 +566,9 @@ const Divider(height: 32),
               color: isDone ? AppColors.primary : AppColors.inputBackground,
               shape: BoxShape.circle,
             ),
-            child: isDone ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+            child: isDone
+                ? const Icon(Icons.check, size: 18, color: Colors.white)
+                : null,
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -455,7 +587,9 @@ const Divider(height: 32),
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDone ? AppColors.textSecondary : AppColors.textMuted.withValues(alpha: 0.5),
+                    color: isDone
+                        ? AppColors.textSecondary
+                        : AppColors.textMuted.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -468,34 +602,94 @@ const Divider(height: 32),
 
   IconData _getStatusIcon(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending: return Icons.timer_outlined;
-      case OrderStatus.accepted: return Icons.thumb_up_alt_rounded;
-      case OrderStatus.preparing: return Icons.restaurant_rounded;
-      case OrderStatus.ready: return Icons.shopping_bag_rounded;
-      case OrderStatus.completed: return Icons.check_circle_rounded;
-      case OrderStatus.cancelled: return Icons.cancel_rounded;
+      case OrderStatus.pending:
+        return Icons.timer_outlined;
+      case OrderStatus.accepted:
+        return Icons.thumb_up_alt_rounded;
+      case OrderStatus.preparing:
+        return Icons.restaurant_rounded;
+      case OrderStatus.ready:
+        return Icons.shopping_bag_rounded;
+      case OrderStatus.completed:
+        return Icons.check_circle_rounded;
+      case OrderStatus.cancelled:
+        return Icons.cancel_rounded;
     }
   }
 
   String _getStatusTitle(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending: return 'Awaiting Confirmation';
-      case OrderStatus.accepted: return 'Order Confirmed';
-      case OrderStatus.preparing: return 'Kitchen is Sizzling';
-      case OrderStatus.ready: return 'Ready for Pickup!';
-      case OrderStatus.completed: return 'Order Completed';
-      case OrderStatus.cancelled: return 'Order Cancelled';
+      case OrderStatus.pending:
+        return 'Awaiting Confirmation';
+      case OrderStatus.accepted:
+        return 'Order Confirmed';
+      case OrderStatus.preparing:
+        return 'Kitchen is Sizzling';
+      case OrderStatus.ready:
+        return 'Ready for Pickup!';
+      case OrderStatus.completed:
+        return 'Order Completed';
+      case OrderStatus.cancelled:
+        return 'Order Cancelled';
     }
   }
 
   String _getStatusDescription(OrderStatus status) {
     switch (status) {
-      case OrderStatus.pending: return 'The vendor will accept your order shortly.';
-      case OrderStatus.accepted: return 'Your order has been accepted and is in queue.';
-      case OrderStatus.preparing: return 'Chef is preparing your delicious meal.';
-      case OrderStatus.ready: return 'Head over to the counter to collect your food.';
-      case OrderStatus.completed: return 'Thank you for ordering with Swift!';
-      case OrderStatus.cancelled: return 'Your order was cancelled. Refund processed if applicable.';
+      case OrderStatus.pending:
+        return 'The vendor will accept your order shortly.';
+      case OrderStatus.accepted:
+        return 'Your order has been accepted and is in queue.';
+      case OrderStatus.preparing:
+        return 'Chef is preparing your delicious meal.';
+      case OrderStatus.ready:
+        return 'Head over to the counter to collect your food.';
+      case OrderStatus.completed:
+        return 'Thank you for ordering with Swift!';
+      case OrderStatus.cancelled:
+        return 'Your order was cancelled. Refund processed if applicable.';
     }
+  }
+}
+
+class _TrackingErrorState extends StatelessWidget {
+  const _TrackingErrorState({required this.message, required this.onBackHome});
+
+  final String message;
+  final VoidCallback onBackHome;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.route_rounded,
+              size: 56,
+              color: AppColors.error.withValues(alpha: 0.75),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Tracking is unavailable',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onBackHome,
+              child: const Text('Back to home'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

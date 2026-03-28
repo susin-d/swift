@@ -28,14 +28,20 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    cd backend
    npm install
    cp .env.example .env
-   # Add your Supabase keys to .env
+   # Add your Supabase and Razorpay keys to .env
    npm run dev
    ```
+
+   Production safety:
+   - Backend startup now fails in `NODE_ENV=production` if `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` are missing or placeholder values.
+   - Keep service-role credentials only in server environment variables, never in client apps.
 
    Contract governance endpoints:
    - `GET /api/v1/contracts/registry` returns canonical request/response contract metadata and standardized error envelope details.
    - `GET /api/v1/contracts/changelog` returns versioned contract change history for consumer sync.
    - `GET /api/v1/contracts/flags` returns staged rollout flags for contract/reliability features.
+   - `POST /api/v1/chat/rooms`, `GET /api/v1/chat/rooms/:id/messages`, and `POST /api/v1/chat/rooms/:id/messages` provide authenticated in-app chat room workflows.
+   - `POST /api/v1/support/tickets`, `GET /api/v1/support/tickets`, `GET /api/v1/support/tickets/me`, and `PATCH /api/v1/support/tickets/:id` provide authenticated support ticket creation and lifecycle updates.
 
    Reliability standards:
    - Admin list endpoints expose shared pagination metadata (`meta.totalPages`, `meta.hasNextPage`, `meta.hasPreviousPage`).
@@ -86,8 +92,17 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    ```bash
    cd user_app
    flutter pub get
-   flutter run
+    flutter run \
+       --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
+       --dart-define=SUPABASE_ANON_KEY=your_anon_key
    ```
+
+    Release build example:
+    ```bash
+    flutter build apk --release \
+       --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
+       --dart-define=SUPABASE_ANON_KEY=your_anon_key
+    ```
 
 5. **Admin App**
    ```bash

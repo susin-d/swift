@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/widgets/responsive_content.dart';
 import '../../providers/class_session_provider.dart';
 import '../../providers/campus_provider.dart';
 import '../../models/campus_building.dart';
@@ -15,35 +16,37 @@ class ClassScheduleScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Class Schedule')),
-      body: sessionsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load classes: $e')),
-        data: (sessions) {
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Saved classes',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _openCreate(context, ref),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              if (sessions.isEmpty)
-                const Center(child: Text('No classes saved yet.'))
-              else
-                ...sessions.map((s) => _SessionCard(session: s)),
-            ],
-          );
-        },
+      body: ResponsiveContent(
+        child: sessionsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Failed to load classes: $e')),
+          data: (sessions) {
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Saved classes',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () => _openCreate(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (sessions.isEmpty)
+                  const Center(child: Text('No classes saved yet.'))
+                else
+                  ...sessions.map((s) => _SessionCard(session: s)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

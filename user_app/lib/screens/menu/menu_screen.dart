@@ -9,11 +9,14 @@ import '../../providers/cart_provider.dart';
 import '../../widgets/menu_item_card.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../core/utils/app_animations.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../core/router/app_router.dart';
 import '../../services/review_service.dart';
 import '../../models/search_result.dart';
 
 enum _MenuSort { recommended, priceLowToHigh }
+
+const String menuItemCardSemanticPrefix = 'Menu item';
 
 class VendorMenuScreen extends ConsumerStatefulWidget {
   final String vendorId;
@@ -31,7 +34,9 @@ class _VendorMenuScreenState extends ConsumerState<VendorMenuScreen> {
 
   List<MenuItemModel> _applyDecisionFilters(List<MenuItemModel> items) {
     var filtered = items.where((item) {
-      final categoryMatch = _selectedCategory == 'All' || (item.category ?? 'Uncategorized') == _selectedCategory;
+      final categoryMatch =
+          _selectedCategory == 'All' ||
+          (item.category ?? 'Uncategorized') == _selectedCategory;
       final availabilityMatch = !_availableOnly || item.isAvailable;
       return categoryMatch && availabilityMatch;
     }).toList();
@@ -51,236 +56,295 @@ class _VendorMenuScreenState extends ConsumerState<VendorMenuScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // Glassmorphic Vendor Header
-          SliverAppBar(
-            expandedHeight: 240,
-            pinned: true,
-            leading: IconButton(
-              icon: const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.textPrimary),
+      body: ResponsiveContent(
+        child: CustomScrollView(
+          slivers: [
+            // Glassmorphic Vendor Header
+            SliverAppBar(
+              expandedHeight: 240,
+              pinned: true,
+              leading: IconButton(
+                tooltip: 'Back',
+                icon: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                onPressed: () => context.pop(),
               ),
-              onPressed: () => context.pop(),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: vendorsAsync.when(
-                data: (vendors) {
-                  final vendor = vendors.firstWhere((v) => v.id == widget.vendorId);
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Hero(
-                        tag: 'vendor_${vendor.id}',
-                        child: CachedNetworkImage(
-                          imageUrl: vendor.imageUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
-                          fit: BoxFit.cover,
+              flexibleSpace: FlexibleSpaceBar(
+                background: vendorsAsync.when(
+                  data: (vendors) {
+                    final vendor = vendors.firstWhere(
+                      (v) => v.id == widget.vendorId,
+                    );
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Hero(
+                          tag: 'vendor_${vendor.id}',
+                          child: CachedNetworkImage(
+                            imageUrl:
+                                vendor.imageUrl ??
+                                'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.8),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.8),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 32,
+                          left: 24,
+                          right: 24,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                vendor.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: -1,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    vendor.rating.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  const Icon(
+                                    Icons.access_time_filled,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    '15-25 mins',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
-                      ),
-                      Positioned(
-                        bottom: 32,
-                        left: 24,
-                        right: 24,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    );
+                  },
+                  loading: () => Container(color: Colors.grey[200]),
+                  error: (e, _) => Container(color: Colors.grey[200]),
+                ),
+              ),
+            ),
+
+            // Menu Section Title
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(24, 32, 24, 14),
+                child: Text(
+                  'Full Menu',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+            ),
+
+            menuAsync.when(
+              data: (items) {
+                final categories = <String>{
+                  'All',
+                  ...items.map((e) => e.category ?? 'Uncategorized'),
+                }.toList();
+
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 34,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: categories.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: 8),
+                            itemBuilder: (context, index) {
+                              final category = categories[index];
+                              final selected = category == _selectedCategory;
+                              return _DecisionChip(
+                                label: category,
+                                selected: selected,
+                                onTap: () => setState(
+                                  () => _selectedCategory = category,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
                           children: [
-                            Text(
-                              vendor.name,
-                              style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
+                            _DecisionChip(
+                              label: _availableOnly
+                                  ? 'Available only'
+                                  : 'All availability',
+                              selected: _availableOnly,
+                              onTap: () => setState(
+                                () => _availableOnly = !_availableOnly,
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(Icons.star, color: Colors.amber, size: 18),
-                                const SizedBox(width: 4),
-                                Text(
-                                  vendor.rating.toString(),
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
-                                ),
-                                const SizedBox(width: 16),
-                                const Icon(Icons.access_time_filled, color: Colors.white70, size: 18),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  '15-25 mins',
-                                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
-                                ),
-                              ],
+                            const SizedBox(width: 8),
+                            _DecisionChip(
+                              label: _sort == _MenuSort.recommended
+                                  ? 'Sort: Recommended'
+                                  : 'Sort: Price low-high',
+                              selected: _sort == _MenuSort.priceLowToHigh,
+                              onTap: () {
+                                setState(() {
+                                  _sort = _sort == _MenuSort.recommended
+                                      ? _MenuSort.priceLowToHigh
+                                      : _MenuSort.recommended;
+                                });
+                              },
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  );
-                },
-                loading: () => Container(color: Colors.grey[200]),
-                error: (e, _) => Container(color: Colors.grey[200]),
-              ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+              error: (_, _) =>
+                  const SliverToBoxAdapter(child: SizedBox.shrink()),
             ),
-          ),
 
-          // Menu Section Title
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(24, 32, 24, 14),
-              child: Text(
-                'Full Menu',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5),
-              ),
-            ),
-          ),
+            // Menu Grid
+            menuAsync.when(
+              data: (items) => SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final filtered = _applyDecisionFilters(items);
+                      if (filtered.isEmpty) {
+                        return const _NoMenuMatchCard();
+                      }
 
-          menuAsync.when(
-            data: (items) {
-              final categories = <String>{'All', ...items.map((e) => e.category ?? 'Uncategorized')}.toList();
-
-              return SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: 34,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: categories.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 8),
-                          itemBuilder: (context, index) {
-                            final category = categories[index];
-                            final selected = category == _selectedCategory;
-                            return _DecisionChip(
-                              label: category,
-                              selected: selected,
-                              onTap: () => setState(() => _selectedCategory = category),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _DecisionChip(
-                            label: _availableOnly ? 'Available only' : 'All availability',
-                            selected: _availableOnly,
-                            onTap: () => setState(() => _availableOnly = !_availableOnly),
-                          ),
-                          const SizedBox(width: 8),
-                          _DecisionChip(
-                            label: _sort == _MenuSort.recommended ? 'Sort: Recommended' : 'Sort: Price low-high',
-                            selected: _sort == _MenuSort.priceLowToHigh,
+                      final item = filtered[index];
+                      final quantityInCart = cart[item.id]?.quantity ?? 0;
+                      return AppAnimations.staggeredList(
+                        index,
+                        Semantics(
+                          button: true,
+                          label:
+                              '$menuItemCardSemanticPrefix ${item.name}, Rs ${item.price.toStringAsFixed(0)}',
+                          child: MenuItemCard(
+                            item: item,
+                            quantityInCart: quantityInCart,
                             onTap: () {
-                              setState(() {
-                                _sort = _sort == _MenuSort.recommended
-                                    ? _MenuSort.priceLowToHigh
-                                    : _MenuSort.recommended;
-                              });
+                              context.push(
+                                '/item',
+                                extra: SearchResult(
+                                  id: item.id,
+                                  name: item.name,
+                                  description: item.description,
+                                  price: item.price,
+                                  imageUrl: item.imageUrl,
+                                  vendor: SearchVendor(
+                                    id: widget.vendorId,
+                                    name: vendorsAsync.maybeWhen(
+                                      data: (vendors) => vendors
+                                          .firstWhere(
+                                            (v) => v.id == widget.vendorId,
+                                          )
+                                          .name,
+                                      orElse: () => 'Campus Vendor',
+                                    ),
+                                  ),
+                                ),
+                              );
                             },
+                            onIncrement: () {
+                              ref.read(cartProvider.notifier).addItem(item);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${item.name} updated in cart'),
+                                  margin: const EdgeInsets.all(24),
+                                  behavior: SnackBarBehavior.floating,
+                                  backgroundColor: AppColors.primary,
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                            onDecrement: () => ref
+                                .read(cartProvider.notifier)
+                                .removeItem(item),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      );
+                    },
+                    childCount: (() {
+                      final filtered = _applyDecisionFilters(items);
+                      return filtered.isEmpty ? 1 : filtered.length;
+                    })(),
                   ),
                 ),
-              );
-            },
-            loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
-            error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
-          ),
-
-          // Menu Grid
-          menuAsync.when(
-            data: (items) => SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final filtered = _applyDecisionFilters(items);
-                    if (filtered.isEmpty) {
-                      return const _NoMenuMatchCard();
-                    }
-
-                    final item = filtered[index];
-                    final quantityInCart = cart[item.id]?.quantity ?? 0;
-                    return AppAnimations.staggeredList(
-                      index,
-                      MenuItemCard(
-                        item: item,
-                        quantityInCart: quantityInCart,
-                        onTap: () {
-                          context.push(
-                            '/item',
-                            extra: SearchResult(
-                              id: item.id,
-                              name: item.name,
-                              description: item.description,
-                              price: item.price,
-                              imageUrl: item.imageUrl,
-                              vendor: SearchVendor(
-                                id: widget.vendorId,
-                                name: vendorsAsync.maybeWhen(
-                                  data: (vendors) =>
-                                      vendors.firstWhere((v) => v.id == widget.vendorId).name,
-                                  orElse: () => 'Campus Vendor',
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        onIncrement: () {
-                          ref.read(cartProvider.notifier).addItem(item);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('${item.name} updated in cart'),
-                              margin: const EdgeInsets.all(24),
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: AppColors.primary,
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                        onDecrement: () => ref.read(cartProvider.notifier).removeItem(item),
-                      ),
-                    );
-                  },
-                  childCount: (() {
-                    final filtered = _applyDecisionFilters(items);
-                    return filtered.isEmpty ? 1 : filtered.length;
-                  })(),
+              ),
+              loading: () => SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => const MenuItemShimmer(),
+                    childCount: 6,
+                  ),
                 ),
               ),
+              error: (e, _) =>
+                  SliverFillRemaining(child: Center(child: Text('Error: $e'))),
             ),
-            loading: () => SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => const MenuItemShimmer(),
-                  childCount: 6,
-                ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: _VendorReviewSection(vendorId: widget.vendorId),
               ),
             ),
-            error: (e, _) => SliverFillRemaining(child: Center(child: Text('Error: $e'))),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-              child: _VendorReviewSection(vendorId: widget.vendorId),
-            ),
-          ),
-          const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
-        ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+          ],
+        ),
       ),
       floatingActionButton: _buildCartFab(ref),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -293,50 +357,71 @@ class _VendorMenuScreenState extends ConsumerState<VendorMenuScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: GestureDetector(
-        onTap: () => ref.read(routerProvider).push('/cart'),
-        child: Container(
-          height: 64,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(
-                    '${cart.length} ITEMS',
-                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
-                  ),
-                  Text(
-                    '₹${ref.read(cartProvider.notifier).totalAmount.toInt()}',
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-                  ),
-                ],
-              ),
-              Row(
-                children: const [
-                  Text(
-                    'VIEW CART',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
-                ],
-              ),
-            ],
+      child: Semantics(
+        button: true,
+        label: 'View cart',
+        child: GestureDetector(
+          onTap: () => ref.read(routerProvider).push('/cart'),
+          child: Container(
+            height: 64,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${cart.length} ITEMS',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    Text(
+                      '₹${ref.read(cartProvider.notifier).totalAmount.toInt()}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: const [
+                    Text(
+                      'VIEW CART',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -357,24 +442,29 @@ class _DecisionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.border,
+            ),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
@@ -401,7 +491,10 @@ class _NoMenuMatchCard extends StatelessWidget {
           Expanded(
             child: Text(
               'No items match these filters. Try another category or availability option.',
-              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -452,7 +545,11 @@ class _VendorReviewSectionState extends State<_VendorReviewSection> {
           children: [
             const Text(
               'Recent Reviews',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 10),
             ...latest.map((review) => _ReviewCard(review: review)),
@@ -496,7 +593,13 @@ class _ReviewCard extends StatelessWidget {
           ),
           if (comment.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(comment, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Text(
+              comment,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
           ],
         ],
       ),

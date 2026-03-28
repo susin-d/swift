@@ -1,16 +1,33 @@
 # admin_app
 
-A new Flutter project.
+Flutter admin operations console for Campus Pulse.
 
-## Getting Started
+## Core Features
 
-This project is a starting point for a Flutter application.
+- Secure admin authentication with session posture checks
+- Dashboard overview for operational health
+- Vendor, user, order, promo, finance, campus, settings, and audit modules
+- Shared AppShell for compact and desktop admin navigation
+- Governance workflows with reason capture on sensitive actions
 
-A few resources to get you started if this is your first Flutter project:
+## Production Readiness (Current)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Compact mode bottom navigation with desktop sidebar parity
+- Trust posture banner and trusted-device action flow
+- Accessibility semantics on shell-level actions (search affordance + sign-out control)
+- Test-covered provider and screen flows for orders, vendors, users, finance, settings, and audit
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Development Commands
+
+Run from `admin_app/`:
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter run
+```
+
+## Monorepo Verification Policy
+
+When admin behavior changes due to backend or shared contract updates, validate impacted backend/app suites as required by repository governance docs.

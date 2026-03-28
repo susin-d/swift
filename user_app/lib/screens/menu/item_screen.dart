@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../models/menu_model.dart';
 import '../../models/search_result.dart';
 import '../../providers/cart_provider.dart';
@@ -22,12 +23,13 @@ class ItemScreen extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Item'),
           leading: IconButton(
+            tooltip: 'Back',
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(
-          child: Text('Unable to load this item right now.'),
+        body: const ResponsiveContent(
+          child: Center(child: Text('Unable to load this item right now.')),
         ),
       );
     }
@@ -35,80 +37,87 @@ class ItemScreen extends ConsumerWidget {
     final data = item as SearchResult;
     final vendor = data.vendor;
     final canAddToCart =
-      data.id.trim().isNotEmpty && vendor?.id.trim().isNotEmpty == true;
+        data.id.trim().isNotEmpty && vendor?.id.trim().isNotEmpty == true;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Item Details'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: CachedNetworkImage(
-                imageUrl: data.imageUrl ??
-                    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200',
-                height: 220,
-                width: double.infinity,
-                fit: BoxFit.cover,
+      body: ResponsiveContent(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: CachedNetworkImage(
+                  imageUrl:
+                      data.imageUrl ??
+                      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200',
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              data.name,
-              style: GoogleFonts.outfit(
-                fontSize: 30,
-                fontWeight: FontWeight.w900,
-                height: 1.05,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (vendor != null)
+              const SizedBox(height: 18),
               Text(
-                vendor.name,
+                data.name,
+                style: GoogleFonts.outfit(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (vendor != null)
+                Text(
+                  vendor.name,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '\u20B9${data.price.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                data.description?.trim().isNotEmpty == true
+                    ? data.description!.trim()
+                    : 'Freshly prepared and served by your campus favorite vendor.',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                  height: 1.45,
                 ),
               ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '\u20B9${data.price.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 20,
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              data.description?.trim().isNotEmpty == true
-                  ? data.description!.trim()
-                  : 'Freshly prepared and served by your campus favorite vendor.',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 15,
-                height: 1.45,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(

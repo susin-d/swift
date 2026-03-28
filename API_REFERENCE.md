@@ -231,6 +231,110 @@ Status mapping:
 
 ## Authentication
 
+## Chat and Support
+
+All chat and support routes require an authenticated bearer token.
+
+### `POST /chat/rooms`
+Creates a chat room for support or operational conversations.
+
+- **Request body**:
+  ```json
+  {
+    "topic": "Order issue follow-up",
+    "participantIds": ["agent-user-id"]
+  }
+  ```
+- **Response** `201 Created`:
+  ```json
+  {
+    "room": {
+      "id": "room_...",
+      "topic": "Order issue follow-up",
+      "status": "active",
+      "createdBy": "user-id",
+      "participants": ["user-id", "agent-user-id"],
+      "createdAt": "2026-03-27T12:00:00.000Z",
+      "updatedAt": "2026-03-27T12:00:00.000Z"
+    }
+  }
+  ```
+
+### `GET /chat/rooms/:id/messages`
+Returns room messages for room participants (admins can read all rooms).
+
+- Optional query params:
+  - `limit`: number of recent messages to return (default `50`, max `100`)
+- **Response** `200 OK`:
+  ```json
+  {
+    "roomId": "room_...",
+    "messages": [
+      {
+        "id": "msg_...",
+        "roomId": "room_...",
+        "senderId": "agent-user-id",
+        "content": "Hello, how can I help?",
+        "createdAt": "2026-03-27T12:05:00.000Z"
+      }
+    ],
+    "meta": {
+      "count": 1,
+      "limit": 50
+    }
+  }
+  ```
+
+### `POST /chat/rooms/:id/messages`
+Adds a message to an active room.
+
+- **Request body**:
+  ```json
+  {
+    "content": "I am missing one item in my order."
+  }
+  ```
+- **Response** `201 Created`:
+  ```json
+  {
+    "message": {
+      "id": "msg_...",
+      "roomId": "room_...",
+      "senderId": "user-id",
+      "content": "I am missing one item in my order.",
+      "createdAt": "2026-03-27T12:06:00.000Z"
+    }
+  }
+  ```
+
+### `POST /support/tickets`
+Creates a support ticket.
+
+- **Request body**:
+  ```json
+  {
+    "subject": "Missing item",
+    "description": "My combo meal was missing the drink.",
+    "priority": "high",
+    "orderId": "order-id-optional"
+  }
+  ```
+
+### `GET /support/tickets`
+Returns support tickets visible to the authenticated user:
+- Admin users: all tickets
+- Non-admin users: only tickets they created
+
+### `GET /support/tickets/me`
+Returns only tickets created by the authenticated user.
+
+### `PATCH /support/tickets/:id`
+Updates ticket status/details.
+
+Rules:
+- Admins can update `status`, `priority`, `assigneeId`, and `resolutionNote`.
+- Ticket owners can close their own ticket (`status: "closed"`) and update `resolutionNote`.
+
 ## Public Discovery
 
 ### `GET /public/recommendations`

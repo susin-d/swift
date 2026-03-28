@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../models/address_model.dart';
 import '../../providers/address_provider.dart';
 
@@ -18,55 +19,59 @@ class AddressBookScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Saved Addresses'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
+            tooltip: 'Add address',
             icon: const Icon(Icons.add_location_alt_rounded),
             onPressed: () => _showAddAddressDialog(context, ref),
           ),
         ],
       ),
-      body: addressesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _EmptyState(
-          title: 'Unable to load addresses',
-          subtitle: e.toString(),
-          actionLabel: 'Retry',
-          onAction: () => ref.read(addressesProvider.notifier).refresh(),
-        ),
-        data: (addresses) {
-          if (addresses.isEmpty) {
-            return _EmptyState(
-              title: 'No addresses yet',
-              subtitle: 'Add a delivery address to speed up checkout.',
-              actionLabel: 'Add address',
-              onAction: () => _showAddAddressDialog(context, ref),
-            );
-          }
+      body: ResponsiveContent(
+        child: addressesAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => _EmptyState(
+            title: 'Unable to load addresses',
+            subtitle: e.toString(),
+            actionLabel: 'Retry',
+            onAction: () => ref.read(addressesProvider.notifier).refresh(),
+          ),
+          data: (addresses) {
+            if (addresses.isEmpty) {
+              return _EmptyState(
+                title: 'No addresses yet',
+                subtitle: 'Add a delivery address to speed up checkout.',
+                actionLabel: 'Add address',
+                onAction: () => _showAddAddressDialog(context, ref),
+              );
+            }
 
-          return RefreshIndicator(
-            onRefresh: () => ref.read(addressesProvider.notifier).refresh(),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(24),
-              itemCount: addresses.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final address = addresses[index];
-                return _AddressCard(
-                  address: address,
-                  onMakeDefault: address.isDefault
-                      ? null
-                      : () => ref
-                            .read(addressesProvider.notifier)
-                            .setDefault(address.id),
-                  onDelete: () => _confirmDelete(context, ref, address),
-                );
-              },
-            ),
-          );
-        },
+            return RefreshIndicator(
+              onRefresh: () => ref.read(addressesProvider.notifier).refresh(),
+              child: ListView.separated(
+                padding: const EdgeInsets.all(24),
+                itemCount: addresses.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final address = addresses[index];
+                  return _AddressCard(
+                    address: address,
+                    onMakeDefault: address.isDefault
+                        ? null
+                        : () => ref
+                              .read(addressesProvider.notifier)
+                              .setDefault(address.id),
+                    onDelete: () => _confirmDelete(context, ref, address),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddAddressDialog(context, ref),

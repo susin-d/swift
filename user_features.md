@@ -42,42 +42,8 @@
 - **Authentication**: Email/password signup and login via Supabase and backend session endpoints
 - **Profile Management**: Edit name, email, phone via `updateProfile()` (AuthService)
 - **Session Posture**: Auth state tracking with current user available in providers
-- **Legal & Help**: Terms of Service, Privacy Policy, Help & Support screens (currently static)
+- **Legal & Help**: Terms of Service, Privacy Policy, and Help & Support with backend ticket submission (`POST /api/v1/support/tickets`), actionable email/phone launch, and in-app FAQ panel
 
-## ❌ Missing Features
-
-### Loyalty & Rewards
-- **Wallet/Account Credit System**: No wallet top-up, credit balance, or credit-based ordering UI (model exists with `walletBalance` field but no corresponding endpoints)
-- **Referral Program**: No referral code generation, sharing, or referral bonus UI
-- **Loyalty Tiers**: No tier progression, points accumulation, or tier-based perks
-- **Achievement System**: No milestones, badges, or gamified engagement rewards
-
-### Messaging & Support
-- **In-App Chat**: Support screen shows placeholder UI for "Chat with Support" but no real chat implementation or WebSocket/messaging endpoints
-- **Courier Communication**: No direct messaging with delivery personnel (only ETA and status updates)
-- **Order-Scoped Support Tickets**: No ability to create help requests tied to specific orders
-
-### Analytics & Insights
-- **Spending Dashboard**: No monthly/weekly spending summaries or expense tracking
-- **Order Statistics**: No personal order analytics (frequency, favorite vendors, most ordered items)
-- **Dietary Preferences**: No filtering by allergies, dietary restrictions, or cuisine preferences
-
-### Account Management
-- **Subscription Options**: No subscription plans for recurring orders or discounted bulk purchases
-- **Payment Method Management**: No saved card list or payment method editing UI (only Razorpay selection at checkout)
-- **Account Deletion**: No self-service account/data deletion flow
-
-### Advanced Ordering
-- **Bulk/Group Orders**: No group ordering or split payment features
-- **Custom Dietary Requests**: No per-item special instructions beyond delivery instructions
-- **Vendor Notifications**: No ability to follow/watch vendors for new menu items or status changes
-
-## 🚀 Suggested Enhancements
-
-### Retention & Engagement
-1. **Wallet System**: Implement wallet top-up UI with balance display in profile. Backend needs `PATCH /api/v1/wallet/topup` and `GET /api/v1/wallet/balance` endpoints
-2. **Referral Program**: Add referral share button on profile screen; generate unique referral code; backend needs `POST /api/v1/referrals/generate` and tracking endpoints
-3. **Subscription Options**: Offer "Order 5 get 1 free" or monthly discount passes; requires new subscription state in cart and backend subscription endpoints
 4. **Spending Insights**: Dashboard card on home showing "You've saved ₹240 this month with promos" and trending vendors/dishes
 
 ### Marketing & Discovery
@@ -108,7 +74,7 @@
 ## ⚠️ UX Issues
 
 ### High Priority
-1. **Support Screen Non-Functional**: "Chat with Support", "Email Us", "Call Us" buttons have empty `onTap` handlers (`() {}`). Implement real support routing (email client, chat SDK, phone dialer)
+1. **Support Screen Channel Depth**: Support entry points now launch email/phone and FAQ actions, but there is no persisted in-app conversation timeline yet
 2. **Cart Height Overflow**: Cart checkout summary referenced as "height-capped with internal scrolling" in README, but on small screens (iPhone SE, Android <5"), address + promo + schedule sections may still overflow; verify horizontal scrolling/collapsible sections
 3. **Payment Error Feedback**: No error recovery UX if Razorpay fails mid-flow; missing retry button or fallback to pay-on-pickup option
 4. **Missing Wallet Balance Display**: User model has `walletBalance` field but no UI component shows it on profile; users unaware of available credit
@@ -143,7 +109,7 @@
 
 ### Communication
 7. **Missing**: Chat/messaging endpoints (e.g., `POST /api/v1/messages`, `GET /api/v1/conversations/:conversationId/messages`)
-8. **Missing**: In-app support ticket endpoints (`POST /api/v1/support/tickets`, `GET /api/v1/support/tickets/me`)
+8. **Delivered**: In-app support ticket endpoints (`POST /api/v1/support/tickets`, `GET /api/v1/support/tickets/me`) and ticket status update (`PATCH /api/v1/support/tickets/:id`)
 9. **Missing**: Delivery person contact endpoint (name, phone, estimated ETA precision)
 
 ### Advanced Features

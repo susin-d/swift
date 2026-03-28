@@ -6,8 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../models/search_result.dart';
 import '../../services/search_service.dart';
+
+const String searchErrorActionLabel = 'Try again';
+const String searchNoMatchesActionLabel = 'Clear query';
+const String searchResultSemanticPrefix = 'Search result';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -69,7 +74,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     setState(() {
       _query = value;
     });
-    _debounce = Timer(const Duration(milliseconds: 320), () => _performSearch(value));
+    _debounce = Timer(
+      const Duration(milliseconds: 320),
+      () => _performSearch(value),
+    );
   }
 
   @override
@@ -79,37 +87,39 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       appBar: AppBar(
         title: const Text('Search'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
-            child: TextField(
-              controller: _controller,
-              onChanged: _onQueryChanged,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: 'Search for dishes or vendors...',
-                prefixIcon: const Icon(Icons.search_rounded),
-                suffixIcon: _query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.close_rounded),
-                        onPressed: () {
-                          _controller.clear();
-                          _onQueryChanged('');
-                        },
-                      )
-                    : null,
+      body: ResponsiveContent(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
+              child: TextField(
+                controller: _controller,
+                onChanged: _onQueryChanged,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Search for dishes or vendors...',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _query.isNotEmpty
+                      ? IconButton(
+                          tooltip: 'Clear search',
+                          icon: const Icon(Icons.close_rounded),
+                          onPressed: () {
+                            _controller.clear();
+                            _onQueryChanged('');
+                          },
+                        )
+                      : null,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: _buildResults(context),
-          ),
-        ],
+            Expanded(child: _buildResults(context)),
+          ],
+        ),
       ),
     );
   }
@@ -130,6 +140,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return _EmptySearchState(
         title: 'Search failed',
         subtitle: _error!,
+        actionLabel: searchErrorActionLabel,
+        onAction: () => _performSearch(_query),
       );
     }
 
@@ -137,6 +149,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return _EmptySearchState(
         title: 'No matches yet',
         subtitle: 'Try a different keyword or search for a vendor name.',
+        actionLabel: searchNoMatchesActionLabel,
+        onAction: () {
+          _controller.clear();
+          _onQueryChanged('');
+        },
       );
     }
 
@@ -171,62 +188,83 @@ class _SearchResultCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
-      child: Ink(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+      child: Semantics(
+        button: true,
+        label:
+            '$searchResultSemanticPrefix ${result.name}, $vendorName, Rs ${result.price.toStringAsFixed(0)}',
+        child: Ink(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
-              child: const Icon(Icons.restaurant_menu_rounded, color: AppColors.primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    result.name,
-                    style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 16),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vendorName,
-                    style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 12),
-                  ),
-                  if (description != null && description.isNotEmpty) ...[
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.restaurant_menu_rounded,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      result.name,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                      vendorName,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
+                    if (description != null && description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '\u20B9${result.price.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                '\u20B9${result.price.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -234,10 +272,17 @@ class _SearchResultCard extends StatelessWidget {
 }
 
 class _EmptySearchState extends StatelessWidget {
-  const _EmptySearchState({required this.title, required this.subtitle});
+  const _EmptySearchState({
+    required this.title,
+    required this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String title;
   final String subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -247,15 +292,26 @@ class _EmptySearchState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_rounded, size: 48, color: AppColors.textMuted.withValues(alpha: 0.6)),
+            Icon(
+              Icons.search_rounded,
+              size: 48,
+              color: AppColors.textMuted.withValues(alpha: 0.6),
+            ),
             const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
             const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary),
             ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
+            ],
           ],
         ),
       ),

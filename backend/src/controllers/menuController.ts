@@ -121,7 +121,7 @@ export const deleteMenuItem = async (request: FastifyRequest, reply: FastifyRepl
  * Error (500): Storage service error
  */
 export const uploadMenuItemImageEndpoint = async (request: FastifyRequest, reply: FastifyReply) => {
-    const vendorId = (request.user as any)?.id;
+    const vendorId = (request.user as any)?.sub;
     if (!vendorId) {
         return reply.code(401).send({ error: 'unauthorized', message: 'Vendor authentication required' });
     }

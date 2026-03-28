@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/payment_config.dart';
+import '../../core/widgets/responsive_content.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../providers/address_provider.dart';
@@ -83,32 +84,35 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       appBar: AppBar(
         title: const Text('Your Basket'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),
-      body: cart.isEmpty
-          ? CartEmptyView(onBack: () => context.pop())
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                    itemCount: cart.length,
-                    itemBuilder: (context, index) {
-                      final item = cart.values.toList()[index];
-                      return CartItemWidget(
-                        item: item.item,
-                        quantity: item.quantity,
-                        onIncrement: () => cartNotifier.addItem(item.item),
-                        onDecrement: () => cartNotifier.removeItem(item.item),
-                      );
-                    },
+      body: ResponsiveContent(
+        child: cart.isEmpty
+            ? CartEmptyView(onBack: () => context.pop())
+            : Column(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                      itemCount: cart.length,
+                      itemBuilder: (context, index) {
+                        final item = cart.values.toList()[index];
+                        return CartItemWidget(
+                          item: item.item,
+                          quantity: item.quantity,
+                          onIncrement: () => cartNotifier.addItem(item.item),
+                          onDecrement: () => cartNotifier.removeItem(item.item),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                _buildSummary(context, addressesAsync),
-              ],
-            ),
+                  _buildSummary(context, addressesAsync),
+                ],
+              ),
+      ),
     );
   }
 

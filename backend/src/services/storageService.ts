@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { v4 as uuidv4 } from 'uuid';
 
 // Configuration
 const BUCKET_NAME = 'menu-items';
@@ -113,9 +112,10 @@ export const uploadMenuItemImage = async (
   };
   const ext = mimeToExt[mimeType] || 'jpg';
 
-  // Generate storage path: vendor/{vendorId}/items/{uniqueId}.{ext}
-  const uniqueId = uuidv4();
-  const fileName = options.fileName || `${uniqueId}.${ext}`;
+  // Generate storage path: vendor/{vendorId}/items/{timestamp}-{randomId}.{ext}
+  const timestamp = Date.now();
+  const randomId = Math.random().toString(36).substring(2, 9);
+  const fileName = options.fileName || `${timestamp}-${randomId}.${ext}`;
   const storagePath = `vendor/${options.vendorId}/items/${fileName}`;
 
   // Convert base64 to buffer

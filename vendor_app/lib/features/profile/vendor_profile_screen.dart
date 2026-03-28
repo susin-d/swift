@@ -6,11 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'vendor_profile_provider.dart';
 import 'vendor_profile_model.dart';
 
+const String vendorProfileErrorTitle = 'Unable to load vendor profile';
+const String vendorProfileErrorActionLabel = 'Retry';
+
 class VendorProfileScreen extends ConsumerStatefulWidget {
   const VendorProfileScreen({super.key});
 
   @override
-  ConsumerState<VendorProfileScreen> createState() => _VendorProfileScreenState();
+  ConsumerState<VendorProfileScreen> createState() =>
+      _VendorProfileScreenState();
 }
 
 class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
@@ -53,18 +57,25 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Vendor Profile', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Vendor Profile',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => context.pop(),
         ),
       ),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load profile: $e')),
+        error: (e, _) => _ProfileErrorState(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(vendorProfileProvider),
+        ),
         data: (profile) {
           if (!_dirty) {
             _sync(profile);
@@ -89,7 +100,9 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
                   _dirty = true;
                 }),
                 title: const Text('Auto accept incoming orders'),
-                subtitle: const Text('New orders enter as accepted when enabled'),
+                subtitle: const Text(
+                  'New orders enter as accepted when enabled',
+                ),
               ),
               SwitchListTile(
                 value: _busyModeEnabled,
@@ -124,13 +137,17 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
                 controller: _prepController,
                 keyboardType: TextInputType.number,
                 onChanged: (_) => setState(() => _dirty = true),
-                decoration: const InputDecoration(labelText: 'Avg prep time (minutes)'),
+                decoration: const InputDecoration(
+                  labelText: 'Avg prep time (minutes)',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _busyMessageController,
                 onChanged: (_) => setState(() => _dirty = true),
-                decoration: const InputDecoration(labelText: 'Busy mode message (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Busy mode message (optional)',
+                ),
               ),
               const SizedBox(height: 12),
               ListTile(
@@ -197,10 +214,12 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
     final name = _nameController.text.trim();
     final description = _descController.text.trim();
     final imageUrl = _imageController.text.trim();
-        final prepTime = int.tryParse(_prepController.text.trim()) ?? 15;
-        final busyMessage = _busyMessageController.text.trim();
+    final prepTime = int.tryParse(_prepController.text.trim()) ?? 15;
+    final busyMessage = _busyMessageController.text.trim();
 
-    await ref.read(vendorProfileProvider.notifier).updateProfile(
+    await ref
+        .read(vendorProfileProvider.notifier)
+        .updateProfile(
           name: name,
           description: description.isEmpty ? null : description,
           imageUrl: imageUrl.isEmpty ? null : imageUrl,
@@ -214,8 +233,51 @@ class _VendorProfileScreenState extends ConsumerState<VendorProfileScreen> {
 
     if (!mounted) return;
     setState(() => _dirty = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated')),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Profile updated')));
+  }
+}
+
+class _ProfileErrorState extends StatelessWidget {
+  const _ProfileErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.store_mall_directory_outlined,
+              size: 48,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              vendorProfileErrorTitle,
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text(vendorProfileErrorActionLabel),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

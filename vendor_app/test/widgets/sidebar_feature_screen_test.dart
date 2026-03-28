@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vendor_app/features/sidebar/sidebar_feature_screen.dart';
 
 void main() {
-  testWidgets('renders sidebar feature placeholder metadata', (tester) async {
+  testWidgets('renders feature workspace with checklist and actions', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: SidebarFeatureScreen(
@@ -14,9 +16,9 @@ void main() {
     );
 
     expect(find.text('Order History'), findsAtLeastNWidgets(1));
-    expect(
-      find.textContaining('Core Navigation module is now added in the sidebar'),
-      findsOneWidget,
-    );
+    expect(find.text('Readiness Checklist'), findsOneWidget);
+    expect(find.text('Quick Actions'), findsOneWidget);
+    expect(find.text('Filter by date'), findsOneWidget);
+    expect(find.text('Save note', skipOffstage: false), findsOneWidget);
   });
 }

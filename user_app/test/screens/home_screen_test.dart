@@ -1,40 +1,41 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_app/screens/home/home_screen.dart';
 
 void main() {
-  group('Widget Smoke Tests', () {
-    testWidgets('Basic scaffold renders expected text', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: Text('Swift User App'),
-          ),
-        ),
-      );
-
-      expect(find.text('Swift User App'), findsOneWidget);
-      expect(find.byType(Scaffold), findsOneWidget);
+  group('Home screen UX copy contract', () {
+    test('bottom nav labels are present and ordered for clarity', () {
+      expect(homeBottomNavLabels, const ['Home', 'Orders', 'Cart', 'Profile']);
     });
 
-    testWidgets('Icon button tap does not throw', (WidgetTester tester) async {
-      var tapped = false;
+    test('hero has one clear primary CTA label', () {
+      expect(homeHeroPrimaryCtaLabel, 'Order Now');
+      expect(homeMicroAnimationDuration, const Duration(milliseconds: 180));
+    });
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: IconButton(
-              icon: const Icon(Icons.shopping_cart_outlined),
-              onPressed: () => tapped = true,
-            ),
-          ),
-        ),
+    test('error states use actionable and friendly copy', () {
+      expect(homeCategoriesErrorText, 'Unable to load categories right now.');
+      expect(homeReorderErrorText, 'Reorder Studio is unavailable right now.');
+      expect(homeFeaturedErrorText, 'Featured items could not be loaded.');
+      expect(homeReorderFailureText, 'Quick reorder failed. Please try again.');
+    });
+
+    test('onboarding tips are progressive and task-focused', () {
+      expect(
+        homeTipPrimaryText,
+        'Tip: mood chips filter discovery, and Reorder Studio repeats your latest order quickly.',
       );
+      expect(
+        homeTipSecondaryText,
+        'Use Home, Orders, Cart, and Profile tabs below to move through your order flow faster.',
+      );
+    });
 
-      await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
-      await tester.pump();
-
-      expect(tapped, isTrue);
-      expect(tester.takeException(), isNull);
+    test('mood descriptions are explicit for onboarding discoverability', () {
+      expect(moodDescriptionForLabel('All'), 'Browse every available item');
+      expect(moodDescriptionForLabel('Comfort'), 'Hearty and filling meals');
+      expect(moodDescriptionForLabel('Quick'), 'Fast bites and snacks');
+      expect(moodDescriptionForLabel('Sweet'), 'Desserts and bakery picks');
+      expect(moodDescriptionForLabel('Light'), 'Fresh and lighter options');
     });
   });
 }
