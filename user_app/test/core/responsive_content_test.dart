@@ -1,6 +1,3 @@
-void main() {
-  // Placeholder main to prevent test runner errors.
-}
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/core/widgets/responsive_content.dart';
