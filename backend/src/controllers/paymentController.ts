@@ -13,7 +13,9 @@ export const createRazorpayOrder = async (request: FastifyRequest, reply: Fastif
         };
 
         const order = await razorpay.orders.create(options);
-        return reply.send(order);
+        // Attach public key to response
+        const keyId = process.env.RAZORPAY_KEY_ID || '';
+        return reply.send({ ...order, key: keyId });
     } catch (error: any) {
         return reply.code(400).send({ error: error.message });
     }

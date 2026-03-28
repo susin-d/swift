@@ -7,6 +7,7 @@ class CartItemWidget extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
+  final VoidCallback? onRemove;
 
   const CartItemWidget({
     super.key,
@@ -14,6 +15,7 @@ class CartItemWidget extends StatelessWidget {
     required this.quantity,
     required this.onIncrement,
     required this.onDecrement,
+    this.onRemove,
   });
 
   @override
@@ -100,6 +102,16 @@ class CartItemWidget extends StatelessWidget {
               ],
             ),
           ),
+          if (onRemove != null) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+              onPressed: onRemove,
+              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              tooltip: 'Remove from cart',
+            ),
+          ],
         ],
       ),
     );

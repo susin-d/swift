@@ -73,8 +73,16 @@ flutter run
 
 Payment configuration:
 
+## Payment configuration
 
-// Supabase configuration is now handled by the backend. No direct keys or dart-define needed in the app.
+Payment gateway (Razorpay) is now fully backend-driven. The app does NOT require any `--dart-define` or direct Razorpay key configuration.
+
+**How it works:**
+- The app requests a payment order from the backend, which returns the public Razorpay key and order ID.
+- The app uses these values to launch the payment UI.
+- No payment keys are stored or configured in the Flutter app.
+
+If you see "Payment gateway is not configured yet", ensure the backend is running and has valid Razorpay keys in its environment.
 
 ## Monorepo Verification Policy
 

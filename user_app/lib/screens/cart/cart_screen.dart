@@ -92,10 +92,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       body: ResponsiveContent(
         child: cart.isEmpty
             ? CartEmptyView(onBack: () => context.pop())
-            : Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
+            : SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                       itemCount: cart.length,
                       itemBuilder: (context, index) {
@@ -105,12 +108,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                           quantity: item.quantity,
                           onIncrement: () => cartNotifier.addItem(item.item),
                           onDecrement: () => cartNotifier.removeItem(item.item),
+                          onRemove: () => cartNotifier.removeItem(item.item), // Remove completely
                         );
                       },
                     ),
-                  ),
-                  _buildSummary(context, addressesAsync),
-                ],
+                    _buildSummary(context, addressesAsync),
+                  ],
+                ),
               ),
       ),
     );
@@ -817,7 +821,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       );
 
       final options = {
-        'key': PaymentConfig.razorpayKeyId,
+        'key': order['key'] ?? '',
         'amount': (finalAmount * 100).toInt(),
         'name': PaymentConfig.merchantName,
         'description': PaymentConfig.merchantDescription,

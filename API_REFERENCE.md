@@ -1,3 +1,43 @@
+## Payments (Razorpay)
+
+### `POST /payments/create-order`
+Creates a Razorpay payment order and returns the order details and public key.
+- **Request Body:**
+  ```json
+  {
+    "amount": 150.0,
+    "currency": "INR" // optional, defaults to INR
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "id": "order_xyz...", // Razorpay order ID
+    "amount": 15000, // in paise
+    "currency": "INR",
+    ...other Razorpay order fields,
+    "key": "rzp_test_..." // public Razorpay key for frontend
+  }
+  ```
+
+### `POST /payments/verify`
+Verifies a Razorpay payment signature after payment completion.
+- **Request Body:**
+  ```json
+  {
+    "razorpay_order_id": "order_xyz...",
+    "razorpay_payment_id": "pay_abc...",
+    "razorpay_signature": "..."
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  { "status": "success", "message": "Payment verified" }
+  ```
+- **Error Response** `400 Bad Request`:
+  ```json
+  { "status": "failure", "message": "Signature mismatch" }
+  ```
 # API Reference
 
 This document outlines the core RESTful endpoints exposed by the Swift backend.
