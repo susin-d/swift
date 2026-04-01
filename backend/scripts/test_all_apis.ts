@@ -1,8 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 
-const BASE_URL = 'http://localhost:3000/api/v1';
+const BASE_URL = process.env.API_BASE_URL?.trim() || 'http://localhost:3000/api/v1';
 const LOG_FILE = path.join(__dirname, '..', 'api_test.log');
+const vendorId = process.env.TEST_VENDOR_ID?.trim() || '';
+const orderId = process.env.TEST_ORDER_ID?.trim() || '';
+const loginEmail = process.env.TEST_LOGIN_EMAIL?.trim() || 'student@campus.edu';
+const loginPassword = process.env.TEST_LOGIN_PASSWORD?.trim() || 'securepassword123';
+const addressLine1 = process.env.TEST_ADDRESS_LINE1?.trim() || '123 Main St';
+const addressCity = process.env.TEST_ADDRESS_CITY?.trim() || 'Campus';
+const addressType = process.env.TEST_ADDRESS_TYPE?.trim() || 'home';
 
 // Clear log file
 fs.writeFileSync(LOG_FILE, `API Test Log - ${new Date().toISOString()}\n\n`);
@@ -17,17 +24,30 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
     let authToken = '';
-    let vendorId = 'v123'; // Placeholder
-    let orderId = 'o123';  // Placeholder
 
-    const endpoints = [
+    if (!vendorId) {
+        log('[INFO] TEST_VENDOR_ID is not set; vendor-scoped endpoints will be skipped.');
+    }
+    if (!orderId) {
+        log('[INFO] TEST_ORDER_ID is not set; delivery-scoped endpoints will be skipped.');
+    }
+
+    const endpoints: Array<{
+        method: string;
+        path: string;
+        body?: Record<string, unknown>;
+        params?: string;
+        protected?: boolean;
+        isLogin?: boolean;
+        requires?: Array<'vendorId' | 'orderId'>;
+    }> = [
         // Auth
         { method: 'POST', path: '/auth/register', body: { email: `test_${Date.now()}@test.com`, password: 'Password123!', name: 'Test User' } },
-        { method: 'POST', path: '/auth/session', body: { email: 'student@campus.edu', password: 'securepassword123' }, isLogin: true },
+        { method: 'POST', path: '/auth/session', body: { email: loginEmail, password: loginPassword }, isLogin: true },
         { method: 'GET', path: '/auth/me', protected: true },
 
         // Orders
-        { method: 'POST', path: '/orders', protected: true, body: { vendor_id: vendorId, total_amount: 150.00, items: [{ id: 'item-1', quantity: 2, price: 75.00 }] } },
+        { method: 'POST', path: '/orders', protected: true, body: { vendor_id: vendorId, total_amount: 150.00, items: [{ id: 'item-1', quantity: 2, price: 75.00 }] }, requires: ['vendorId'] },
         { method: 'GET', path: '/orders/me', protected: true },
 
         // Vendor Ops
@@ -36,7 +56,7 @@ async function runTests() {
         { method: 'GET', path: '/vendor-ops/stats', protected: true },
 
         // Menus
-        { method: 'GET', path: `/menus/vendor/${vendorId}` },
+        { method: 'GET', path: `/menus/vendor/${vendorId}`, requires: ['vendorId'] },
         { method: 'POST', path: '/menus', protected: true, body: { name: 'New Menu' } },
 
         // Public
@@ -48,13 +68,13 @@ async function runTests() {
 
         // Addresses
         { method: 'GET', path: '/addresses', protected: true },
-        { method: 'POST', path: '/addresses', protected: true, body: { line1: '123 Main St', city: 'Campus', type: 'home' } },
+        { method: 'POST', path: '/addresses', protected: true, body: { line1: addressLine1, city: addressCity, type: addressType } },
 
         // Reviews
-        { method: 'GET', path: `/reviews/vendor/${vendorId}` },
+        { method: 'GET', path: `/reviews/vendor/${vendorId}`, requires: ['vendorId'] },
 
         // Delivery
-        { method: 'GET', path: `/delivery/${orderId}/location`, protected: true },
+        { method: 'GET', path: `/delivery/${orderId}/location`, protected: true, requires: ['orderId'] },
 
         // Admin
         { method: 'GET', path: '/admin/stats', protected: true },
@@ -62,6 +82,15 @@ async function runTests() {
     ];
 
     for (const ep of endpoints) {
+        if (ep.requires?.includes('vendorId') && !vendorId) {
+            log(`[SKIP] ${ep.method} ${ep.path} - TEST_VENDOR_ID not set`);
+            continue;
+        }
+        if (ep.requires?.includes('orderId') && !orderId) {
+            log(`[SKIP] ${ep.method} ${ep.path} - TEST_ORDER_ID not set`);
+            continue;
+        }
+
         const url = `${BASE_URL}${ep.path}${ep.params ? '?' + ep.params : ''}`;
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (ep.protected && authToken) {
@@ -88,7 +117,7 @@ async function runTests() {
             if (status >= 200 && status < 300) {
                 log(`[PASS] ${ep.method} ${ep.path} - Status: ${status}`);
                 passed++;
-                if ((ep as any).isLogin && data.session?.access_token) {
+                if (ep.isLogin && data.session?.access_token) {
                     authToken = data.session.access_token;
                     log('  -> Auth token acquired');
                 }

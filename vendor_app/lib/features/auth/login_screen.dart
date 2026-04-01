@@ -23,6 +23,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
   static const _teal = Color(0xFF0D9488);
   static const _tealDark = Color(0xFF065F46);
+  static const _demoEmail = 'demo.vendor@swift.com';
+  static const _demoPassword = 'Demo@1234';
 
   @override
   void initState() {
@@ -50,6 +52,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         _passwordController.text,
       );
     }
+  }
+
+  void _fillDemoCredentials() {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _emailController.text = _demoEmail;
+      _passwordController.text = _demoPassword;
+      _obscurePassword = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Demo credentials filled. Review them, then tap Login.'),
+      ),
+    );
   }
 
   @override
@@ -126,6 +142,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         // Email
                         _buildLabel('EMAIL'),
                         TextFormField(
+                          key: const Key('loginEmailField'),
                           controller: _emailController,
                           decoration: InputDecoration(
                             hintText: 'e.g. vendor@campus.edu',
@@ -150,6 +167,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         // Password
                         _buildLabel('PASSWORD'),
                         TextFormField(
+                          key: const Key('loginPasswordField'),
                           controller: _passwordController,
                           decoration: InputDecoration(
                             hintText: '••••••••',
@@ -208,6 +226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                           width: double.infinity,
                           height: 60,
                           child: ElevatedButton(
+                            key: const Key('loginSubmitButton'),
                             onPressed: authState.isLoading ? null : _submit,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _teal,
@@ -245,15 +264,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                               border: Border.all(color: _teal.withValues(alpha: 0.4), width: 1.5),
                             ),
                             child: TextButton.icon(
+                              key: const Key('fillDemoCredentialsButton'),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14)),
-                              onPressed: authState.isLoading
-                                  ? null
-                                  : () {
-                                      HapticFeedback.lightImpact();
-                                      ref.read(authProvider.notifier).login('demo.vendor@swift.com', 'Demo@1234');
-                                    },
+                              onPressed: authState.isLoading ? null : _fillDemoCredentials,
                               icon: const Icon(Icons.storefront_outlined, size: 20, color: _teal),
-                              label: Text('Login as Demo Vendor', style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15)),
+                              label: Text('Use Demo Credentials', style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15)),
                             ),
                           ),
                         ),

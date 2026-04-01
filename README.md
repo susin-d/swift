@@ -35,6 +35,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    Production safety:
    - Backend startup now fails in `NODE_ENV=production` if `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` are missing or placeholder values.
    - Keep service-role credentials only in server environment variables, never in client apps.
+   - `npm run test:api` is a local smoke harness; set `TEST_VENDOR_ID` and `TEST_ORDER_ID` to exercise vendor- and delivery-scoped routes instead of using placeholder IDs.
 
    Contract governance endpoints:
    - `GET /api/v1/contracts/registry` returns canonical request/response contract metadata and standardized error envelope details.
