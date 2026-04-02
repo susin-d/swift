@@ -371,11 +371,43 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
 
 export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
-    const { data: ordersData, error: queryError } = await listUserOrdersWithFallback(user.sub);
+    const query = (request.query ?? {}) as {
+        status?: string;
+        vendor_id?: string;
+        from_date?: string;
+        to_date?: string;
+        page?: string;
+        per_page?: string;
+    };
 
+    const { data: ordersData, error: queryError } = await listUserOrdersWithFallback(user.sub);
     if (queryError) throw queryError;
 
-    const normalized = (ordersData || []).map((order: any) => {
+    let filtered = (ordersData || []) as any[];
+
+    if (query.status) {
+        filtered = filtered.filter((o: any) => o.status === query.status);
+    }
+    if (query.vendor_id) {
+        filtered = filtered.filter((o: any) => o.vendor_id === query.vendor_id);
+    }
+    if (query.from_date) {
+        const from = new Date(query.from_date);
+        filtered = filtered.filter((o: any) => new Date(o.created_at) >= from);
+    }
+    if (query.to_date) {
+        const to = new Date(query.to_date);
+        filtered = filtered.filter((o: any) => new Date(o.created_at) <= to);
+    }
+
+    const hasFilters = query.status || query.vendor_id || query.from_date || query.to_date || query.page || query.per_page;
+    const page = Math.max(1, parseInt(query.page ?? '1', 10));
+    const perPage = Math.min(100, Math.max(1, parseInt(query.per_page ?? '20', 10)));
+    const total = filtered.length;
+    const totalPages = Math.ceil(total / perPage);
+    const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+    const normalized = paginated.map((order: any) => {
         const orderItems = Array.isArray(order?.order_items) ? order.order_items : [];
         return {
             ...order,
@@ -387,7 +419,22 @@ export const getMyOrders = async (request: FastifyRequest, reply: FastifyReply) 
         };
     });
 
-    return reply.send(normalized.map((order: any) => attachVendorPacing(order)));
+    const result = normalized.map((order: any) => attachVendorPacing(order));
+
+    if (hasFilters) {
+        return reply.send({
+            orders: result,
+            meta: {
+                total,
+                page,
+                per_page: perPage,
+                total_pages: totalPages,
+                has_next: page < totalPages,
+                has_prev: page > 1,
+            },
+        });
+    }
+    return reply.send(result);
 };
 
 const allowedOrderStatuses = new Set([

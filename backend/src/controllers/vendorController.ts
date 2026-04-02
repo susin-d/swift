@@ -84,11 +84,16 @@ export const getMyVendorProfile = async (request: FastifyRequest, reply: Fastify
 export const getAllVendors = async (request: FastifyRequest, reply: FastifyReply) => {
     const { data, error } = await supabase
         .from('vendors')
-        .select('*')
+        .select('*, reviews(count)')
         .order('name', { ascending: true });
 
     if (error) throw error;
-    return reply.send(data);
+    const mapped = (data ?? []).map((v: any) => {
+        const reviewCount = v.reviews?.[0]?.count ?? 0;
+        const { reviews: _reviews, ...rest } = v;
+        return { ...rest, review_count: Number(reviewCount) };
+    });
+    return reply.send(mapped);
 };
 
 export const getVendorStats = async (request: FastifyRequest, reply: FastifyReply) => {

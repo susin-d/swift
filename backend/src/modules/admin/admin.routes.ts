@@ -30,6 +30,8 @@ import {
     getPayoutRecords
 } from './admin.controller';
 import { requireAdmin } from '../../middleware/rbac';
+import { listAdminPromos, createAdminPromo, updateAdminPromo, deleteAdminPromo } from '../../controllers/promoAdminController';
+import { getAdminRefunds, resolveRefund } from '../../controllers/refundController';
 
 export const adminRoutes = async (app: FastifyInstance) => {
     app.addHook('preValidation', app.authenticate);
@@ -58,10 +60,15 @@ export const adminRoutes = async (app: FastifyInstance) => {
     app.get('/settings', { preHandler: [requireAdmin] }, getAdminSettings);
     app.post('/settings', { preHandler: [requireAdmin] }, updateAdminSettings);
 
-    // Stubs retained for promo workflows pending full implementation.
-    app.get('/promos', { preHandler: [requireAdmin] }, async (_request, reply) => reply.send([]));
-    app.post('/promos', { preHandler: [requireAdmin] }, async (_request, reply) => reply.code(201).send({ message: 'Promo created' }));
-    app.patch('/promos/:id', { preHandler: [requireAdmin] }, async (_request, reply) => reply.send({ message: 'Promo updated' }));
+    // Promo management — full CRUD via promoAdminController.
+    app.get('/promos', { preHandler: [requireAdmin] }, listAdminPromos);
+    app.post('/promos', { preHandler: [requireAdmin] }, createAdminPromo);
+    app.patch('/promos/:id', { preHandler: [requireAdmin] }, updateAdminPromo);
+    app.delete('/promos/:id', { preHandler: [requireAdmin] }, deleteAdminPromo);
+
+    // Admin refund management.
+    app.get('/refunds', { preHandler: [requireAdmin] }, getAdminRefunds);
+    app.patch('/refunds/:id', { preHandler: [requireAdmin] }, resolveRefund);
 
     // Legacy aliases kept for backward compatibility.
     app.get('/dashboard/stats', { preHandler: [requireAdmin] }, getAdminDashboardStats);

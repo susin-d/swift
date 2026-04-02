@@ -18,6 +18,11 @@ import { campusRoutes } from './campus';
 import { classSessionRoutes } from './class-sessions';
 
 import { chatRoutes } from './chat';
+import { walletRoutes } from './wallet';
+import { favoritesRoutes } from './favorites';
+import { userRoutes } from './users';
+import { analyticsRoutes } from './analytics';
+import { refundRoutes } from './refunds';
 
 export const setupRoutes = (app: FastifyInstance) => {
     app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
@@ -42,4 +47,10 @@ export const setupRoutes = (app: FastifyInstance) => {
 
     // Register chat and support endpoints
     app.register(chatRoutes);
+
+    app.register(walletRoutes, { prefix: '/api/v1/wallet' });
+    app.register(favoritesRoutes, { prefix: '/api/v1/favorites' });
+    app.register(userRoutes, { prefix: '/api/v1/users' });
+    app.register(analyticsRoutes, { prefix: '/api/v1/analytics' });
+    app.register(refundRoutes, { prefix: '/api/v1' });
 };

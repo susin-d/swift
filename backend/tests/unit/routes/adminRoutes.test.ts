@@ -16,6 +16,7 @@ describe('adminRoutes', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
@@ -33,6 +34,7 @@ describe('adminRoutes', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
@@ -50,6 +52,7 @@ describe('adminRoutes - bulk vendor operations', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
@@ -67,6 +70,7 @@ describe('adminRoutes - bulk vendor operations', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
@@ -84,6 +88,7 @@ describe('adminRoutes - bulk vendor operations', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
@@ -101,6 +106,7 @@ describe('adminRoutes - bulk vendor operations', () => {
             get: jest.fn(),
             patch: jest.fn(),
             post: jest.fn(),
+            delete: jest.fn(),
         };
 
         await adminRoutes(app);
