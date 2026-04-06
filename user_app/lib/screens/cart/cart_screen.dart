@@ -833,12 +833,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     } catch (e) {
       setState(() => _paymentInProgress = false);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Payment setup failed: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      await _showPaymentRecoverySheet(reason: 'Payment setup failed: $e');
     }
   }
 
@@ -898,11 +893,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   void _handlePaymentError(PaymentFailureResponse response) {
     setState(() => _paymentInProgress = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Payment failed: ${response.message ?? 'Unknown error'}'),
-        backgroundColor: AppColors.error,
-      ),
+    _showPaymentRecoverySheet(
+      reason: response.message ?? 'Unknown error',
     );
   }
 
@@ -911,6 +903,66 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       SnackBar(
         content: Text('External wallet selected: ${response.walletName ?? ''}'),
       ),
+    );
+  }
+
+  Future<void> _showPaymentRecoverySheet({required String reason}) async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Payment failed',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  reason,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      _startRazorpayPayment(context);
+                    },
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry payment'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(sheetContext).pop();
+                      await _placeOrder(context);
+                    },
+                    icon: const Icon(Icons.storefront_rounded),
+                    label: const Text('Switch to pay-on-pickup'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

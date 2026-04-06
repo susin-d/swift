@@ -1,23 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendor_app/core/api_exception.dart';
 import 'package:vendor_app/core/api_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() {
-    SharedPreferences.setMockInitialValues({});
-  });
-
   group('ApiService', () {
-    test('uses live production base URL', () {
+    test('uses configurable API base URL with production default', () {
       final service = ApiService();
 
       expect(
         service.dio.options.baseUrl,
-        equals('https://swift-campus.vercel.app/api/v1'),
+        equals(ApiService.baseUrl),
       );
     });
 

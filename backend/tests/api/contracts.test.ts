@@ -27,6 +27,14 @@ describe('API - Contracts Registry', () => {
         expect(sessionContract).toBeDefined();
         expect(sessionContract.path).toBe('/api/v1/auth/session');
         expect(sessionContract.method).toBe('POST');
+
+        const secureWalletTopupV2 = response.body.endpoints.find((endpoint: any) => endpoint.id === 'wallet.topup.patch.v2');
+        expect(secureWalletTopupV2).toBeDefined();
+        expect(secureWalletTopupV2.path).toBe('/api/v2/wallet/topup');
+
+        const loyaltyMutationV2 = response.body.endpoints.find((endpoint: any) => endpoint.id === 'loyalty.points.post.v2');
+        expect(loyaltyMutationV2).toBeDefined();
+        expect(loyaltyMutationV2.auth).toBe('admin');
     });
 
     it('GET /changelog - returns contract changelog feed', async () => {

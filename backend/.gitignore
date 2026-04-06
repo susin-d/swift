@@ -14,6 +14,7 @@ dist-ssr
 .env
 .env.*
 .vercel
+reports/live-api-responses*.json
 
 # Editor directories and files
 .vscode/*

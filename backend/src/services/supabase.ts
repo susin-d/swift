@@ -44,9 +44,11 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 export const createSupabaseUserClient = (accessToken: string) => {
-    const runtimeKey = supabaseAnonKey || supabaseKey;
+    if (isPlaceholderValue(supabaseAnonKey)) {
+        throw new Error('SUPABASE_ANON_KEY is required for user-scoped Supabase clients');
+    }
 
-    return createClient(supabaseUrl, runtimeKey, {
+    return createClient(supabaseUrl, supabaseAnonKey, {
         global: {
             headers: {
                 Authorization: `Bearer ${accessToken}`,

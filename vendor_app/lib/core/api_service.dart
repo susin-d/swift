@@ -1,13 +1,19 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_exception.dart';
 
 final apiServiceProvider = Provider((ref) => ApiService());
 
 class ApiService {
+  static const _storage = FlutterSecureStorage();
+  static const String _defaultBaseUrl = 'https://swift-campus.vercel.app/api/v1';
+  static const String baseUrl =
+      String.fromEnvironment('API_BASE_URL', defaultValue: _defaultBaseUrl);
+
   final Dio dio = Dio(BaseOptions(
-    baseUrl: 'https://swift-campus.vercel.app/api/v1',
+    baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 30),
   ));
@@ -19,8 +25,15 @@ class ApiService {
   ApiService() {
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
+        String? token;
+        try {
+          token = await _storage.read(key: 'auth_token');
+        } on MissingPluginException {
+          token = null;
+        } catch (_) {
+          token = null;
+        }
+
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }

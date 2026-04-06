@@ -30,6 +30,9 @@ import {
     getPayoutRecords
 } from './admin.controller';
 import { requireAdmin } from '../../middleware/rbac';
+import { createPromo, getAdminPromos, updatePromo } from '../../controllers/promoController';
+import { getAdminSupportSummary, listAdminSupportTickets, updateAdminSupportTicket } from '../../controllers/chatController';
+import { listDeletionReminders, processDueDeletionRequests } from '../../controllers/userAccountController';
 
 export const adminRoutes = async (app: FastifyInstance) => {
     app.addHook('preValidation', app.authenticate);
@@ -58,10 +61,17 @@ export const adminRoutes = async (app: FastifyInstance) => {
     app.get('/settings', { preHandler: [requireAdmin] }, getAdminSettings);
     app.post('/settings', { preHandler: [requireAdmin] }, updateAdminSettings);
 
-    // Stubs retained for promo workflows pending full implementation.
-    app.get('/promos', { preHandler: [requireAdmin] }, async (_request, reply) => reply.send([]));
-    app.post('/promos', { preHandler: [requireAdmin] }, async (_request, reply) => reply.code(201).send({ message: 'Promo created' }));
-    app.patch('/promos/:id', { preHandler: [requireAdmin] }, async (_request, reply) => reply.send({ message: 'Promo updated' }));
+    // Admin promo management routes.
+    app.get('/promos', { preHandler: [requireAdmin] }, getAdminPromos as any);
+    app.post('/promos', { preHandler: [requireAdmin] }, createPromo as any);
+    app.patch('/promos/:id', { preHandler: [requireAdmin] }, updatePromo as any);
+
+    // Admin support inbox routes.
+    app.get('/support/tickets', { preHandler: [requireAdmin] }, listAdminSupportTickets as any);
+    app.get('/support/summary', { preHandler: [requireAdmin] }, getAdminSupportSummary as any);
+    app.patch('/support/tickets/:id', { preHandler: [requireAdmin] }, updateAdminSupportTicket as any);
+    app.post('/users/deletions/process-due', { preHandler: [requireAdmin] }, processDueDeletionRequests as any);
+    app.get('/users/deletions/reminders', { preHandler: [requireAdmin] }, listDeletionReminders as any);
 
     // Legacy aliases kept for backward compatibility.
     app.get('/dashboard/stats', { preHandler: [requireAdmin] }, getAdminDashboardStats);

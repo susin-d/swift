@@ -10,6 +10,7 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/finance/presentation/screens/finance_screen.dart';
 import '../../features/orders/presentation/screens/orders_screen.dart';
 import '../../features/promos/presentation/screens/promos_screen.dart';
+import '../../features/support/presentation/screens/support_inbox_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../../features/vendors/presentation/screens/vendors_screen.dart';
@@ -98,6 +99,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/audit',
             builder: (_, __) => const AuditLogsScreen(),
           ),
+          GoRoute(
+            path: '/support-inbox',
+            builder: (_, __) => const SupportInboxScreen(),
+          ),
         ],
       ),
     ],
@@ -113,6 +118,7 @@ int _indexForPath(String path) {
   if (path.startsWith('/promos')) return 6;
   if (path.startsWith('/settings')) return 7;
   if (path.startsWith('/audit')) return 8;
+  if (path.startsWith('/support-inbox')) return 9;
   return 0;
 }
 
@@ -126,6 +132,7 @@ String _titleForIndex(int i) => const [
       'Promos',
       'Settings',
       'Audit Logs',
+      'Support Inbox',
     ][i];
 
 String _subtitleForIndex(int i) => const [
@@ -138,4 +145,5 @@ String _subtitleForIndex(int i) => const [
       'Launch and manage promo campaigns.',
       'Commission, delivery fee, and platform controls.',
       'Read-only timeline of administrator actions.',
+      'Resolve user support tickets and triage queue workload.',
     ][i];

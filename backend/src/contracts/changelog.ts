@@ -12,6 +12,78 @@ export type ContractChange = {
 
 export const CONTRACT_CHANGELOG: ContractChange[] = [
     {
+        id: 'chg-2026-04-05-41',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T12:10:00.000Z',
+        changeType: 'added',
+        endpointId: 'orders.refund.create',
+        summary: 'Added user refund request and refund history endpoints.',
+        consumers: ['user_app', 'admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-40',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T12:00:00.000Z',
+        changeType: 'added',
+        endpointId: 'orders.group.create',
+        summary: 'Added group order create and split endpoints for collaborative checkout workflows.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-39',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T11:50:00.000Z',
+        changeType: 'added',
+        endpointId: 'referrals.generate',
+        summary: 'Added referrals, loyalty, subscription, and vendor watch engagement endpoints.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-38',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T11:40:00.000Z',
+        changeType: 'added',
+        endpointId: 'analytics.spending.get',
+        summary: 'Added spending analytics endpoints for monthly and vendor-level spend insights.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-35',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T11:20:00.000Z',
+        changeType: 'updated',
+        endpointId: 'admin.promos.create',
+        summary: 'Admin promo routes now return persisted promo entities instead of stub acknowledgements.',
+        consumers: ['admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-34',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T11:10:00.000Z',
+        changeType: 'added',
+        endpointId: 'admin.support.tickets.list',
+        summary: 'Added admin support inbox and ticket triage endpoints for support operations.',
+        consumers: ['admin_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-33',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T11:00:00.000Z',
+        changeType: 'added',
+        endpointId: 'wallet.balance.get',
+        summary: 'Added wallet balance, top-up, and transaction history endpoints for user accounts.',
+        consumers: ['user_app', 'shared']
+    },
+    {
+        id: 'chg-2026-04-05-32',
+        version: '2026.04.s12.0',
+        timestamp: '2026-04-05T10:55:00.000Z',
+        changeType: 'added',
+        endpointId: 'users.me.delete',
+        summary: 'Added 7-day deferred account deletion and cancellation endpoints.',
+        consumers: ['user_app', 'shared']
+    },
+    {
         id: 'chg-2026-03-20-31',
         version: '2026.03.s11.4',
         timestamp: '2026-03-20T11:55:00.000Z',

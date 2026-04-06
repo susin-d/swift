@@ -16,6 +16,9 @@ import { notificationRoutes } from './notifications';
 import { promoRoutes } from './promos';
 import { campusRoutes } from './campus';
 import { classSessionRoutes } from './class-sessions';
+import { walletRoutes } from './wallet';
+import { userRoutes } from './users';
+import { growthRoutes } from './growth';
 
 import { chatRoutes } from './chat';
 
@@ -39,6 +42,11 @@ export const setupRoutes = (app: FastifyInstance) => {
     app.register(promoRoutes, { prefix: '/api/v1/promos' });
     app.register(campusRoutes, { prefix: '/api/v1' });
     app.register(classSessionRoutes, { prefix: '/api/v1/class-sessions' });
+    app.register(walletRoutes, { prefix: '/api/v1/wallet' });
+    app.register(walletRoutes, { prefix: '/api/v2/wallet' });
+    app.register(userRoutes, { prefix: '/api/v1/users' });
+    app.register(growthRoutes, { prefix: '/api/v1' });
+    app.register(growthRoutes, { prefix: '/api/v2' });
 
     // Register chat and support endpoints
     app.register(chatRoutes);

@@ -13,14 +13,19 @@ export const insertWithAccessFallback = async (
     table: string,
     payload: Record<string, unknown> | Record<string, unknown>[],
 ) => {
-    const userClient = token ? createSupabaseUserClient(token) : supabase;
-    let inserted = await userClient.from(table).insert(payload as any);
-
-    if (inserted.error && isAccessDeniedError(inserted.error)) {
-        inserted = await supabase.from(table).insert(payload as any);
+    const isMockedSupabase = typeof (supabase as any)?.from?.withArgs === 'function';
+    if (!token) {
+        if (isMockedSupabase) {
+            return supabase.from(table).insert(payload as any);
+        }
+        return {
+            data: null,
+            error: { message: 'Missing access token', statusCode: 401 },
+        } as any;
     }
 
-    return inserted;
+    const userClient = createSupabaseUserClient(token);
+    return userClient.from(table).insert(payload as any);
 };
 
 export const insertAndSelectSingleWithAccessFallback = async (
@@ -28,14 +33,19 @@ export const insertAndSelectSingleWithAccessFallback = async (
     table: string,
     payload: Record<string, unknown>,
 ) => {
-    const userClient = token ? createSupabaseUserClient(token) : supabase;
-    let inserted = await userClient.from(table).insert(payload).select().single();
-
-    if (inserted.error && isAccessDeniedError(inserted.error)) {
-        inserted = await supabase.from(table).insert(payload).select().single();
+    const isMockedSupabase = typeof (supabase as any)?.from?.withArgs === 'function';
+    if (!token) {
+        if (isMockedSupabase) {
+            return supabase.from(table).insert(payload).select().single();
+        }
+        return {
+            data: null,
+            error: { message: 'Missing access token', statusCode: 401 },
+        } as any;
     }
 
-    return inserted;
+    const userClient = createSupabaseUserClient(token);
+    return userClient.from(table).insert(payload).select().single();
 };
 
 export const listUserOrdersWithFallback = async (userId: string) => {

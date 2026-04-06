@@ -19,6 +19,7 @@ import '../../screens/notifications/notifications_screen.dart';
 import '../../screens/favorites/favorites_screen.dart';
 import '../../screens/profile/edit_profile_screen.dart';
 import '../../screens/profile/class_schedule_screen.dart';
+import '../../screens/profile/growth_hub_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = ref.watch(authRefreshListenableProvider);
@@ -94,6 +95,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/classes',
         builder: (context, state) => const ClassScheduleScreen(),
+      ),
+      GoRoute(
+        path: '/growth',
+        builder: (context, state) => const GrowthHubScreen(),
       ),
       GoRoute(
         path: '/legal',

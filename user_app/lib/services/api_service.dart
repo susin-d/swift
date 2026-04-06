@@ -14,7 +14,9 @@ class ApiService {
   static const int _baseRetryDelayMs = 300;
   static const String _authRetryKey = 'authRetryAttempted';
 
-  static const String baseUrl = 'https://swift-campus.vercel.app/api/v1';
+  static const String _defaultBaseUrl = 'https://swift-campus.vercel.app/api/v1';
+  static const String baseUrl =
+      String.fromEnvironment('API_BASE_URL', defaultValue: _defaultBaseUrl);
 
   ApiService() {
     _dio.options.baseUrl = baseUrl;

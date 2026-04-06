@@ -23,6 +23,11 @@ jobs:
       - name: Run Tests & Coverage
         working-directory: ./backend
         run: npm test -- --coverage
+      - name: Run Contract + Performance Budget Suites
+        working-directory: ./backend
+        run: |
+          npm test -- tests/api/contracts_compliance.test.ts --runInBand
+          npm test -- tests/api/performance_budgets.test.ts --runInBand
 
   user-app-tests:
     name: User App (Flutter) Tests
@@ -36,6 +41,21 @@ jobs:
       - name: Install Dependencies
         working-directory: ./user_app
         run: flutter pub get
+      - name: Enforce runtime API config
+        working-directory: ./user_app
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected."
+            exit 1
+          fi
       - name: Analyze
         working-directory: ./user_app
         run: flutter analyze
@@ -55,6 +75,21 @@ jobs:
       - name: Install Dependencies
         working-directory: ./vendor_app
         run: flutter pub get
+      - name: Enforce runtime API config
+        working-directory: ./vendor_app
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected."
+            exit 1
+          fi
       - name: Analyze
         working-directory: ./vendor_app
         run: flutter analyze
@@ -74,6 +109,21 @@ jobs:
       - name: Install Dependencies
         working-directory: ./admin_app
         run: flutter pub get
+      - name: Enforce runtime API config
+        working-directory: ./admin_app
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected."
+            exit 1
+          fi
       - name: Analyze
         working-directory: ./admin_app
         run: flutter analyze

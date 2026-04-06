@@ -802,8 +802,10 @@ export const getOrderSlots = async (request: FastifyRequest, reply: FastifyReply
 };
 
 export const updateOrderHandoff = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { id } = request.params as any;
     const { status, proof_url } = request.body as any;
+    const vendorId = user ? await resolveVendorIdForUser(user) : null;
 
     const allowed = ['pending', 'arrived_building', 'arrived_class', 'delivered', 'failed'];
     if (!allowed.includes(status)) {
@@ -819,11 +821,16 @@ export const updateOrderHandoff = async (request: FastifyRequest, reply: Fastify
         throw err;
     }
 
-    const { data: existingOrder, error: existingError } = await supabase
+    let existingOrderQuery = supabase
         .from('orders')
-        .select('id, user_id, delivery_mode, delivery_zone_id, quiet_mode')
-        .eq('id', id)
-        .single();
+        .select('id, user_id, vendor_id, delivery_mode, delivery_zone_id, quiet_mode')
+        .eq('id', id);
+
+    if (vendorId) {
+        existingOrderQuery = existingOrderQuery.eq('vendor_id', vendorId);
+    }
+
+    const { data: existingOrder, error: existingError } = await existingOrderQuery.single();
 
     if (existingError || !existingOrder) {
         const err = new Error('Order not found') as any;
@@ -874,16 +881,20 @@ export const updateOrderHandoff = async (request: FastifyRequest, reply: Fastify
         }
     }
 
-    const { data, error } = await supabase
+    let updateOrderQuery = supabase
         .from('orders')
         .update({
             handoff_status: status,
             handoff_proof_url: proofValue || null,
             updated_at: new Date().toISOString(),
         })
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
+
+    if (vendorId) {
+        updateOrderQuery = updateOrderQuery.eq('vendor_id', vendorId);
+    }
+
+    const { data, error } = await updateOrderQuery.select().single();
 
     if (error) throw error;
 
@@ -917,4 +928,3 @@ export const updateOrderHandoff = async (request: FastifyRequest, reply: Fastify
 
     return reply.send(data);
 };
-

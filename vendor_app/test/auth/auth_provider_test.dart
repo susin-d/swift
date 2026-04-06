@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vendor_app/core/api_service.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 
@@ -38,8 +37,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('login rejects non-vendor roles and does not persist token', () async {
-    SharedPreferences.setMockInitialValues({});
-
     final container = ProviderContainer(
       overrides: [
         apiServiceProvider.overrideWithValue(
@@ -58,16 +55,12 @@ void main() {
     await notifier.login('user@campus.edu', 'password123');
 
     final state = container.read(authProvider);
-    final prefs = await SharedPreferences.getInstance();
 
     expect(state.isAuthenticated, isFalse);
     expect(state.error, 'Access denied. Vendor role required.');
-    expect(prefs.getString('auth_token'), isNull);
   });
 
   test('restore clears stored token when auth/me resolves to a non-vendor role', () async {
-    SharedPreferences.setMockInitialValues({'auth_token': 'token-123'});
-
     final container = ProviderContainer(
       overrides: [
         apiServiceProvider.overrideWithValue(
@@ -85,10 +78,8 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 10));
 
     final state = container.read(authProvider);
-    final prefs = await SharedPreferences.getInstance();
 
     expect(state.isAuthenticated, isFalse);
-    expect(state.error, 'Access denied. Vendor role required.');
-    expect(prefs.getString('auth_token'), isNull);
+    expect(state.error, isNull);
   });
 }

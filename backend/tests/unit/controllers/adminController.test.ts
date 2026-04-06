@@ -165,6 +165,32 @@ describe('Admin Controller - Vendor Moderation', () => {
         });
     });
 
+    it('getAdminOrders clamps page limit to 100 for performance safety', async () => {
+        const countSelectStub = Sinon.stub().resolves({ count: 0, error: null });
+
+        const rangeStub = Sinon.stub().resolves({ data: [], error: null });
+        const orderStub = Sinon.stub().returns({ range: rangeStub });
+        const ordersSelectStub = Sinon.stub().returns({ order: orderStub });
+
+        fromStub.onFirstCall().returns({
+            select: countSelectStub,
+        } as any);
+
+        fromStub.onSecondCall().returns({
+            select: ordersSelectStub,
+        } as any);
+
+        const request: any = { query: { page: '1', limit: '5000' } };
+        const reply: any = { send: Sinon.stub() };
+
+        await getAdminOrders(request, reply);
+
+        Sinon.assert.calledWithExactly(rangeStub, 0, 99);
+        const payload = reply.send.firstCall.args[0];
+        expect(payload.limit).toBe(100);
+        expect(payload.meta.limit).toBe(100);
+    });
+
     it('cancelAdminOrder sets order status to cancelled', async () => {
         const updateStub = Sinon.stub().returnsThis();
         const eqStub = Sinon.stub().resolves({ error: null });

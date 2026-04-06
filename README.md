@@ -1,6 +1,13 @@
 # Swift
 A comprehensive, real-time logistics and food delivery platform connecting students with premium vendors.
 
+## Documentation Index
+- Consolidated platform documentation: [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
+- API details: [API_REFERENCE.md](./API_REFERENCE.md)
+- Developer runbook: [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)
+- User app features: [user_features.md](./user_features.md)
+- Admin app features: [admin_features.md](./admin_features.md)
+
 ## 🌟 Platform Components
 
 1. **User App (Flutter)**: Allows students and staff to browse vendors, order food, and track deliveries in real-time.
@@ -43,6 +50,10 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - `GET /api/v1/contracts/flags` returns staged rollout flags for contract/reliability features.
    - `POST /api/v1/chat/rooms`, `GET /api/v1/chat/rooms/:id/messages`, and `POST /api/v1/chat/rooms/:id/messages` provide authenticated in-app chat room workflows.
    - `POST /api/v1/support/tickets`, `GET /api/v1/support/tickets`, `GET /api/v1/support/tickets/me`, and `PATCH /api/v1/support/tickets/:id` provide authenticated support ticket creation and lifecycle updates.
+   - `GET /api/v1/admin/support/tickets` and `PATCH /api/v1/admin/support/tickets/:id` provide admin support inbox triage and assignment.
+   - `GET /api/v1/wallet/balance`, `PATCH /api/v1/wallet/topup`, and `GET /api/v1/wallet/transactions` provide authenticated wallet balance and ledger workflows.
+   - `DELETE /api/v1/users/me`, `GET /api/v1/users/me/deletion`, and `PATCH /api/v1/users/me/deletion/cancel` provide deferred 7-day account deletion with cancel support.
+   - Growth and retention APIs now include referrals (`/api/v1/referrals/*`), loyalty (`/api/v1/loyalty/*`), subscriptions (`/api/v1/subscriptions/*`), spend analytics (`/api/v1/analytics/*`), vendor watch (`POST/DELETE /api/v1/vendors/:id/watch`), group-order split (`/api/v1/orders/group`, `/api/v1/orders/:id/split`), and refund requests (`POST /api/v1/orders/:id/refund`, `GET /api/v1/refunds/me`).
 
    Reliability standards:
    - Admin list endpoints expose shared pagination metadata (`meta.totalPages`, `meta.hasNextPage`, `meta.hasPreviousPage`).
@@ -73,6 +84,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - Admin app shell now surfaces session posture (`Trusted device` / `Untrusted device`) with an inline remediation banner so operators can confirm trust on active devices.
    - Customer-only mutations (`/orders`, `/orders/me`, `/addresses`, `/payments`, `/reviews`) now reject vendor/admin tokens with `403 Forbidden`.
    - Delivery location updates are now explicitly scoped to vendor or admin operators, and the vendor app clears/restores sessions only for vendor-role accounts.
+   - Chat and support workflows now persist in Supabase-backed tables (`chat_rooms`, `chat_messages`, `support_tickets`) to avoid data loss on backend restart.
 
    Live API smoke test:
    - Run `cd backend && npm run test:api:live` to execute a live deployment API sweep.
@@ -86,7 +98,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    ```bash
    cd vendor_app
    flutter pub get
-   flutter run
+   flutter run --dart-define=API_BASE_URL=http://localhost:3000/api/v1
    ```
 
 4. **User App**
@@ -94,6 +106,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    cd user_app
    flutter pub get
     flutter run \
+       --dart-define=API_BASE_URL=http://localhost:3000/api/v1 \
        --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
        --dart-define=SUPABASE_ANON_KEY=your_anon_key
    ```
@@ -101,6 +114,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
     Release build example:
     ```bash
     flutter build apk --release \
+       --dart-define=API_BASE_URL=https://swift-campus.vercel.app/api/v1 \
        --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
        --dart-define=SUPABASE_ANON_KEY=your_anon_key
     ```
@@ -109,8 +123,17 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    ```bash
    cd admin_app
    flutter pub get
-   flutter run
+   flutter run --dart-define=API_BASE_URL=http://localhost:3000/api/v1
    ```
+
+   Optional demo-login defines (disabled by default):
+   - `--dart-define=DEMO_USER_EMAIL=... --dart-define=DEMO_USER_PASSWORD=...`
+   - `--dart-define=DEMO_VENDOR_EMAIL=... --dart-define=DEMO_VENDOR_PASSWORD=...`
+   - `--dart-define=DEMO_ADMIN_EMAIL=... --dart-define=DEMO_ADMIN_PASSWORD=...`
+
+API contract versioning:
+- Existing clients continue on `/api/v1`.
+- Security-hardened finance/growth routes are available at `/api/v2` (`/wallet/*`, growth endpoints), with controlled migration and deprecation of unsafe v1 mutation patterns.
 
 ## 🎨 UI Language
 - Vendor and Admin apps now use a shared white-mode visual direction with stronger typographic hierarchy, cleaner card geometry, and calmer surface contrast.

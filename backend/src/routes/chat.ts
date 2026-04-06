@@ -10,6 +10,7 @@ export async function chatRoutes(app: FastifyInstance) {
 
   app.get('/api/v1/support/tickets', chatController.listSupportTickets);
   app.get('/api/v1/support/tickets/me', chatController.listMySupportTickets);
+  app.get('/api/v1/support/tickets/:id/timeline', chatController.getSupportTicketTimeline);
   app.post('/api/v1/support/tickets', chatController.createSupportTicket);
   app.patch('/api/v1/support/tickets/:id', chatController.updateSupportTicket);
 }

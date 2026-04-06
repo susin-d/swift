@@ -28,14 +28,30 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --runInBand
         env:
           NODE_ENV: test
           SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://placeholder.supabase.co' }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY || 'placeholder-key' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key' }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
           RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || 'placeholder-razorpay-id' }}
           RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || 'placeholder-razorpay-secret' }}
+
+      - name: Run contract compliance suite
+        run: npm test -- tests/api/contracts_compliance.test.ts --runInBand
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
+
+      - name: Run performance budget suite
+        run: npm test -- tests/api/performance_budgets.test.ts --runInBand
+        env:
+          NODE_ENV: test
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || 'placeholder-anon-key' }}
 
   user_app:
     name: User App — Flutter Analyze + Test
@@ -56,6 +72,21 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Enforce runtime API config (no hardcoded base URL assignment)
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use runtime config."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
 
       - name: Analyze
         run: flutter analyze --fatal-infos
@@ -83,6 +114,21 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Enforce runtime API config (no hardcoded base URL assignment)
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use runtime config."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
+
       - name: Analyze
         run: flutter analyze --fatal-infos
 
@@ -108,6 +154,21 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Enforce runtime API config (no hardcoded base URL assignment)
+        run: |
+          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
+          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded API base URL assignment detected. Use runtime config."
+            exit 1
+          fi
+          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+            echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
+            exit 1
+          fi
 
       - name: Analyze
         run: flutter analyze --fatal-infos

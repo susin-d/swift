@@ -19,6 +19,7 @@ describe('chatRoutes', () => {
         expect(app.post).toHaveBeenCalledWith('/api/v1/chat/rooms/:id/messages', chatController.sendChatMessage);
         expect(app.get).toHaveBeenCalledWith('/api/v1/support/tickets', chatController.listSupportTickets);
         expect(app.get).toHaveBeenCalledWith('/api/v1/support/tickets/me', chatController.listMySupportTickets);
+        expect(app.get).toHaveBeenCalledWith('/api/v1/support/tickets/:id/timeline', chatController.getSupportTicketTimeline);
         expect(app.post).toHaveBeenCalledWith('/api/v1/support/tickets', chatController.createSupportTicket);
         expect(app.patch).toHaveBeenCalledWith('/api/v1/support/tickets/:id', chatController.updateSupportTicket);
     });

@@ -17,6 +17,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _submitting = false;
   String? _errorMessage;
+  static const _demoEmail = String.fromEnvironment('DEMO_ADMIN_EMAIL', defaultValue: '');
+  static const _demoPassword = String.fromEnvironment('DEMO_ADMIN_PASSWORD', defaultValue: '');
 
   @override
   void dispose() {
@@ -253,13 +255,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   const SizedBox(height: 16),
                                   OutlinedButton(
-                                    onPressed: _submitting
+                                    onPressed: _submitting || _demoEmail.isEmpty || _demoPassword.isEmpty
                                         ? null
                                         : () async {
                                             setState(() => _submitting = true);
                                             final ok = await ref.read(authProvider.notifier).login(
-                                              'demo.admin@swift.com',
-                                              'Demo@1234',
+                                              _demoEmail,
+                                              _demoPassword,
                                             );
                                             if (!mounted) return;
                                             setState(() => _submitting = false);
@@ -267,7 +269,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                               setState(() => _errorMessage = 'Demo login failed');
                                             }
                                           },
-                                    child: Text(_submitting ? 'Loading...' : 'Try Demo Admin'),
+                                    child: Text(
+                                      _submitting
+                                          ? 'Loading...'
+                                          : (_demoEmail.isEmpty || _demoPassword.isEmpty)
+                                              ? 'Demo Disabled'
+                                              : 'Try Demo Admin',
+                                    ),
                                   ),
                                 ],
                               ),

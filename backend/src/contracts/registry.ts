@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.03.s11.9';
+export const CONTRACT_REGISTRY_VERSION = '2026.04.s12.1';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -1348,6 +1348,440 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
             fields: [
                 { name: 'id', type: 'string(uuid)', required: true, description: 'Promo id.' },
                 { name: 'is_active', type: 'boolean', required: false, description: 'Active state.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.support.tickets.list',
+        method: 'GET',
+        path: '/api/v1/admin/support/tickets',
+        owner: 'admin_app',
+        auth: 'admin',
+        response: {
+            description: 'Paginated support ticket inbox for administrators.',
+            fields: [
+                { name: 'tickets', type: 'array<object>', required: true, description: 'Support tickets.' },
+                { name: 'meta.totalPages', type: 'number', required: true, description: 'Total page count.' }
+            ]
+        }
+    },
+    {
+        id: 'admin.support.tickets.update',
+        method: 'PATCH',
+        path: '/api/v1/admin/support/tickets/:id',
+        owner: 'admin_app',
+        auth: 'admin',
+        request: {
+            description: 'Update support ticket state, assignment, or resolution details.',
+            fields: [
+                { name: 'status', type: 'string', required: false, description: 'Ticket status.' },
+                { name: 'priority', type: 'string', required: false, description: 'Ticket priority.' },
+                { name: 'assigneeId', type: 'string(uuid)', required: false, description: 'Assignee user id.' },
+                { name: 'resolutionNote', type: 'string', required: false, description: 'Resolution note.' }
+            ]
+        },
+        response: {
+            description: 'Updated support ticket.',
+            fields: [
+                { name: 'ticket.id', type: 'string(uuid)', required: true, description: 'Ticket id.' },
+                { name: 'ticket.status', type: 'string', required: true, description: 'Ticket status.' }
+            ]
+        }
+    },
+    {
+        id: 'wallet.balance.get',
+        method: 'GET',
+        path: '/api/v1/wallet/balance',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Returns wallet balance for authenticated user.',
+            fields: [
+                { name: 'balance', type: 'number', required: true, description: 'Current wallet balance.' },
+                { name: 'currency', type: 'string', required: true, description: 'Currency code.' }
+            ]
+        }
+    },
+    {
+        id: 'wallet.topup.patch',
+        method: 'PATCH',
+        path: '/api/v1/wallet/topup',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Top up user wallet.',
+            fields: [
+                { name: 'amount', type: 'number', required: true, description: 'Top-up amount.' },
+                { name: 'source', type: 'string', required: false, description: 'Source label.' }
+            ]
+        },
+        response: {
+            description: 'Updated balance and created wallet transaction.',
+            fields: [
+                { name: 'balance', type: 'number', required: true, description: 'Updated wallet balance.' },
+                { name: 'transaction.id', type: 'string(uuid)', required: true, description: 'Transaction id.' }
+            ]
+        }
+    },
+    {
+        id: 'wallet.topup.patch.v2',
+        method: 'PATCH',
+        path: '/api/v2/wallet/topup',
+        owner: 'shared',
+        auth: 'authenticated',
+        request: {
+            description: 'Secure wallet top-up mutation with admin-verified settlement states.',
+            fields: [
+                { name: 'amount', type: 'number', required: true, description: 'Top-up amount.' },
+                { name: 'source', type: 'string', required: false, description: 'Source label.' },
+                { name: 'status', type: 'string', required: false, description: 'pending|completed|failed. Non-admin callers are restricted to pending.' },
+                { name: 'idempotencyKey', type: 'string', required: false, description: 'Optional idempotency key for replay-safe settlement.' },
+                { name: 'userId', type: 'string(uuid)', required: false, description: 'Admin-only settlement target user id.' }
+            ]
+        },
+        response: {
+            description: 'Wallet response containing balance and transaction record.',
+            fields: [
+                { name: 'balance', type: 'number', required: true, description: 'Resulting wallet balance.' },
+                { name: 'transaction.id', type: 'string(uuid)', required: true, description: 'Transaction id.' },
+                { name: 'transaction.status', type: 'string', required: true, description: 'Applied transaction status.' }
+            ]
+        }
+    },
+    {
+        id: 'wallet.transactions.get',
+        method: 'GET',
+        path: '/api/v1/wallet/transactions',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Paginated wallet transactions.',
+            fields: [
+                { name: 'transactions', type: 'array<object>', required: true, description: 'Transaction list.' },
+                { name: 'meta.totalPages', type: 'number', required: true, description: 'Total page count.' }
+            ]
+        }
+    },
+    {
+        id: 'users.me.delete',
+        method: 'DELETE',
+        path: '/api/v1/users/me',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Schedules account deletion after 7-day cancellation window.',
+            fields: [
+                { name: 'deletion.status', type: 'string', required: true, description: 'Deletion request state.' },
+                { name: 'deletion.delete_after', type: 'string(datetime)', required: true, description: 'Scheduled deletion timestamp.' }
+            ]
+        }
+    },
+    {
+        id: 'users.me.deletion.cancel',
+        method: 'PATCH',
+        path: '/api/v1/users/me/deletion/cancel',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Cancels pending account deletion request.',
+            fields: [
+                { name: 'deletion.status', type: 'string', required: true, description: 'Updated deletion state.' }
+            ]
+        }
+    },
+    {
+        id: 'analytics.spending.get',
+        method: 'GET',
+        path: '/api/v1/analytics/spending',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'User spending totals and monthly breakdown.',
+            fields: [
+                { name: 'summary.total_spent', type: 'number', required: true, description: 'Total spend amount.' },
+                { name: 'summary.total_saved', type: 'number', required: true, description: 'Total promo savings.' },
+                { name: 'monthly[]', type: 'array<object>', required: true, description: 'Month-level spending rows.' }
+            ]
+        }
+    },
+    {
+        id: 'analytics.vendors.get',
+        method: 'GET',
+        path: '/api/v1/analytics/vendors',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Vendor-level spend breakdown for authenticated user.',
+            fields: [
+                { name: 'vendors[]', type: 'array<object>', required: true, description: 'Vendor spend rows.' }
+            ]
+        }
+    },
+    {
+        id: 'referrals.generate',
+        method: 'POST',
+        path: '/api/v1/referrals/generate',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Creates or returns active referral code.',
+            fields: [
+                { name: 'referral.code', type: 'string', required: true, description: 'Referral code.' }
+            ]
+        }
+    },
+    {
+        id: 'referrals.code.get',
+        method: 'GET',
+        path: '/api/v1/referrals/code/:code',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Returns referral details by code.',
+            fields: [
+                { name: 'referral.id', type: 'string(uuid)', required: true, description: 'Referral id.' },
+                { name: 'referral.code', type: 'string', required: true, description: 'Referral code.' }
+            ]
+        }
+    },
+    {
+        id: 'referrals.redeem',
+        method: 'POST',
+        path: '/api/v1/referrals/redeem',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Redeem another user referral code.',
+            fields: [
+                { name: 'code', type: 'string', required: true, description: 'Referral code.' }
+            ]
+        },
+        response: {
+            description: 'Referral redemption row.',
+            fields: [
+                { name: 'redemption.id', type: 'string(uuid)', required: true, description: 'Redemption id.' }
+            ]
+        }
+    },
+    {
+        id: 'loyalty.tier.get',
+        method: 'GET',
+        path: '/api/v1/loyalty/tier',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Current loyalty points and tier.',
+            fields: [
+                { name: 'loyalty.points', type: 'number', required: true, description: 'Points balance.' },
+                { name: 'loyalty.tier', type: 'string', required: true, description: 'Loyalty tier.' }
+            ]
+        }
+    },
+    {
+        id: 'loyalty.points.post',
+        method: 'POST',
+        path: '/api/v1/loyalty/points',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Add loyalty points for user.',
+            fields: [
+                { name: 'points', type: 'number', required: true, description: 'Points delta.' }
+            ]
+        },
+        response: {
+            description: 'Updated loyalty account.',
+            fields: [
+                { name: 'loyalty.points', type: 'number', required: true, description: 'Updated points.' },
+                { name: 'loyalty.tier', type: 'string', required: true, description: 'Updated tier.' }
+            ]
+        }
+    },
+    {
+        id: 'loyalty.points.post.v2',
+        method: 'POST',
+        path: '/api/v2/loyalty/points',
+        owner: 'shared',
+        auth: 'admin',
+        request: {
+            description: 'Admin-only loyalty mutation for audited reward adjustments.',
+            fields: [
+                { name: 'userId', type: 'string(uuid)', required: true, description: 'Target user id.' },
+                { name: 'points', type: 'number', required: true, description: 'Positive/negative points delta.' },
+                { name: 'reason', type: 'string', required: false, description: 'Optional audit note.' }
+            ]
+        },
+        response: {
+            description: 'Updated loyalty account.',
+            fields: [
+                { name: 'loyalty.points', type: 'number', required: true, description: 'Updated points.' },
+                { name: 'loyalty.tier', type: 'string', required: true, description: 'Updated tier.' }
+            ]
+        }
+    },
+    {
+        id: 'subscriptions.list',
+        method: 'GET',
+        path: '/api/v1/subscriptions',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Subscription list for authenticated user.',
+            fields: [
+                { name: 'subscriptions[]', type: 'array<object>', required: true, description: 'Subscriptions.' }
+            ]
+        }
+    },
+    {
+        id: 'subscriptions.create',
+        method: 'POST',
+        path: '/api/v1/subscriptions/create',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Create subscription plan enrollment.',
+            fields: [
+                { name: 'plan', type: 'string', required: true, description: 'Plan slug.' }
+            ]
+        },
+        response: {
+            description: 'Created subscription.',
+            fields: [
+                { name: 'subscription.id', type: 'string(uuid)', required: true, description: 'Subscription id.' }
+            ]
+        }
+    },
+    {
+        id: 'subscriptions.create.v2',
+        method: 'POST',
+        path: '/api/v2/subscriptions/create',
+        owner: 'shared',
+        auth: 'admin',
+        request: {
+            description: 'Admin-only subscription activation after verified payment/admin event.',
+            fields: [
+                { name: 'userId', type: 'string(uuid)', required: true, description: 'Target user id.' },
+                { name: 'plan', type: 'string', required: true, description: 'Plan slug.' }
+            ]
+        },
+        response: {
+            description: 'Created subscription.',
+            fields: [
+                { name: 'subscription.id', type: 'string(uuid)', required: true, description: 'Subscription id.' },
+                { name: 'subscription.status', type: 'string', required: true, description: 'Subscription status.' }
+            ]
+        }
+    },
+    {
+        id: 'subscriptions.renew.v2',
+        method: 'PATCH',
+        path: '/api/v2/subscriptions/:id/renew',
+        owner: 'shared',
+        auth: 'admin',
+        response: {
+            description: 'Admin-only subscription renewal response.',
+            fields: [
+                { name: 'subscription.id', type: 'string(uuid)', required: true, description: 'Subscription id.' },
+                { name: 'subscription.current_period_end', type: 'string(datetime)', required: true, description: 'Updated renewal end timestamp.' }
+            ]
+        }
+    },
+    {
+        id: 'vendors.watch.create',
+        method: 'POST',
+        path: '/api/v1/vendors/:id/watch',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Creates vendor watch row.',
+            fields: [
+                { name: 'watch.id', type: 'string(uuid)', required: true, description: 'Watch id.' }
+            ]
+        }
+    },
+    {
+        id: 'vendors.watch.delete',
+        method: 'DELETE',
+        path: '/api/v1/vendors/:id/watch',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Deletes vendor watch.',
+            fields: [
+                { name: 'success', type: 'boolean', required: true, description: 'Deletion success.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.group.create',
+        method: 'POST',
+        path: '/api/v1/orders/group',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Create a group order for existing order id.',
+            fields: [
+                { name: 'orderId', type: 'string(uuid)', required: true, description: 'Order id.' },
+                { name: 'participantIds', type: 'array<string(uuid)>', required: false, description: 'Participant ids.' }
+            ]
+        },
+        response: {
+            description: 'Created group order.',
+            fields: [
+                { name: 'group_order.id', type: 'string(uuid)', required: true, description: 'Group order id.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.split.update',
+        method: 'PATCH',
+        path: '/api/v1/orders/:id/split',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Split group order contributions.',
+            fields: [
+                { name: 'splits[]', type: 'array<object>', required: true, description: 'Contribution rows.' }
+            ]
+        },
+        response: {
+            description: 'Split update acknowledgement.',
+            fields: [
+                { name: 'success', type: 'boolean', required: true, description: 'Update success.' }
+            ]
+        }
+    },
+    {
+        id: 'orders.refund.create',
+        method: 'POST',
+        path: '/api/v1/orders/:id/refund',
+        owner: 'user_app',
+        auth: 'user',
+        request: {
+            description: 'Create refund request for an order.',
+            fields: [
+                { name: 'reason', type: 'string', required: true, description: 'Refund reason.' },
+                { name: 'amount', type: 'number', required: false, description: 'Requested amount.' }
+            ]
+        },
+        response: {
+            description: 'Created refund request.',
+            fields: [
+                { name: 'refund.id', type: 'string(uuid)', required: true, description: 'Refund id.' },
+                { name: 'refund.status', type: 'string', required: true, description: 'Refund status.' }
+            ]
+        }
+    },
+    {
+        id: 'refunds.me.list',
+        method: 'GET',
+        path: '/api/v1/refunds/me',
+        owner: 'user_app',
+        auth: 'user',
+        response: {
+            description: 'Refund request list for authenticated user.',
+            fields: [
+                { name: 'refunds[]', type: 'array<object>', required: true, description: 'Refund rows.' }
             ]
         }
     },

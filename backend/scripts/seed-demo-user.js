@@ -3,27 +3,28 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const defaultDemoPassword = process.env.DEMO_DEFAULT_PASSWORD || 'ChangeMeBeforeUse!123';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const demoUsers = [
     {
         email: 'demo.user@swift.com',
-        password: 'Demo@1234',
+        password: process.env.DEMO_USER_PASSWORD || defaultDemoPassword,
         name: 'Demo User',
         role: 'user',
         createProfile: 'customer_profiles'
     },
     {
         email: 'demo.vendor@swift.com',
-        password: 'Demo@1234',
+        password: process.env.DEMO_VENDOR_PASSWORD || defaultDemoPassword,
         name: 'Demo Vendor',
         role: 'vendor',
         createProfile: 'vendors'
     },
     {
         email: 'demo.admin@swift.com',
-        password: 'Demo@1234',
+        password: process.env.DEMO_ADMIN_PASSWORD || defaultDemoPassword,
         name: 'Demo Admin',
         role: 'admin',
         createProfile: null // Admins may not need specific profile
@@ -142,15 +143,19 @@ async function main() {
 
     console.log('\n=== Demo Users Created ===');
     results.forEach(r => {
-        console.log(`${r.role.toUpperCase()}: ${r.email} / ${r.password}`);
+        console.log(`${r.role.toUpperCase()}: ${r.email} / [password-set-via-env]`);
     });
-    console.log('\nCredentials saved to backend/demo-credentials.json');
+    console.log('\nDemo account metadata saved to backend/demo-credentials.json');
 
     // Save credentials to file for app reference
     const fs = require('fs');
     fs.writeFileSync(
         require('path').join(__dirname, '..', 'demo-credentials.json'),
-        JSON.stringify(results, null, 2)
+        JSON.stringify(
+            results.map(r => ({ email: r.email, role: r.role })),
+            null,
+            2
+        )
     );
 }
 

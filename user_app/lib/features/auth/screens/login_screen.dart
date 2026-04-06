@@ -23,6 +23,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  static const _demoEmail = String.fromEnvironment('DEMO_USER_EMAIL', defaultValue: '');
+  static const _demoPassword = String.fromEnvironment('DEMO_USER_PASSWORD', defaultValue: '');
 
   @override
   void initState() {
@@ -279,15 +281,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             ),
                             child: TextButton.icon(
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16)),
-                              onPressed: authState.isLoading
+                              onPressed: authState.isLoading || _demoEmail.isEmpty || _demoPassword.isEmpty
                                   ? null
                                   : () {
                                       HapticFeedback.lightImpact();
-                                      ref.read(authNotifierProvider.notifier).signIn('demo.user@swift.com', 'Demo@1234');
+                                      ref.read(authNotifierProvider.notifier).signIn(_demoEmail, _demoPassword);
                                     },
                               icon: const Icon(Icons.account_circle_outlined, size: 24, color: AppColors.primary),
                               label: Text(
-                                'Login as Demo User',
+                                _demoEmail.isEmpty || _demoPassword.isEmpty
+                                    ? 'Demo Login Disabled'
+                                    : 'Login as Demo User',
                                 style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 16),
                               ),
                             ),

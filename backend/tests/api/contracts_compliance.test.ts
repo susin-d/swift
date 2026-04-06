@@ -2,6 +2,7 @@ import supertest from 'supertest';
 import { FastifyInstance } from 'fastify';
 import { buildApp } from '../../src/app';
 import { CONTRACT_ENDPOINTS, CONTRACT_REGISTRY_VERSION } from '../../src/contracts/registry';
+import { supabase } from '../../src/services/supabase';
 
 /**
  * S9-04 — Contract Compliance Replay Tests
@@ -37,7 +38,7 @@ describe('Contract Compliance — Registry Shape', () => {
         for (const endpoint of CONTRACT_ENDPOINTS) {
             expect(endpoint.id).toBeTruthy();
             expect(endpoint.method).toMatch(/^(GET|POST|PATCH|DELETE)$/);
-            expect(endpoint.path).toMatch(/^\/api\/v1\//);
+            expect(endpoint.path).toMatch(/^\/api\/v(1|2)\//);
             expect(['public', 'authenticated', 'user', 'admin', 'vendor']).toContain(endpoint.auth);
             expect(endpoint.response).toBeDefined();
             expect(Array.isArray(endpoint.response.fields)).toBe(true);
@@ -65,10 +66,25 @@ describe('Contract Compliance — Registry Shape', () => {
         expect(uniqueIds.size).toBe(ids.length);
     });
 
-    it('all paths start with /api/v1/', () => {
+    it('all paths start with /api/v1/ or /api/v2/', () => {
         for (const endpoint of CONTRACT_ENDPOINTS) {
-            expect(endpoint.path.startsWith('/api/v1/')).toBe(true);
+            expect(
+                endpoint.path.startsWith('/api/v1/') || endpoint.path.startsWith('/api/v2/')
+            ).toBe(true);
         }
+    });
+
+    it('registers secure v2 contract endpoints for sensitive finance/reward mutations', () => {
+        const byId = new Map(CONTRACT_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint]));
+
+        expect(byId.get('wallet.topup.patch.v2')?.path).toBe('/api/v2/wallet/topup');
+        expect(byId.get('loyalty.points.post.v2')?.path).toBe('/api/v2/loyalty/points');
+        expect(byId.get('subscriptions.create.v2')?.path).toBe('/api/v2/subscriptions/create');
+        expect(byId.get('subscriptions.renew.v2')?.path).toBe('/api/v2/subscriptions/:id/renew');
+
+        expect(byId.get('loyalty.points.post.v2')?.auth).toBe('admin');
+        expect(byId.get('subscriptions.create.v2')?.auth).toBe('admin');
+        expect(byId.get('subscriptions.renew.v2')?.auth).toBe('admin');
     });
 
     it('total endpoint count is within registered bounds', async () => {
@@ -160,13 +176,19 @@ describe('Contract Compliance — Key Business Endpoints', () => {
         expect(roleField!.required).toBe(true);
     });
 
-    it('public login endpoint returns 200 with correct Content-Type on valid credentials', async () => {
+    it('public login endpoint is reachable without relying on external auth network', async () => {
+        const signInStub = jest.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValue({
+            data: { session: null, user: null } as any,
+            error: { message: 'Invalid login credentials' } as any,
+        });
         const response = await supertest(app.server as any)
             .post('/api/v1/auth/session')
             .send({ email: 'wrong@test.com', password: 'badpassword' });
+        signInStub.mockRestore();
 
-        // We don't assert 200 (credentials invalid), but must not be 404 or 500
+        // For bad credentials, endpoint should respond with auth error (never 404/5xx).
         expect(response.status).not.toBe(404);
         expect(response.status).not.toBe(500);
+        expect([400, 401]).toContain(response.status);
     });
 });

@@ -7,6 +7,7 @@ type Paging = {
     from: number;
     to: number;
 };
+const MAX_PAGE_LIMIT = 100;
 
 const toNumber = (value: unknown, fallback: number) => {
     const parsed = Number(value);
@@ -15,7 +16,8 @@ const toNumber = (value: unknown, fallback: number) => {
 
 const getPaging = (query: Record<string, unknown>, defaultLimit = 20): Paging => {
     const page = toNumber(query.page, 1);
-    const limit = toNumber(query.limit, defaultLimit);
+    const requestedLimit = toNumber(query.limit, defaultLimit);
+    const limit = Math.min(requestedLimit, MAX_PAGE_LIMIT);
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     return { page, limit, from, to };

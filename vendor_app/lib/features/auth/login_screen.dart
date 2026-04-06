@@ -23,8 +23,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
   static const _teal = Color(0xFF0D9488);
   static const _tealDark = Color(0xFF065F46);
-  static const _demoEmail = 'demo.vendor@swift.com';
-  static const _demoPassword = 'Demo@1234';
+  static const _demoEmail = String.fromEnvironment('DEMO_VENDOR_EMAIL', defaultValue: '');
+  static const _demoPassword = String.fromEnvironment('DEMO_VENDOR_PASSWORD', defaultValue: '');
 
   @override
   void initState() {
@@ -55,6 +55,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   }
 
   void _fillDemoCredentials() {
+    if (_demoEmail.isEmpty || _demoPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Demo credentials are disabled in this build.'),
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.selectionClick();
     setState(() {
       _emailController.text = _demoEmail;
@@ -266,9 +275,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             child: TextButton.icon(
                               key: const Key('fillDemoCredentialsButton'),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14)),
-                              onPressed: authState.isLoading ? null : _fillDemoCredentials,
+                              onPressed: authState.isLoading || _demoEmail.isEmpty || _demoPassword.isEmpty
+                                  ? null
+                                  : _fillDemoCredentials,
                               icon: const Icon(Icons.storefront_outlined, size: 20, color: _teal),
-                              label: Text('Use Demo Credentials', style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15)),
+                              label: Text(
+                                _demoEmail.isEmpty || _demoPassword.isEmpty
+                                    ? 'Demo Disabled'
+                                    : 'Use Demo Credentials',
+                                style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15),
+                              ),
                             ),
                           ),
                         ),

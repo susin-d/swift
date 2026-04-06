@@ -23,6 +23,11 @@ class ProfileScreen extends ConsumerWidget {
               .join()
               .toUpperCase()
         : 'CS';
+    final walletBalanceRaw =
+        user?['wallet_balance'] ?? user?['walletBalance'] ?? 0;
+    final walletBalance = walletBalanceRaw is num
+        ? walletBalanceRaw.toDouble()
+        : double.tryParse(walletBalanceRaw.toString()) ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -90,6 +95,41 @@ class ProfileScreen extends ConsumerWidget {
               Text(name, style: Theme.of(context).textTheme.displayMedium),
               const SizedBox(height: 4),
               Text(email, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.account_balance_wallet_rounded,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Wallet Balance',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Text(
+                      'Rs ${walletBalance.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 48),
 
               // Menu Items
@@ -122,6 +162,12 @@ class ProfileScreen extends ConsumerWidget {
                 'Edit Profile',
                 Icons.edit_rounded,
                 () => context.push('/profile/edit'),
+              ),
+              _buildProfileItem(
+                context,
+                'Growth Hub',
+                Icons.trending_up_rounded,
+                () => context.push('/growth'),
               ),
               _buildProfileItem(
                 context,

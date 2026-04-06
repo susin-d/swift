@@ -1,3 +1,5 @@
+> Canonical consolidated reference: `PROJECT_DOCUMENTATION.md`
+
 ## Payments (Razorpay)
 
 ### `POST /payments/create-order`
@@ -45,6 +47,10 @@ This document outlines the core RESTful endpoints exposed by the Swift backend.
 **Base URL (Production)**: `https://swift-campus.vercel.app/api/v1`
 
 **Base URL (Local Development)**: `http://localhost:3000/api/v1`
+
+**Versioned secure routes (migration)**: `https://swift-campus.vercel.app/api/v2`
+- Finance and growth mutations now have `/api/v2` availability for controlled breaking-change rollout.
+- Clients should migrate mutating wallet/loyalty/subscription flows to v2 contracts.
 
 ## Health Check
 
@@ -358,7 +364,130 @@ Creates a support ticket.
     "priority": "high",
     "orderId": "order-id-optional"
   }
+
+### `GET /admin/support/tickets`
+Returns paginated support inbox entries for admins.
+
+- Query params:
+  - `page` (default `1`)
+  - `limit` (default `20`, max `100`)
+  - `status` (optional: `open|in_progress|resolved|closed`)
+- **Response** `200 OK`:
+  ```json
+  {
+    "tickets": [
+      {
+        "id": "ticket-id",
+        "status": "open",
+        "priority": "high",
+        "createdBy": "user-id"
+      }
+    ],
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "meta": {
+      "totalPages": 1,
+      "hasNextPage": false,
+      "hasPreviousPage": false
+    }
+  }
   ```
+
+### `PATCH /admin/support/tickets/:id`
+Admin triage endpoint for status, priority, assignment, and resolution notes.
+
+- **Request body**:
+  ```json
+  {
+    "status": "in_progress",
+    "priority": "high",
+    "assigneeId": "admin-or-agent-user-id",
+    "resolutionNote": "Working with vendor on replacement."
+  }
+  ```
+
+## Wallet
+
+All wallet routes require an authenticated user token.
+
+### `GET /wallet/balance`
+- **Response** `200 OK`:
+  ```json
+  {
+    "balance": 240.0,
+    "currency": "INR"
+  }
+  ```
+
+### `PATCH /wallet/topup`
+- **Request body**:
+  ```json
+  {
+    "amount": 100,
+    "source": "upi",
+    "status": "pending",
+    "idempotencyKey": "optional-idempotency-key"
+  }
+  ```
+- Security rules:
+  - Non-admin callers can only create `pending` top-up requests.
+  - Only admin-verified actions may mark top-ups `completed` or `failed`.
+  - Admin settlement can target a specific user via `userId`.
+- **Response** `200 OK`:
+  ```json
+  {
+    "balance": 340,
+    "currency": "INR",
+    "transaction": {
+      "id": "tx-id",
+      "amount": 100,
+      "transaction_type": "topup",
+      "status": "completed"
+    }
+  }
+  ```
+
+### `GET /wallet/transactions`
+Returns paginated wallet transaction history.
+
+## Account Deletion
+
+All account deletion routes require an authenticated user token.
+
+### `DELETE /users/me`
+Schedules account deletion after a 7-day cancellation window.
+
+### `GET /users/me/deletion`
+Returns current deletion-request state (or `null` if no request exists).
+
+### `PATCH /users/me/deletion/cancel`
+Cancels a pending scheduled deletion request.
+
+## Growth & Retention
+
+Authenticated user endpoints:
+
+- `POST /referrals/generate`
+- `GET /referrals/code/:code`
+- `POST /referrals/redeem`
+- `GET /loyalty/tier`
+- `POST /loyalty/points`
+- `GET /subscriptions`
+- `POST /subscriptions/create`
+- `GET /analytics/spending`
+- `GET /analytics/vendors`
+- `POST /vendors/:id/watch`
+- `DELETE /vendors/:id/watch`
+- `POST /orders/group`
+- `PATCH /orders/:id/split`
+- `POST /orders/:id/refund`
+- `GET /refunds/me`
+
+Admin-only mutation endpoints:
+- `POST /loyalty/points`
+- `POST /subscriptions/create`
+- `PATCH /subscriptions/:id/renew`
 
 ### `GET /support/tickets`
 Returns support tickets visible to the authenticated user:

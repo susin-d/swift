@@ -99,6 +99,13 @@ class _SupportScreenState extends State<SupportScreen> {
               ),
               _buildSupportOption(
                 context,
+                'My Tickets',
+                'Track status of submitted requests',
+                Icons.receipt_long_rounded,
+                () => _showTicketTimeline(context),
+              ),
+              _buildSupportOption(
+                context,
                 'Email Us',
                 'support@swift.campus.edu',
                 Icons.email_rounded,
@@ -424,6 +431,117 @@ class _SupportScreenState extends State<SupportScreen> {
       },
     );
 
+  }
+
+  Future<void> _showTicketTimeline(BuildContext context) async {
+    final gateway = widget.supportGateway ?? SupportService();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        final maxSheetHeight = MediaQuery.of(sheetContext).size.height * 0.78;
+        return SafeArea(
+          child: SizedBox(
+            height: maxSheetHeight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+              child: FutureBuilder<List<SupportTicket>>(
+                future: gateway.getMyTickets(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Unable to load tickets',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(snapshot.error.toString(), textAlign: TextAlign.center),
+                      ],
+                    );
+                  }
+
+                  final tickets = snapshot.data ?? const <SupportTicket>[];
+                  if (tickets.isEmpty) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'No tickets yet',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Submit your first ticket from this support page.'),
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'My Support Tickets',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: tickets.length,
+                          separatorBuilder: (_, itemIndex) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final ticket = tickets[index];
+                            final canClose = ticket.status != 'closed';
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(
+                                ticket.subject,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              subtitle: Text(
+                                'Status: ${ticket.status.toUpperCase()} | Priority: ${ticket.priority.toUpperCase()}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: canClose
+                                  ? TextButton(
+                                      onPressed: () async {
+                                        await gateway.updateTicketStatus(
+                                          ticketId: ticket.id,
+                                          status: 'closed',
+                                        );
+                                        if (sheetContext.mounted) {
+                                          Navigator.of(sheetContext).pop();
+                                          await _showTicketTimeline(context);
+                                        }
+                                      },
+                                      child: const Text('Close'),
+                                    )
+                                  : const Text('Closed'),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showSupportSnack(String message) {

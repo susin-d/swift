@@ -509,4 +509,9 @@ const _navigationItems = <_NavItem>[
   _NavItem(icon: Icons.local_offer_rounded, label: 'Promos', route: '/promos'),
   _NavItem(icon: Icons.tune_rounded, label: 'Settings', route: '/settings'),
   _NavItem(icon: Icons.history_rounded, label: 'Audit Logs', route: '/audit'),
+  _NavItem(
+    icon: Icons.support_agent_rounded,
+    label: 'Support Inbox',
+    route: '/support-inbox',
+  ),
 ];

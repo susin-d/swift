@@ -23,6 +23,20 @@ class _FakeSupportGateway implements SupportTicketGateway {
     capturedOrderId = orderId;
     return 'ticket_demo_123';
   }
+
+  @override
+  Future<List<SupportTicket>> getMyTickets() async {
+    return const <SupportTicket>[];
+  }
+
+  @override
+  Future<SupportTicket?> updateTicketStatus({
+    required String ticketId,
+    required String status,
+    String? resolutionNote,
+  }) async {
+    return null;
+  }
 }
 
 void main() {
@@ -51,6 +65,7 @@ void main() {
   testWidgets('faq option opens bottom sheet with answers', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SupportScreen()));
 
+    await tester.ensureVisible(find.text('FAQs'));
     await tester.tap(find.text('FAQs'));
     await tester.pumpAndSettle();
 
