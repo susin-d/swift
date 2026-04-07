@@ -7,8 +7,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function resetAdmin() {
-    const email = 'admin@swift.com';
-    const newPassword = 'admin@swift';
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const newPassword = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
     console.log(`Resetting password for ${email}...`);
 

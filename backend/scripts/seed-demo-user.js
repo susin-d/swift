@@ -9,21 +9,21 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const demoUsers = [
     {
-        email: 'demo.user@swift.com',
+        email: process.env.DEMO_USER_EMAIL || 'demo.user@example.com',
         password: process.env.DEMO_USER_PASSWORD || defaultDemoPassword,
         name: 'Demo User',
         role: 'user',
         createProfile: 'customer_profiles'
     },
     {
-        email: 'demo.vendor@swift.com',
+        email: process.env.DEMO_VENDOR_EMAIL || 'demo.vendor@example.com',
         password: process.env.DEMO_VENDOR_PASSWORD || defaultDemoPassword,
         name: 'Demo Vendor',
         role: 'vendor',
         createProfile: 'vendors'
     },
     {
-        email: 'demo.admin@swift.com',
+        email: process.env.DEMO_ADMIN_EMAIL || 'demo.admin@example.com',
         password: process.env.DEMO_ADMIN_PASSWORD || defaultDemoPassword,
         name: 'Demo Admin',
         role: 'admin',

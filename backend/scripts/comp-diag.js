@@ -9,6 +9,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 async function testAll() {
     console.log('--- Comprehensive Auth Diagnostic ---');
     console.log('URL:', supabaseUrl);
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
     // 1. Raw Network Test
     console.log('\n1. Testing Raw HTTPS connection to Auth endpoint...');
@@ -36,8 +38,8 @@ async function testAll() {
     // 2. Refresh Token / Sign In
     console.log('\n2. Testing Sign-In...');
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'admin@swift.com',
-        password: 'admin@swift'
+        email,
+        password
     });
 
     if (authError) {

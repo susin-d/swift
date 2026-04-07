@@ -41,8 +41,31 @@ class AuthService {
     // Optionally, call a backend endpoint to invalidate session if needed
   }
 
+  Future<void> requestPasswordResetPin(String email) async {
+    await _api.post('/auth/password/forgot', data: {
+      'email': email,
+    });
+  }
+
+  Future<void> resetPasswordWithPin({
+    required String email,
+    required String pin,
+    required String newPassword,
+  }) async {
+    await _api.post('/auth/password/reset', data: {
+      'email': email,
+      'pin': pin,
+      'new_password': newPassword,
+    });
+  }
+
   // Fetch session from backend
   Future<Map<String, dynamic>?> fetchSession() async {
+    final token = await _storage.read(key: 'jwt');
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+
     final response = await _api.get('/auth/me');
     return response.data;
   }

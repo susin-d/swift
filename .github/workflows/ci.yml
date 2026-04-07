@@ -75,15 +75,15 @@ jobs:
 
       - name: Enforce runtime API config (no hardcoded base URL assignment)
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use runtime config."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi
@@ -116,15 +116,15 @@ jobs:
 
       - name: Enforce runtime API config (no hardcoded base URL assignment)
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use runtime config."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi
@@ -157,15 +157,15 @@ jobs:
 
       - name: Enforce runtime API config (no hardcoded base URL assignment)
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected. Use runtime config."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected. Use String.fromEnvironment('API_BASE_URL')."
             exit 1
           fi

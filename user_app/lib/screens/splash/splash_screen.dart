@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -61,9 +61,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(32),
                       ),
-                      child: Image.asset(
-                        'assets/branding/swift_logo.png',
-                        
+                      child: SvgPicture.asset(
+                        'assets/branding/swift_logo.svg',
                         width: 64,
                         height: 64,
                       ),
@@ -71,12 +70,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     const SizedBox(height: 32),
                     Text(
                       'Swift',
-                      style: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -2),
+                      style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -2),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Campus Food Delivery',
-                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.8)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),

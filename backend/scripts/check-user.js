@@ -7,13 +7,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function checkUser() {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
     const { data: { users }, error } = await supabase.auth.admin.listUsers();
     if (error) {
         console.error('Error listing users:', error);
         return;
     }
 
-    const admin = users.find(u => u.email === 'admin@swift.com');
+    const admin = users.find(u => u.email === adminEmail);
     if (admin) {
         console.log('User found in Auth:');
         console.log('ID:', admin.id);
@@ -25,7 +26,7 @@ async function checkUser() {
     }
 
     // Check public users table too
-    const { data: publicUser, error: publicError } = await supabase.from('users').select('*').eq('email', 'admin@swift.com').single();
+    const { data: publicUser, error: publicError } = await supabase.from('users').select('*').eq('email', adminEmail).single();
     if (publicError) {
         console.log('Not found in public.users table or error:', publicError.message);
     } else {

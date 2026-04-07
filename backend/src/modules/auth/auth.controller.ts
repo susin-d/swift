@@ -1,5 +1,56 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { supabase } from '../../services/supabase';
+import crypto from 'crypto';
+
+const OTP_TTL_MINUTES = Number(process.env.PASSWORD_RESET_OTP_TTL_MINUTES || 10);
+const OTP_MAX_ATTEMPTS = Number(process.env.PASSWORD_RESET_OTP_MAX_ATTEMPTS || 5);
+
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+const hashOtp = (otp: string) => crypto.createHash('sha256').update(otp).digest('hex');
+
+const generateSixDigitOtp = () => {
+    const n = crypto.randomInt(0, 1000000);
+    return n.toString().padStart(6, '0');
+};
+
+const sendPasswordResetEmailViaBrevo = async (email: string, otp: string) => {
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.BREVO_FROM_EMAIL;
+    const senderName = process.env.BREVO_FROM_NAME || 'Swift Support';
+
+    if (!apiKey || !senderEmail) {
+        throw new Error('Brevo configuration missing: BREVO_API_KEY and BREVO_FROM_EMAIL are required');
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key': apiKey,
+        },
+        body: JSON.stringify({
+            sender: { email: senderEmail, name: senderName },
+            to: [{ email }],
+            subject: 'Your Swift password reset code',
+            htmlContent: `
+                <div style="font-family:Arial,sans-serif;line-height:1.5;color:#1b1b1b;">
+                  <h2 style="margin:0 0 12px 0;">Reset your password</h2>
+                  <p>Use this 6-digit code to reset your Swift password:</p>
+                  <p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:12px 0;">${otp}</p>
+                  <p>This code expires in ${OTP_TTL_MINUTES} minutes.</p>
+                  <p>If you did not request this, you can ignore this email.</p>
+                </div>
+            `,
+            textContent: `Reset your Swift password. Your 6-digit code is ${otp}. This code expires in ${OTP_TTL_MINUTES} minutes.`,
+        }),
+    });
+
+    if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Brevo send failed (${response.status}): ${body}`);
+    }
+};
 
 export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password } = request.body as any;
@@ -334,4 +385,137 @@ export const acceptStaffOnboardingInviteHandler = async (request: FastifyRequest
             status: 'accepted',
         },
     });
+};
+
+export const forgotPasswordHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { email } = request.body as { email?: string };
+
+    if (!email || typeof email !== 'string') {
+        const err = new Error('email is required') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    const { data: userRecord } = await supabase
+        .from('users')
+        .select('id, email')
+        .ilike('email', normalizedEmail)
+        .maybeSingle();
+
+    // Always return a generic success response to avoid account enumeration.
+    if (!userRecord?.id) {
+        return reply.send({ message: 'If the account exists, a 6-digit reset code has been sent.' });
+    }
+
+    const otp = generateSixDigitOtp();
+    const otpHash = hashOtp(otp);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
+
+    await supabase
+        .from('password_reset_codes')
+        .update({ consumed_at: new Date().toISOString() })
+        .ilike('email', normalizedEmail)
+        .is('consumed_at', null);
+
+    const { error: insertError } = await supabase
+        .from('password_reset_codes')
+        .insert({
+            user_id: userRecord.id,
+            email: normalizedEmail,
+            code_hash: otpHash,
+            expires_at: expiresAt,
+            attempts: 0,
+        });
+
+    if (insertError) {
+        throw insertError;
+    }
+
+    await sendPasswordResetEmailViaBrevo(normalizedEmail, otp);
+
+    return reply.send({ message: 'If the account exists, a 6-digit reset code has been sent.' });
+};
+
+export const resetPasswordWithOtpHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    const { email, pin, new_password } = request.body as {
+        email?: string;
+        pin?: string;
+        new_password?: string;
+    };
+
+    if (!email || !pin || !new_password) {
+        const err = new Error('email, pin, and new_password are required') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if (!/^\d{6}$/.test(pin)) {
+        const err = new Error('pin must be a 6-digit numeric code') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if (new_password.length < 8) {
+        const err = new Error('Password must be at least 8 characters') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    const { data: codeRow, error: codeError } = await supabase
+        .from('password_reset_codes')
+        .select('id, user_id, code_hash, expires_at, attempts, consumed_at')
+        .ilike('email', normalizedEmail)
+        .is('consumed_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (codeError) {
+        throw codeError;
+    }
+
+    if (!codeRow) {
+        const err = new Error('Invalid or expired reset code') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const isExpired = new Date(codeRow.expires_at).getTime() < Date.now();
+    if (isExpired) {
+        await supabase.from('password_reset_codes').update({ consumed_at: new Date().toISOString() }).eq('id', codeRow.id);
+        const err = new Error('Invalid or expired reset code') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if ((codeRow.attempts || 0) >= OTP_MAX_ATTEMPTS) {
+        await supabase.from('password_reset_codes').update({ consumed_at: new Date().toISOString() }).eq('id', codeRow.id);
+        const err = new Error('Too many invalid attempts. Request a new code.') as any;
+        err.statusCode = 429;
+        throw err;
+    }
+
+    const providedHash = hashOtp(pin);
+    if (providedHash !== codeRow.code_hash) {
+        await supabase.from('password_reset_codes').update({ attempts: (codeRow.attempts || 0) + 1 }).eq('id', codeRow.id);
+        const err = new Error('Invalid or expired reset code') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const { error: updateAuthError } = await supabase.auth.admin.updateUserById(codeRow.user_id, {
+        password: new_password,
+    });
+
+    if (updateAuthError) {
+        throw updateAuthError;
+    }
+
+    await supabase.from('password_reset_codes').update({ consumed_at: new Date().toISOString() }).eq('id', codeRow.id);
+
+    return reply.send({ message: 'Password updated successfully' });
 };

@@ -45,7 +45,7 @@ type RuntimeContext = {
   classSessionId?: string;
 };
 
-const SITE_URL = process.env.LIVE_SITE_URL ?? 'https://swift-campus.vercel.app';
+const SITE_URL = process.env.LIVE_SITE_URL ?? 'https://example.com';
 const API_BASE = process.env.LIVE_API_BASE ?? `${SITE_URL}/api/v1`;
 const REQUEST_TIMEOUT_MS = Number(process.env.API_TEST_TIMEOUT_MS ?? 20000);
 

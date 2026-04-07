@@ -12,7 +12,8 @@ export const mockSupabase = {
         onAuthStateChange: Sinon.stub(supabase.auth, 'onAuthStateChange'),
         admin: {
             createUser: Sinon.stub(supabase.auth.admin, 'createUser'),
-            deleteUser: Sinon.stub(supabase.auth.admin, 'deleteUser')
+            deleteUser: Sinon.stub(supabase.auth.admin, 'deleteUser'),
+            updateUserById: Sinon.stub(supabase.auth.admin, 'updateUserById')
         }
     },
     from: Sinon.stub(supabase, 'from'),

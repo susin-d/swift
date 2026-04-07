@@ -157,7 +157,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                   SizedBox(
                     width: 160,
                     child: DropdownButtonFormField<String?>(
-                      value: _statusFilter,
+                      initialValue: _statusFilter,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Status',
@@ -180,7 +180,7 @@ class _SupportInboxScreenState extends State<SupportInboxScreen> {
                   SizedBox(
                     width: 160,
                     child: DropdownButtonFormField<String?>(
-                      value: _priorityFilter,
+                      initialValue: _priorityFilter,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Priority',

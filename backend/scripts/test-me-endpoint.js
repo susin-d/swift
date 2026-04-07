@@ -8,12 +8,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function testMe() {
     console.log('--- Auth/Me Diagnostic Script (v2) ---');
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
-    // 1. Get a fresh token for admin@swift.com
+    // 1. Get a fresh token from configured admin credentials
     console.log('Signing in to get token...');
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'admin@swift.com',
-        password: 'admin@swift'
+        email,
+        password
     });
 
     if (authError) {

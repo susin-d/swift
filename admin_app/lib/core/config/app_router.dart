@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/audit/presentation/screens/audit_logs_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/campus/presentation/screens/campus_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -28,10 +29,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState is AuthAuthenticated;
       final isLoading = authState is AuthLoading || authState is AuthInitial;
-      final goingToLogin = state.matchedLocation == '/login';
+      final goingToLogin = state.matchedLocation == '/login' || state.matchedLocation == '/forgot-password';
       final requested = state.uri.toString();
       final fromParam = state.uri.queryParameters['from'];
-      final fromIsLogin = fromParam != null && fromParam.startsWith('/login');
+      final fromIsLogin = fromParam != null && (fromParam.startsWith('/login') || fromParam.startsWith('/forgot-password'));
 
       if (isLoading) return null;
       if (!isAuthenticated && !goingToLogin) {
@@ -50,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (_, __) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, __) => const ForgotPasswordScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

@@ -136,7 +136,11 @@ const menuItemsData = [
 async function seed() {
     console.log('Starting seed process...');
 
-    const vendorEmails = ['anna@bhawan.com', 'karaikudi@spice.com', 'madurai@bun.com'];
+    const vendorEmails = [
+        process.env.SEED_VENDOR_EMAIL_1 || 'vendor1@example.com',
+        process.env.SEED_VENDOR_EMAIL_2 || 'vendor2@example.com',
+        process.env.SEED_VENDOR_EMAIL_3 || 'vendor3@example.com',
+    ];
     const createdUsers = [];
 
     for (const email of vendorEmails) {
@@ -155,7 +159,7 @@ async function seed() {
             console.log(`Creating auth user: ${email}`);
             const { data: newAuth, error: createAuthError } = await supabase.auth.admin.createUser({
                 email,
-                password: 'password123',
+                password: process.env.SEED_VENDOR_PASSWORD || 'ChangeMeBeforeUse!123',
                 email_confirm: true,
                 user_metadata: { name: email.split('@')[0].toUpperCase(), role: 'vendor' }
             });

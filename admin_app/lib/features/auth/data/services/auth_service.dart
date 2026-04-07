@@ -66,4 +66,40 @@ class AuthService {
   Future<void> logout() async {
     await _storage.delete(key: _tokenKey);
   }
+
+  Future<void> requestPasswordResetPin(String email) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/auth/password/forgot',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to send reset PIN',
+      );
+    }
+  }
+
+  Future<void> resetPasswordWithPin({
+    required String email,
+    required String pin,
+    required String newPassword,
+  }) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/auth/password/reset',
+        data: {
+          'email': email,
+          'pin': pin,
+          'new_password': newPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to reset password',
+      );
+    }
+  }
 }

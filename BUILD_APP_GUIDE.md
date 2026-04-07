@@ -40,7 +40,7 @@ When `-All` is used, the script builds `vendor_app`, `admin_app`, and `user_app`
 ### Build All Apps
 
 ```powershell
-\.\build-app.ps1 -All -UserSupabaseUrl "https://your-project-id.supabase.co" -UserSupabaseAnonKey "your_anon_key"
+\.\build-app.ps1 -All -UserSupabaseUrl "<SUPABASE_URL>" -UserSupabaseAnonKey "<SUPABASE_ANON_KEY>"
 ```
 
 This builds:
@@ -55,15 +55,15 @@ Note: The three builds are started in parallel to reduce total build time.
 ```powershell
 .\build-app.ps1 -AppName vendor_app
 .\build-app.ps1 -AppName admin_app
-\.\build-app.ps1 -AppName user_app -UserSupabaseUrl "https://your-project-id.supabase.co" -UserSupabaseAnonKey "your_anon_key"
+\.\build-app.ps1 -AppName user_app -UserSupabaseUrl "<SUPABASE_URL>" -UserSupabaseAnonKey "<SUPABASE_ANON_KEY>"
 ```
 
 ### Build User App With Payment Key
 
 ```powershell
 \.\build-app.ps1 -AppName user_app -BuildType release `
-	-UserSupabaseUrl "https://your-project-id.supabase.co" `
-	-UserSupabaseAnonKey "your_anon_key" `
+	-UserSupabaseUrl "<SUPABASE_URL>" `
+	-UserSupabaseAnonKey "<SUPABASE_ANON_KEY>" `
 	-UserRazorpayKeyId "rzp_live_xxxxx"
 ```
 

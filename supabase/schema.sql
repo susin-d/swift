@@ -261,6 +261,23 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS password_reset_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  consumed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS password_reset_codes_email_created_idx
+  ON public.password_reset_codes (email, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS password_reset_codes_user_created_idx
+  ON public.password_reset_codes (user_id, created_at DESC);
+
 -- RLS POLICIES
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendors ENABLE ROW LEVEL SECURITY;
@@ -284,6 +301,7 @@ ALTER TABLE public.vendor_staff_invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.campus_buildings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.delivery_zones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.password_reset_codes ENABLE ROW LEVEL SECURITY;
 
 -- Drop policies if they exist so we can recreate them safely
 DO $$ DECLARE

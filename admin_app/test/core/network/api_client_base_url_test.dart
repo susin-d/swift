@@ -2,10 +2,10 @@ import 'package:admin_app/core/network/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('ApiClient uses live production base URL', () {
+  test('ApiClient uses environment-configurable base URL with local default', () {
     expect(
       ApiClient.instance.dio.options.baseUrl,
-      equals('https://swift-campus.vercel.app/api/v1'),
+      equals('http://localhost:3000/api/v1'),
     );
   });
 }

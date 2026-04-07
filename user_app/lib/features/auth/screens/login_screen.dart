@@ -23,8 +23,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
-  static const _demoEmail = String.fromEnvironment('DEMO_USER_EMAIL', defaultValue: '');
-  static const _demoPassword = String.fromEnvironment('DEMO_USER_PASSWORD', defaultValue: '');
 
   @override
   void initState() {
@@ -199,17 +197,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                  title: Text('Reset Password', style: GoogleFonts.outfit(fontWeight: FontWeight.w800)),
-                                  content: const Text('Please contact support@swift.campus to reset your password.'),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-                                ),
-                              );
-                            },
+                            onPressed: () => context.push('/forgot-password'),
                             child: Text('Forgot password?', style: GoogleFonts.inter(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
                           ),
                         ),
@@ -259,44 +247,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         ),
                         const SizedBox(height: 32),
 
-                        // Divider
-                        Row(
-                          children: [
-                            const Expanded(child: Divider(color: AppColors.border)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('OR QUICK ACCESS', style: Theme.of(context).textTheme.labelSmall),
-                            ),
-                            const Expanded(child: Divider(color: AppColors.border)),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Demo Login Button
-                        Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.5), width: 1.5),
-                            ),
-                            child: TextButton.icon(
-                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16)),
-                              onPressed: authState.isLoading || _demoEmail.isEmpty || _demoPassword.isEmpty
-                                  ? null
-                                  : () {
-                                      HapticFeedback.lightImpact();
-                                      ref.read(authNotifierProvider.notifier).signIn(_demoEmail, _demoPassword);
-                                    },
-                              icon: const Icon(Icons.account_circle_outlined, size: 24, color: AppColors.primary),
-                              label: Text(
-                                _demoEmail.isEmpty || _demoPassword.isEmpty
-                                    ? 'Demo Login Disabled'
-                                    : 'Login as Demo User',
-                                style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ),
                         const SizedBox(height: 60),
                       ],
                     ),

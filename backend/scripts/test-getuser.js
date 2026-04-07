@@ -7,11 +7,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function testGetUser() {
     console.log('--- Supabase getUser Test ---');
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
     // 1. Get a token
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'admin@swift.com',
-        password: 'admin@swift'
+        email,
+        password
     });
 
     if (authError) {

@@ -44,15 +44,15 @@ jobs:
       - name: Enforce runtime API config
         working-directory: ./user_app
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected."
             exit 1
           fi
@@ -78,15 +78,15 @@ jobs:
       - name: Enforce runtime API config
         working-directory: ./vendor_app
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected."
             exit 1
           fi
@@ -112,15 +112,15 @@ jobs:
       - name: Enforce runtime API config
         working-directory: ./admin_app
         run: |
-          if grep -R -n "baseUrl: 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "baseUrl:\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "_dio.options.baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "_dio.options.baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded API base URL assignment detected."
             exit 1
           fi
-          if grep -R -n "const _baseUrl = 'https://swift-campus.vercel.app/api/v1'" lib; then
+          if grep -R -nE "const _baseUrl\\s*=\\s*'https?://.*/api/v1'" lib; then
             echo "Hardcoded _baseUrl detected."
             exit 1
           fi

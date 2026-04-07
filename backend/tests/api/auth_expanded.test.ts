@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { mockSupabase } from '../mocks/supabaseMock';
 import { mockAuthenticate } from '../mocks/authMock';
 import supertest from 'supertest';
@@ -7,13 +8,16 @@ import Sinon from 'sinon';
 
 describe('API - Auth Controller Expansion', () => {
     let app: FastifyInstance;
+    let fetchStub: Sinon.SinonStub;
 
     beforeAll(async () => {
         app = await buildApp(mockAuthenticate);
         await app.ready();
+        fetchStub = Sinon.stub(globalThis as any, 'fetch');
     });
 
     afterAll(async () => {
+        fetchStub.restore();
         await app.close();
         Sinon.restore();
     });
@@ -23,6 +27,10 @@ describe('API - Auth Controller Expansion', () => {
         mockSupabase.from.resetBehavior();
         mockSupabase.auth.signUp.resetHistory();
         mockSupabase.auth.signUp.resetBehavior();
+        mockSupabase.auth.admin.updateUserById.resetHistory();
+        mockSupabase.auth.admin.updateUserById.resetBehavior();
+        fetchStub.resetHistory();
+        fetchStub.resetBehavior();
     });
 
     it('POST /register - should register a new student', async () => {
@@ -171,5 +179,106 @@ describe('API - Auth Controller Expansion', () => {
         expect(response.status).toBe(200);
         expect(response.body.onboarding.status).toBe('accepted');
         expect(response.body.onboarding.role_key).toBe('cashier');
+    });
+
+    it('POST /password/forgot - returns generic success when account is unknown', async () => {
+        mockSupabase.from.withArgs('users').returns({
+            select: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: null, error: null }),
+        } as any);
+
+        const response = await supertest(app.server as any)
+            .post('/api/v1/auth/password/forgot')
+            .send({ email: 'unknown@campus.edu' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toContain('6-digit reset code');
+    });
+
+    it('POST /password/reset - resets password with valid pin', async () => {
+        const passwordCodesTable = {
+            select: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            is: Sinon.stub().returnsThis(),
+            order: Sinon.stub().returnsThis(),
+            limit: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({
+                data: {
+                    id: 'code-1',
+                    user_id: 'user_123',
+                    code_hash: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
+                    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+                    attempts: 0,
+                    consumed_at: null,
+                },
+                error: null,
+            }),
+            update: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().resolves({ error: null }),
+        } as any;
+
+        // sha256("123456")
+        passwordCodesTable.maybeSingle = Sinon.stub().resolves({
+            data: {
+                id: 'code-1',
+                user_id: 'user_123',
+                code_hash: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
+                expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+                attempts: 0,
+                consumed_at: null,
+            },
+            error: null,
+        });
+
+        mockSupabase.from.withArgs('password_reset_codes').returns(passwordCodesTable);
+        mockSupabase.auth.admin.updateUserById.resolves({ data: {}, error: null } as any);
+
+        const response = await supertest(app.server as any)
+            .post('/api/v1/auth/password/reset')
+            .send({ email: 'test@campus.edu', pin: '123456', new_password: 'newpassword123' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toBe('Password updated successfully');
+        Sinon.assert.calledOnce(mockSupabase.auth.admin.updateUserById);
+    });
+
+    it('POST /password/forgot - stores OTP and sends email via Brevo fetch path', async () => {
+        process.env.BREVO_API_KEY = 'test-brevo-key';
+        process.env.BREVO_FROM_EMAIL = 'no-reply@swift.campus';
+
+        const usersTable = {
+            select: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({
+                data: { id: 'user_123', email: 'test@campus.edu' },
+                error: null,
+            }),
+        } as any;
+
+        const passwordCodesTable = {
+            update: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            is: Sinon.stub().resolves({ data: null, error: null }),
+            insert: Sinon.stub().resolves({ data: null, error: null }),
+        } as any;
+
+        mockSupabase.from.withArgs('users').returns(usersTable);
+        mockSupabase.from.withArgs('password_reset_codes').returns(passwordCodesTable);
+
+        fetchStub.resolves({
+            ok: true,
+            status: 201,
+            text: async () => '',
+        } as any);
+
+        const response = await supertest(app.server as any)
+            .post('/api/v1/auth/password/forgot')
+            .send({ email: 'test@campus.edu' });
+
+        expect(response.status).toBe(200);
+        expect(response.body.message).toContain('6-digit reset code');
+        Sinon.assert.calledOnce(fetchStub);
+        Sinon.assert.calledOnce(passwordCodesTable.insert);
     });
 });

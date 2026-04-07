@@ -17,8 +17,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function createAdmin() {
-    const email = 'admin@swift.com';
-    const password = 'admin@swift';
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
     console.log(`Attempting to create admin user: ${email}`);
 
@@ -64,7 +64,7 @@ async function updatePublicUser(id, email) {
         .upsert({
             id,
             email,
-            name: 'Global Admin',
+            name: process.env.ADMIN_NAME || 'Global Admin',
             role: 'admin'
         }, { onConflict: 'id' });
 

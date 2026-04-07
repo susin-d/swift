@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 
@@ -200,6 +201,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     },
                                   ),
                                   const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: _submitting
+                                          ? null
+                                          : () => context.push('/forgot-password'),
+                                      child: const Text('Forgot password?'),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [

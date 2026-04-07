@@ -12,11 +12,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function testAdminAPI() {
     console.log('--- Testing Admin Real-Data APIs ---');
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
 
     // 1. Get Token
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: 'admin@swift.com',
-        password: 'admin@swift'
+        email,
+        password
     });
     if (authError) {
         console.error('Sign-in failed:', authError.message);

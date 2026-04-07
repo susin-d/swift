@@ -13,9 +13,11 @@ const supabase = createClient(url, key);
 
 async function test() {
     console.log('Testing login with truncated ANON_KEY...');
+    const email = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const password = process.env.ADMIN_PASSWORD || 'ChangeMeBeforeUse!123';
     const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@swift.com',
-        password: 'admin@swift'
+        email,
+        password
     });
 
     if (error) {

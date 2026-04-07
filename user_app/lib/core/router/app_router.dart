@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../screens/home/home_screen.dart';
@@ -43,6 +44,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/vendor/:id',
@@ -118,12 +123,16 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final user = ref.read(userProvider);
       final loc = state.matchedLocation;
-      final isAuthRoute = loc == '/login' || loc == '/register';
+      final isAuthRoute = loc == '/login' || loc == '/register' || loc == '/forgot-password';
       final isSplash = loc == '/splash';
       final isPublicInfoRoute = loc == '/legal' || loc == '/privacy' || loc == '/support';
       final requested = state.uri.toString();
       final fromParam = state.uri.queryParameters['from'];
-      final fromIsAuth = fromParam != null && (fromParam.startsWith('/login') || fromParam.startsWith('/register'));
+      final fromIsAuth = fromParam != null && (
+        fromParam.startsWith('/login') ||
+        fromParam.startsWith('/register') ||
+        fromParam.startsWith('/forgot-password')
+      );
 
       // Don't redirect away from splash — it auto-navigates
       if (isSplash) return null;

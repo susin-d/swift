@@ -7,10 +7,26 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function setupUsers() {
+    const defaultPassword = process.env.DEFAULT_TEST_PASSWORD || 'ChangeMeBeforeUse!123';
     const roles = [
-        { email: 'admin@swift.com', password: 'admin@swift', role: 'admin', name: 'Global Admin' },
-        { email: 'anna@bhawan.com', password: 'password123', role: 'vendor', name: 'ANNA' },
-        { email: 'user@example.com', password: 'password123', role: 'user', name: 'Test User' }
+        {
+            email: process.env.ADMIN_EMAIL || 'admin@example.com',
+            password: process.env.ADMIN_PASSWORD || defaultPassword,
+            role: 'admin',
+            name: process.env.ADMIN_NAME || 'Global Admin'
+        },
+        {
+            email: process.env.TEST_VENDOR_EMAIL || 'vendor@example.com',
+            password: process.env.TEST_VENDOR_PASSWORD || defaultPassword,
+            role: 'vendor',
+            name: process.env.TEST_VENDOR_NAME || 'Test Vendor'
+        },
+        {
+            email: process.env.TEST_USER_EMAIL || 'user@example.com',
+            password: process.env.TEST_USER_PASSWORD || defaultPassword,
+            role: 'user',
+            name: process.env.TEST_USER_NAME || 'Test User'
+        }
     ];
 
     for (const u of roles) {

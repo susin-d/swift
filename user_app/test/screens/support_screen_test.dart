@@ -59,7 +59,7 @@ void main() {
 
     expect(launchedUris, hasLength(1));
     expect(launchedUris.first.scheme, 'mailto');
-    expect(launchedUris.first.path, 'support@swift.campus.edu');
+    expect(launchedUris.first.path, 'support@example.com');
   });
 
   testWidgets('faq option opens bottom sheet with answers', (tester) async {

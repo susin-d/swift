@@ -5,3 +5,4 @@ SUPABASE_ANON_KEY=your-anon-key
 JWT_SECRET=replace-with-strong-random-secret
 RAZORPAY_KEY_ID=your-razorpay-key-id
 RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+NODE_ENV=development

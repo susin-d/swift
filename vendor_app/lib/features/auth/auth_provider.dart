@@ -118,4 +118,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _clearToken();
     state = AuthState();
   }
+
+  Future<void> requestPasswordResetPin(String email) async {
+    await _api.post('/auth/password/forgot', data: {
+      'email': email,
+    });
+  }
+
+  Future<void> resetPasswordWithPin({
+    required String email,
+    required String pin,
+    required String newPassword,
+  }) async {
+    await _api.post('/auth/password/reset', data: {
+      'email': email,
+      'pin': pin,
+      'new_password': newPassword,
+    });
+  }
 }

@@ -86,7 +86,10 @@ class GrowthService {
   }) async {
     final response = await _api.post(
       '/orders/$orderId/refund',
-      data: {'reason': reason, if (amount != null) 'amount': amount},
+      data: {
+        'reason': reason,
+        ...?amount == null ? null : {'amount': amount},
+      },
     );
     return (response.data as Map?)?.cast<String, dynamic>() ??
         <String, dynamic>{};

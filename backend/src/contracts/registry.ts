@@ -20,7 +20,7 @@ export type ContractEndpoint = {
     response: ContractSchema;
 };
 
-export const CONTRACT_REGISTRY_VERSION = '2026.04.s12.1';
+export const CONTRACT_REGISTRY_VERSION = '2026.04.s13.0';
 
 export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
     {
@@ -44,6 +44,46 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'user.role', type: 'string', required: true, description: 'Resolved role from users table.' },
                 { name: 'session.access_token', type: 'string', required: true, description: 'Supabase JWT token.' },
                 { name: 'session.expires_in', type: 'number', required: true, description: 'Token expiration in seconds.' }
+            ]
+        }
+    },
+    {
+        id: 'auth.password.forgot',
+        method: 'POST',
+        path: '/api/v1/auth/password/forgot',
+        owner: 'shared',
+        auth: 'public',
+        request: {
+            description: 'Request a 6-digit email OTP for password reset.',
+            fields: [
+                { name: 'email', type: 'string(email)', required: true, description: 'Account email that should receive the PIN.' }
+            ]
+        },
+        response: {
+            description: 'Enumeration-safe generic message indicating PIN dispatch attempt.',
+            fields: [
+                { name: 'message', type: 'string', required: true, description: 'Generic status message regardless of account existence.' }
+            ]
+        }
+    },
+    {
+        id: 'auth.password.reset',
+        method: 'POST',
+        path: '/api/v1/auth/password/reset',
+        owner: 'shared',
+        auth: 'public',
+        request: {
+            description: 'Reset password using email + 6-digit OTP PIN.',
+            fields: [
+                { name: 'email', type: 'string(email)', required: true, description: 'Account email.' },
+                { name: 'pin', type: 'string(6-digit)', required: true, description: '6-digit OTP code sent to email.' },
+                { name: 'new_password', type: 'string', required: true, description: 'New password, minimum 8 characters.' }
+            ]
+        },
+        response: {
+            description: 'Password reset completion response.',
+            fields: [
+                { name: 'message', type: 'string', required: true, description: 'Password update confirmation.' }
             ]
         }
     },

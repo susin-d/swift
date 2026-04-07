@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -205,17 +206,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                  title: Text('Reset Password', style: GoogleFonts.outfit(fontWeight: FontWeight.w800)),
-                                  content: const Text('Contact admin@swift.campus to reset your vendor password.'),
-                                  actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
-                                ),
-                              );
-                            },
+                            onPressed: () => context.push('/forgot-password'),
                             child: Text('Forgot password?', style: GoogleFonts.inter(color: _teal, fontWeight: FontWeight.w600, fontSize: 13)),
                           ),
                         ),

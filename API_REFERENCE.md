@@ -44,11 +44,11 @@ Verifies a Razorpay payment signature after payment completion.
 
 This document outlines the core RESTful endpoints exposed by the Swift backend.
 
-**Base URL (Production)**: `https://swift-campus.vercel.app/api/v1`
+**Base URL (Production)**: `<API_BASE_URL>/api/v1`
 
 **Base URL (Local Development)**: `http://localhost:3000/api/v1`
 
-**Versioned secure routes (migration)**: `https://swift-campus.vercel.app/api/v2`
+**Versioned secure routes (migration)**: `<API_BASE_URL>/api/v2`
 - Finance and growth mutations now have `/api/v2` availability for controlled breaking-change rollout.
 - Clients should migrate mutating wallet/loyalty/subscription flows to v2 contracts.
 
@@ -555,7 +555,7 @@ Login an existing user or vendor.
 - **Request Body**:
   ```json
   {
-    "email": "user@campus.edu",
+    "email": "<USER_EMAIL>",
     "password": "securepassword123"
   }
   ```
@@ -564,7 +564,7 @@ Login an existing user or vendor.
   {
     "user": {
       "id": "uuid",
-      "email": "user@campus.edu",
+      "email": "<USER_EMAIL>",
       "role": "user"
     },
     "session": { "access_token": "...", "expires_in": 3600 }
@@ -579,7 +579,7 @@ Register a new customer.
 - **Request Body**:
   ```json
   {
-    "email": "student@campus.edu",
+    "email": "<USER_EMAIL>",
     "password": "securepassword123",
     "name": "Jane Doe"
   }
@@ -591,6 +591,44 @@ Register a new customer.
 - **Error Responses**:
   - `400 ValidationError` when name/email/password are missing or password is shorter than 8 characters.
   - `409 Conflict` when the email is already registered.
+
+### `POST /auth/password/forgot`
+Request a 6-digit password reset PIN by email (Brevo).
+- **Request Body**:
+  ```json
+  {
+    "email": "<USER_EMAIL>"
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "message": "If the account exists, a 6-digit reset code has been sent."
+  }
+  ```
+- **Notes**:
+  - Response is intentionally generic to prevent account enumeration.
+  - PIN expiration and retry thresholds are enforced server-side.
+
+### `POST /auth/password/reset`
+Reset account password using email + 6-digit PIN.
+- **Request Body**:
+  ```json
+  {
+    "email": "<USER_EMAIL>",
+    "pin": "123456",
+    "new_password": "newSecurePass123"
+  }
+  ```
+- **Response** `200 OK`:
+  ```json
+  {
+    "message": "Password updated successfully"
+  }
+  ```
+- **Error Responses**:
+  - `400 ValidationError` for invalid payload, invalid PIN, or expired PIN.
+  - `429 TooManyRequests` when invalid PIN attempts exceed configured limit.
 
 ## Order Management
 
@@ -1067,8 +1105,8 @@ Create a vendor staff member record.
     "name": "Kitchen Lead",
     "role_key": "manager",
     "status": "active",
-    "email": "kitchen.lead@example.com",
-    "phone": "+91XXXXXXXXXX"
+    "email": "<STAFF_EMAIL>",
+    "phone": "<STAFF_PHONE>"
   }
   ```
 
@@ -1091,7 +1129,7 @@ Create a staff invitation tied to real user identity by email.
 - **Request Body**:
   ```json
   {
-    "email": "staff.member@example.com",
+    "email": "<STAFF_EMAIL>",
     "role_key": "cashier",
     "expires_in_days": 7
   }

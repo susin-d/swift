@@ -8,7 +8,7 @@ final apiServiceProvider = Provider((ref) => ApiService());
 
 class ApiService {
   static const _storage = FlutterSecureStorage();
-  static const String _defaultBaseUrl = 'https://swift-campus.vercel.app/api/v1';
+  static const String _defaultBaseUrl = 'http://localhost:3000/api/v1';
   static const String baseUrl =
       String.fromEnvironment('API_BASE_URL', defaultValue: _defaultBaseUrl);
 

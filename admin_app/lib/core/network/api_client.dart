@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:math';
 
-const _defaultBaseUrl = 'https://swift-campus.vercel.app/api/v1';
+const _defaultBaseUrl = 'http://localhost:3000/api/v1';
 const _baseUrl = String.fromEnvironment(
   'API_BASE_URL',
   defaultValue: _defaultBaseUrl,

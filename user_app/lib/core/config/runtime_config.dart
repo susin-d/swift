@@ -1,25 +1,24 @@
 class RuntimeConfig {
   RuntimeConfig({
-    required this.supabaseUrl,
-    required this.supabaseAnonKey,
+    required this.backendApiUrl,
   });
 
-  final String supabaseUrl;
-  final String supabaseAnonKey;
+  final String backendApiUrl;
 
   factory RuntimeConfig.fromEnvironment() {
-    const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-    const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+    const backendApiUrl = String.fromEnvironment(
+      'BACKEND_API_URL',
+      defaultValue: 'http://localhost:3000/api/v1',
+    );
 
-    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    if (backendApiUrl.isEmpty) {
       throw StateError(
-        'Missing required --dart-define values: SUPABASE_URL and SUPABASE_ANON_KEY',
+        'Missing BACKEND_API_URL environment variable. Set it via --dart-define or .env file.',
       );
     }
 
     return RuntimeConfig(
-      supabaseUrl: supabaseUrl,
-      supabaseAnonKey: supabaseAnonKey,
+      backendApiUrl: backendApiUrl,
     );
   }
 }

@@ -35,9 +35,22 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    cd backend
    npm install
    cp .env.example .env
-   # Add your Supabase and Razorpay keys to .env
+   # Add your Supabase, Razorpay, and Brevo keys to .env
    npm run dev
    ```
+
+   Required password-reset email variables:
+   - `BREVO_API_KEY` (Brevo API v3 key)
+   - `BREVO_FROM_EMAIL` (verified sender email in Brevo)
+   - `BREVO_FROM_NAME` (optional display name, defaults to `Swift Support`)
+   - `PASSWORD_RESET_OTP_TTL_MINUTES` (optional, default `10`)
+   - `PASSWORD_RESET_OTP_MAX_ATTEMPTS` (optional, default `5`)
+
+   Script credential variables (for local admin/demo scripts):
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`
+   - `TEST_VENDOR_EMAIL`, `TEST_VENDOR_PASSWORD`, `TEST_VENDOR_NAME`
+   - `TEST_USER_EMAIL`, `TEST_USER_PASSWORD`, `TEST_USER_NAME`
+   - `DEMO_USER_EMAIL`, `DEMO_VENDOR_EMAIL`, `DEMO_ADMIN_EMAIL`
 
    Production safety:
    - Backend startup now fails in `NODE_ENV=production` if `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` are missing or placeholder values.
@@ -48,6 +61,9 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - `GET /api/v1/contracts/registry` returns canonical request/response contract metadata and standardized error envelope details.
    - `GET /api/v1/contracts/changelog` returns versioned contract change history for consumer sync.
    - `GET /api/v1/contracts/flags` returns staged rollout flags for contract/reliability features.
+    - Password reset OTP flow endpoints:
+       - `POST /api/v1/auth/password/forgot` sends a 6-digit PIN through Brevo.
+       - `POST /api/v1/auth/password/reset` verifies email + PIN and updates password.
    - `POST /api/v1/chat/rooms`, `GET /api/v1/chat/rooms/:id/messages`, and `POST /api/v1/chat/rooms/:id/messages` provide authenticated in-app chat room workflows.
    - `POST /api/v1/support/tickets`, `GET /api/v1/support/tickets`, `GET /api/v1/support/tickets/me`, and `PATCH /api/v1/support/tickets/:id` provide authenticated support ticket creation and lifecycle updates.
    - `GET /api/v1/admin/support/tickets` and `PATCH /api/v1/admin/support/tickets/:id` provide admin support inbox triage and assignment.
@@ -106,18 +122,24 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    cd user_app
    flutter pub get
     flutter run \
-       --dart-define=API_BASE_URL=http://localhost:3000/api/v1 \
-       --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
-       --dart-define=SUPABASE_ANON_KEY=your_anon_key
+         --dart-define=API_BASE_URL=<API_BASE_URL> \
+         --dart-define=SUPABASE_URL=<SUPABASE_URL> \
+         --dart-define=SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
    ```
 
     Release build example:
     ```bash
     flutter build apk --release \
-       --dart-define=API_BASE_URL=https://swift-campus.vercel.app/api/v1 \
-       --dart-define=SUPABASE_URL=https://your-project-id.supabase.co \
-       --dart-define=SUPABASE_ANON_KEY=your_anon_key
+       --dart-define=API_BASE_URL=<API_BASE_URL> \
+       --dart-define=SUPABASE_URL=<SUPABASE_URL> \
+       --dart-define=SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
     ```
+
+    Optional support contact defines:
+   - `--dart-define=SUPPORT_EMAIL=<SUPPORT_EMAIL>`
+    - `--dart-define=SUPPORT_EMAIL_SUBJECT="Support Request"`
+   - `--dart-define=SUPPORT_PHONE=<SUPPORT_PHONE>`
+   - `--dart-define=SUPPORT_PHONE_DISPLAY="<SUPPORT_PHONE_DISPLAY>"`
 
 5. **Admin App**
    ```bash

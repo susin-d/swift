@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vendor_app/features/auth/auth_provider.dart';
+import 'package:vendor_app/features/auth/forgot_password_screen.dart';
 import 'package:vendor_app/features/auth/login_screen.dart';
 import 'package:vendor_app/features/dashboard/dashboard_screen.dart';
 import 'package:vendor_app/features/menu/menu_management_screen.dart';
@@ -23,12 +24,12 @@ final routerProvider = Provider((ref) {
     redirect: (context, state) {
       final loggedIn = authState.isAuthenticated;
       final loc = state.matchedLocation;
-      final loggingIn = loc == '/login';
+      final loggingIn = loc == '/login' || loc == '/forgot-password';
       final isSplash = loc == '/splash';
       final isPublicInfoRoute = loc == '/legal' || loc == '/privacy';
       final requested = state.uri.toString();
       final fromParam = state.uri.queryParameters['from'];
-      final fromIsAuth = fromParam != null && fromParam.startsWith('/login');
+      final fromIsAuth = fromParam != null && (fromParam.startsWith('/login') || fromParam.startsWith('/forgot-password'));
 
       if (isSplash) return null;
       if (isPublicInfoRoute) return null;
@@ -155,6 +156,10 @@ final routerProvider = Provider((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/legal',

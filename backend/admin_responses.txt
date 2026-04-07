@@ -39,7 +39,7 @@
         "id": "7afd125b-8545-4393-ad8c-816587a8a9f8",
         "role": "admin",
         "name": "Global Admin",
-        "email": "admin@swift.com",
+        "email": "admin@example.com",
         "phone": null,
         "campus_id": null,
         "created_at": "2026-03-08T12:34:54.885617+00:00"

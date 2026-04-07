@@ -18,13 +18,30 @@ class SupportScreen extends StatefulWidget {
 }
 
 class _SupportScreenState extends State<SupportScreen> {
-  static final Uri _emailUri = Uri(
-    scheme: 'mailto',
-    path: 'support@swift.campus.edu',
-    queryParameters: <String, String>{'subject': 'Swift Support Request'},
+  static const String _supportEmail = String.fromEnvironment(
+    'SUPPORT_EMAIL',
+    defaultValue: 'support@example.com',
+  );
+  static const String _supportEmailSubject = String.fromEnvironment(
+    'SUPPORT_EMAIL_SUBJECT',
+    defaultValue: 'Support Request',
+  );
+  static const String _supportPhoneRaw = String.fromEnvironment(
+    'SUPPORT_PHONE',
+    defaultValue: '+10000000000',
+  );
+  static const String _supportPhoneDisplay = String.fromEnvironment(
+    'SUPPORT_PHONE_DISPLAY',
+    defaultValue: '+1 000-000-0000',
   );
 
-  static final Uri _phoneUri = Uri(scheme: 'tel', path: '+911800794383');
+  static final Uri _emailUri = Uri(
+    scheme: 'mailto',
+    path: _supportEmail,
+    queryParameters: <String, String>{'subject': _supportEmailSubject},
+  );
+
+  static final Uri _phoneUri = Uri(scheme: 'tel', path: _supportPhoneRaw);
   static const List<String> _priorityOptions = <String>[
     'low',
     'normal',
@@ -107,7 +124,7 @@ class _SupportScreenState extends State<SupportScreen> {
               _buildSupportOption(
                 context,
                 'Email Us',
-                'support@swift.campus.edu',
+                _supportEmail,
                 Icons.email_rounded,
                 () => _openEmailSupport(context),
               ),
@@ -121,7 +138,7 @@ class _SupportScreenState extends State<SupportScreen> {
               _buildSupportOption(
                 context,
                 'Call Us',
-                '+91 1800-SWIFT-FOOD',
+                _supportPhoneDisplay,
                 Icons.phone_rounded,
                 () => _openPhoneSupport(context),
               ),
