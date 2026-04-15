@@ -2,13 +2,84 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { supabase } from '../services/supabase';
 import { uploadMenuItemImage, validateImageFile } from '../services/storageService';
 
+const resolveActorVendorId = async (user: any) => {
+    if (!user?.sub) {
+        const err = new Error('Authentication required') as any;
+        err.statusCode = 401;
+        throw err;
+    }
+
+    const role = String(user.role || '').toLowerCase();
+    if (role === 'admin') {
+        return null as string | null;
+    }
+
+    const ownerVendorQuery = supabase
+        .from('vendors')
+        .select('id')
+        .eq('owner_id', user.sub) as any;
+    const { data: ownerVendor } = ownerVendorQuery?.maybeSingle
+        ? await ownerVendorQuery.maybeSingle()
+        : await ownerVendorQuery.single();
+
+    if (ownerVendor?.id) {
+        return ownerVendor.id as string;
+    }
+
+    let staffMembershipQuery: any = supabase
+        .from('vendor_staff_members')
+        .select('vendor_id')
+        .eq('user_id', user.sub)
+        .eq('status', 'active');
+
+    if (staffMembershipQuery?.order) {
+        staffMembershipQuery = staffMembershipQuery.order('updated_at', { ascending: false });
+    }
+    if (staffMembershipQuery?.limit) {
+        staffMembershipQuery = staffMembershipQuery.limit(1);
+    }
+    const { data: staffMembership } = staffMembershipQuery?.maybeSingle
+        ? await staffMembershipQuery.maybeSingle()
+        : (staffMembershipQuery?.single
+            ? await staffMembershipQuery.single()
+            : { data: null });
+
+    if (staffMembership?.vendor_id) {
+        return String(staffMembership.vendor_id);
+    }
+
+    const err = new Error('Vendor profile not found') as any;
+    err.statusCode = 404;
+    throw err;
+};
+
+const assertVendorScope = (actorVendorId: string | null, resourceVendorId: string) => {
+    if (!actorVendorId) return;
+    if (actorVendorId === resourceVendorId) return;
+
+    const err = new Error('You do not have permission to access this resource') as any;
+    err.statusCode = 403;
+    throw err;
+};
+
 // Menu Controllers
 export const createMenu = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { vendor_id, category_name, sort_order } = request.body as any;
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const nextVendorId = actorVendorId || vendor_id;
+    if (!nextVendorId) {
+        const err = new Error('vendor_id is required') as any;
+        err.statusCode = 400;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, nextVendorId);
 
     const { data, error } = await supabase
         .from('menus')
-        .insert({ vendor_id, category_name, sort_order })
+        .insert({ vendor_id: nextVendorId, category_name, sort_order })
         .select()
         .single();
 
@@ -29,9 +100,26 @@ export const getVendorMenus = async (request: FastifyRequest, reply: FastifyRepl
 };
 
 export const updateMenu = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { id } = request.params as any;
     const { category_name, sort_order } = request.body as any;
     const updated_at = new Date().toISOString();
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const { data: existingMenu, error: existingMenuError } = await supabase
+        .from('menus')
+        .select('id, vendor_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (existingMenuError) throw existingMenuError;
+    if (!existingMenu?.id) {
+        const err = new Error('Menu not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, String(existingMenu.vendor_id));
 
     const { data, error } = await supabase
         .from('menus')
@@ -45,7 +133,24 @@ export const updateMenu = async (request: FastifyRequest, reply: FastifyReply) =
 };
 
 export const deleteMenu = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { id } = request.params as any;
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const { data: existingMenu, error: existingMenuError } = await supabase
+        .from('menus')
+        .select('id, vendor_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (existingMenuError) throw existingMenuError;
+    if (!existingMenu?.id) {
+        const err = new Error('Menu not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, String(existingMenu.vendor_id));
 
     const { error } = await supabase
         .from('menus')
@@ -58,7 +163,24 @@ export const deleteMenu = async (request: FastifyRequest, reply: FastifyReply) =
 
 // Menu Item Controllers
 export const createMenuItem = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { menu_id, name, description, price, is_available, image_url } = request.body as any;
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const { data: menu, error: menuError } = await supabase
+        .from('menus')
+        .select('id, vendor_id')
+        .eq('id', menu_id)
+        .maybeSingle();
+
+    if (menuError) throw menuError;
+    if (!menu?.id) {
+        const err = new Error('Menu not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, String(menu.vendor_id));
 
     const { data, error } = await supabase
         .from('menu_items')
@@ -71,7 +193,38 @@ export const createMenuItem = async (request: FastifyRequest, reply: FastifyRepl
 };
 
 export const updateMenuItem = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { id } = request.params as any;
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const { data: existingItem, error: existingItemError } = await supabase
+        .from('menu_items')
+        .select('id, menu_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (existingItemError) throw existingItemError;
+    if (!existingItem?.id) {
+        const err = new Error('Menu item not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    const { data: menu, error: menuError } = await supabase
+        .from('menus')
+        .select('vendor_id')
+        .eq('id', existingItem.menu_id)
+        .maybeSingle();
+
+    if (menuError) throw menuError;
+    if (!menu?.vendor_id) {
+        const err = new Error('Menu not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, String(menu.vendor_id));
+
     const updateData = {
         ...(request.body as any),
         updated_at: new Date().toISOString(),
@@ -89,7 +242,37 @@ export const updateMenuItem = async (request: FastifyRequest, reply: FastifyRepl
 };
 
 export const deleteMenuItem = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user as any;
     const { id } = request.params as any;
+    const actorVendorId = await resolveActorVendorId(user);
+
+    const { data: existingItem, error: existingItemError } = await supabase
+        .from('menu_items')
+        .select('id, menu_id')
+        .eq('id', id)
+        .maybeSingle();
+
+    if (existingItemError) throw existingItemError;
+    if (!existingItem?.id) {
+        const err = new Error('Menu item not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    const { data: menu, error: menuError } = await supabase
+        .from('menus')
+        .select('vendor_id')
+        .eq('id', existingItem.menu_id)
+        .maybeSingle();
+
+    if (menuError) throw menuError;
+    if (!menu?.vendor_id) {
+        const err = new Error('Menu not found') as any;
+        err.statusCode = 404;
+        throw err;
+    }
+
+    assertVendorScope(actorVendorId, String(menu.vendor_id));
 
     const { error } = await supabase
         .from('menu_items')
@@ -170,24 +353,18 @@ export const uploadMenuItemImageEndpoint = async (request: FastifyRequest, reply
 
 export const getMyVendorMenu = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
+    const vendorId = await resolveActorVendorId(user);
 
-    // Get the vendor for this user
-    const { data: vendor, error: vendorError } = await supabase
-        .from('vendors')
-        .select('id')
-        .eq('owner_id', user.sub)
-        .single();
-
-    if (vendorError || !vendor) {
-        const err = new Error('Vendor profile not found') as any;
-        err.statusCode = 404;
+    if (!vendorId) {
+        const err = new Error('vendor_id is required for admin context') as any;
+        err.statusCode = 400;
         throw err;
     }
 
     const { data, error } = await supabase
         .from('menus')
         .select('*, menu_items(*)')
-        .eq('vendor_id', vendor.id);
+        .eq('vendor_id', vendorId);
 
     if (error) throw error;
 

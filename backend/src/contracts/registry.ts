@@ -42,7 +42,7 @@ export const CONTRACT_ENDPOINTS: ContractEndpoint[] = [
                 { name: 'user.id', type: 'string(uuid)', required: true, description: 'Primary user identifier.' },
                 { name: 'user.email', type: 'string', required: true, description: 'Authenticated email.' },
                 { name: 'user.role', type: 'string', required: true, description: 'Resolved role from users table.' },
-                { name: 'session.access_token', type: 'string', required: true, description: 'Supabase JWT token.' },
+                { name: 'session.access_token', type: 'string', required: true, description: 'Backend-issued JWT access token.' },
                 { name: 'session.expires_in', type: 'number', required: true, description: 'Token expiration in seconds.' }
             ]
         }

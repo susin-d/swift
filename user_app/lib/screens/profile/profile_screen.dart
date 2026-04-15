@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/customer_shell.dart';
 import '../../core/widgets/responsive_content.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,12 +15,12 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
-      final name = user?['user_metadata']?['name'] ?? 'Campus Student';
-      final email = user != null ? user['email'] : '';
+    final name = user?['user_metadata']?['name'] ?? 'Campus Student';
+    final email = user != null ? user['email'] : '';
     final initials = name.isNotEmpty
         ? name
               .split(' ')
-              .map((w) => w.isNotEmpty ? w[0] : '')
+              .map((word) => word.isNotEmpty ? word[0] : '')
               .take(2)
               .join()
               .toUpperCase()
@@ -29,12 +31,18 @@ class ProfileScreen extends ConsumerWidget {
         ? walletBalanceRaw.toDouble()
         : double.tryParse(walletBalanceRaw.toString()) ?? 0;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        actions: [
-          IconButton(
+    return CustomerShell(
+      selectedIndex: 3,
+      title: 'Profile',
+      subtitle: 'Account, saved places, growth, and support.',
+      actions: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: IconButton(
             tooltip: 'Sign out',
             onPressed: () {
               HapticFeedback.mediumImpact();
@@ -70,122 +78,156 @@ class ProfileScreen extends ConsumerWidget {
             },
             icon: const Icon(Icons.logout_rounded, color: AppColors.error),
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
+        ),
+      ],
       body: ResponsiveContent(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Column(
             children: [
-              // Profile Header with initials avatar
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: AppColors.primary,
-                child: Text(
-                  initials,
-                  style: GoogleFonts.outfit(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(name, style: Theme.of(context).textTheme.displayMedium),
-              const SizedBox(height: 4),
-              Text(email, style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 20),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 14,
-                ),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  gradient: AppColors.heroGradient,
+                  borderRadius: BorderRadius.circular(28),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    const Icon(
-                      Icons.account_balance_wallet_rounded,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
+                    CircleAvatar(
+                      radius: 42,
+                      backgroundColor: Colors.white.withValues(alpha: 0.18),
                       child: Text(
-                        'Wallet Balance',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        initials,
+                        style: GoogleFonts.outfit(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
+                    const SizedBox(height: 18),
                     Text(
-                      'Rs ${walletBalance.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary,
+                      name,
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.84),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.account_balance_wallet_rounded,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'Wallet Balance',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'Rs ${walletBalance.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 48),
-
-              // Menu Items
-              _buildProfileItem(
-                context,
-                'Order History',
-                Icons.history_rounded,
-                () => context.push('/order-history'),
-              ),
-              _buildProfileItem(
-                context,
-                'Saved Addresses',
-                Icons.location_on_rounded,
-                () => context.push('/addresses'),
-              ),
-              _buildProfileItem(
-                context,
-                'Favorites',
-                Icons.favorite_rounded,
-                () => context.push('/favorites'),
-              ),
-              _buildProfileItem(
-                context,
-                'Class Schedule',
-                Icons.school_rounded,
-                () => context.push('/profile/classes'),
-              ),
-              _buildProfileItem(
-                context,
-                'Edit Profile',
-                Icons.edit_rounded,
-                () => context.push('/profile/edit'),
-              ),
-              _buildProfileItem(
-                context,
-                'Growth Hub',
-                Icons.trending_up_rounded,
-                () => context.push('/growth'),
-              ),
-              _buildProfileItem(
-                context,
-                'Help & Support',
-                Icons.help_outline_rounded,
-                () => context.push('/support'),
-              ),
-              _buildProfileItem(
-                context,
-                'Terms of Service',
-                Icons.gavel_rounded,
-                () => context.push('/legal'),
-              ),
-              _buildProfileItem(
-                context,
-                'Privacy Policy',
-                Icons.privacy_tip_rounded,
-                () => context.push('/privacy'),
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.border),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
+                  children: [
+                    _buildProfileItem(
+                      context,
+                      'Order History',
+                      Icons.history_rounded,
+                      () => context.push('/order-history'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Saved Addresses',
+                      Icons.location_on_rounded,
+                      () => context.push('/addresses'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Favorites',
+                      Icons.favorite_rounded,
+                      () => context.push('/favorites'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Class Schedule',
+                      Icons.school_rounded,
+                      () => context.push('/profile/classes'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Edit Profile',
+                      Icons.edit_rounded,
+                      () => context.push('/profile/edit'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Growth Hub',
+                      Icons.trending_up_rounded,
+                      () => context.push('/growth'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Help & Support',
+                      Icons.help_outline_rounded,
+                      () => context.push('/support'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Terms of Service',
+                      Icons.gavel_rounded,
+                      () => context.push('/legal'),
+                    ),
+                    _buildProfileItem(
+                      context,
+                      'Privacy Policy',
+                      Icons.privacy_tip_rounded,
+                      () => context.push('/privacy'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -207,7 +249,14 @@ class ProfileScreen extends ConsumerWidget {
             HapticFeedback.lightImpact();
             onTap();
           },
-          leading: Icon(icon, color: AppColors.primary),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: AppColors.primary),
+          ),
           title: Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.w700),
@@ -219,7 +268,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           contentPadding: EdgeInsets.zero,
         ),
-        const Divider(color: AppColors.border),
+        const Divider(color: AppColors.divider),
       ],
     );
   }

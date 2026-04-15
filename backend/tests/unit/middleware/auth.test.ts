@@ -2,14 +2,15 @@ import { authMiddlewarePlugin } from '../../../src/middleware/auth';
 import Fastify, { FastifyInstance } from 'fastify';
 import Sinon from 'sinon';
 import { supabase } from '../../../src/services/supabase';
+import * as customAuth from '../../../src/services/customAuth';
 
 describe('Auth Middleware', () => {
     let app: FastifyInstance;
-    let getUserStub: Sinon.SinonStub;
+    let verifyAccessTokenStub: Sinon.SinonStub;
 
     beforeEach(async () => {
         app = Fastify();
-        getUserStub = Sinon.stub(supabase.auth, 'getUser');
+        verifyAccessTokenStub = Sinon.stub(customAuth, 'verifyAccessToken');
         await app.register(authMiddlewarePlugin);
     });
 
@@ -18,16 +19,21 @@ describe('Auth Middleware', () => {
     });
 
     it('should verify bearer token successfully', async () => {
-        getUserStub.resolves({
-            data: {
-                user: {
-                    id: 'user-1',
-                    email: 'vendor@test.com',
-                    user_metadata: { role: 'vendor' }
-                }
-            },
-            error: null
-        });
+        verifyAccessTokenStub.returns({ sub: 'user-1', email: 'vendor@test.com', role: 'vendor' });
+
+        Sinon.stub(supabase, 'from')
+            .withArgs('auth_accounts')
+            .returns({
+                select: Sinon.stub().returnsThis(),
+                eq: Sinon.stub().returnsThis(),
+                maybeSingle: Sinon.stub().resolves({ data: { is_blocked: false }, error: null }),
+            } as any)
+            .withArgs('users')
+            .returns({
+                select: Sinon.stub().returnsThis(),
+                eq: Sinon.stub().returnsThis(),
+                maybeSingle: Sinon.stub().resolves({ data: { id: 'user-1', email: 'vendor@test.com', role: 'vendor' }, error: null }),
+            } as any);
 
         const mockRequest: any = {
             headers: { authorization: 'Bearer token-123' }
@@ -39,8 +45,8 @@ describe('Auth Middleware', () => {
 
         await (app as any).authenticate(mockRequest, mockReply);
 
-        Sinon.assert.calledOnce(getUserStub);
-        Sinon.assert.calledWithExactly(getUserStub, 'token-123');
+        Sinon.assert.calledOnce(verifyAccessTokenStub);
+        Sinon.assert.calledWithExactly(verifyAccessTokenStub, 'token-123');
         Sinon.assert.notCalled(mockReply.send);
         expect(mockRequest.user).toEqual({
             sub: 'user-1',
@@ -50,10 +56,7 @@ describe('Auth Middleware', () => {
     });
 
     it('should send unauthorized when token is invalid', async () => {
-        getUserStub.resolves({
-            data: { user: null },
-            error: { message: 'Invalid token' }
-        });
+        verifyAccessTokenStub.throws(new Error('Invalid token'));
 
         const mockRequest: any = {
             headers: { authorization: 'Bearer bad-token' }
@@ -71,16 +74,21 @@ describe('Auth Middleware', () => {
     });
 
     it('should send forbidden when account is blocked', async () => {
-        getUserStub.resolves({
-            data: {
-                user: {
-                    id: 'user-2',
-                    email: 'blocked@test.com',
-                    user_metadata: { role: 'admin', is_blocked: true }
-                }
-            },
-            error: null
-        });
+        verifyAccessTokenStub.returns({ sub: 'user-2', email: 'blocked@test.com', role: 'admin' });
+
+        Sinon.stub(supabase, 'from')
+            .withArgs('auth_accounts')
+            .returns({
+                select: Sinon.stub().returnsThis(),
+                eq: Sinon.stub().returnsThis(),
+                maybeSingle: Sinon.stub().resolves({ data: { is_blocked: true }, error: null }),
+            } as any)
+            .withArgs('users')
+            .returns({
+                select: Sinon.stub().returnsThis(),
+                eq: Sinon.stub().returnsThis(),
+                maybeSingle: Sinon.stub().resolves({ data: { id: 'user-2', email: 'blocked@test.com', role: 'admin' }, error: null }),
+            } as any);
 
         const mockRequest: any = {
             headers: { authorization: 'Bearer blocked-token' }

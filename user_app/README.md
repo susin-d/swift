@@ -71,6 +71,25 @@ flutter test
 flutter run
 ```
 
+## Test Documentation
+
+Run from `user_app/`:
+
+```bash
+flutter analyze
+flutter test
+```
+
+What this covers:
+
+- Static analysis and lint checks across user-facing modules.
+- Unit and widget coverage across providers, core features, smoke tests, and shared widgets under `test/`.
+
+Passing criteria:
+
+- `flutter analyze` returns no errors.
+- `flutter test` completes with all tests passing.
+
 Payment configuration:
 
 ## Payment configuration

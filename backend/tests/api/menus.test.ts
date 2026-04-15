@@ -32,6 +32,11 @@ describe('API - Menus Controller', () => {
 
     it('POST / - creates a new menu category (Vendor Only)', async () => {
         const newCategory = { category_name: 'Beverages', vendor_id: 'vendor_456' };
+        mockSupabase.from.withArgs('vendors').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: { id: 'vendor_456' }, error: null }),
+        } as any);
         mockSupabase.from.withArgs('menus').returns({
             insert: Sinon.stub().returnsThis(),
             select: Sinon.stub().returnsThis(),
@@ -49,11 +54,22 @@ describe('API - Menus Controller', () => {
 
     it('PATCH /items/:id - updates a menu item', async () => {
         const updatedItem = { name: 'Masala Tea', price: 15 };
-        mockSupabase.from.withArgs('menu_items').returns({
-            update: Sinon.stub().returnsThis(),
-            eq: Sinon.stub().returnsThis(),
+        mockSupabase.from.withArgs('vendors').returns({
             select: Sinon.stub().returnsThis(),
-            single: Sinon.stub().resolves({ data: updatedItem, error: null })
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: { id: 'vendor_456' }, error: null }),
+        } as any);
+        mockSupabase.from.withArgs('menu_items').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: { id: 'item_abc', menu_id: 'menu_1' }, error: null }),
+            update: Sinon.stub().returnsThis(),
+            single: Sinon.stub().resolves({ data: updatedItem, error: null }),
+        } as any);
+        mockSupabase.from.withArgs('menus').returns({
+            select: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: { vendor_id: 'vendor_456' }, error: null }),
         } as any);
 
         const response = await supertest(app.server as any)

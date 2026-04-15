@@ -549,9 +549,6 @@ export const getAdminSupportSummary = async (request: FastifyRequest, reply: Fas
         return sendForbidden(reply, 'Admin access required');
     }
 
-    const { data, error } = await supabase.from('support_tickets').select('status, priority');
-    if (error) throw error;
-
     const summary = {
         total: 0,
         status: {
@@ -568,12 +565,34 @@ export const getAdminSupportSummary = async (request: FastifyRequest, reply: Fas
         } as Record<TicketPriority, number>,
     };
 
-    for (const row of (data || []) as any[]) {
-        summary.total += 1;
-        const status = row.status as TicketStatus;
-        const priority = row.priority as TicketPriority;
-        if (ticketStatuses.includes(status)) summary.status[status] += 1;
-        if (ticketPriorities.includes(priority)) summary.priority[priority] += 1;
+    const totalQuery = supabase.from('support_tickets').select('id', { count: 'exact', head: true });
+    const statusQueries = ticketStatuses.map((status) =>
+        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', status),
+    );
+    const priorityQueries = ticketPriorities.map((priority) =>
+        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('priority', priority),
+    );
+
+    const [totalResult, ...bucketResults] = await Promise.all([totalQuery, ...statusQueries, ...priorityQueries]);
+    if (totalResult.error) throw totalResult.error;
+    summary.total = totalResult.count || 0;
+
+    ticketStatuses.forEach((status, idx) => {
+        const result = bucketResults[idx];
+        if (result.error) throw result.error;
+        summary.status[status] = result.count || 0;
+    });
+
+    ticketPriorities.forEach((priority, idx) => {
+        const result = bucketResults[ticketStatuses.length + idx];
+        if (result.error) throw result.error;
+        summary.priority[priority] = result.count || 0;
+    });
+
+    // Keep aggregate in sync even if DB count semantics change.
+    const statusTotal = ticketStatuses.reduce((acc, status) => acc + (summary.status[status] || 0), 0);
+    if (statusTotal > summary.total) {
+        summary.total = statusTotal;
     }
 
     return reply.send({ summary });

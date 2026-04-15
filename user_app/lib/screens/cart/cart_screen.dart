@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/payment_config.dart';
+import '../../core/widgets/customer_shell.dart';
 import '../../core/widgets/responsive_content.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
@@ -79,42 +80,89 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cartNotifier = ref.read(cartProvider.notifier);
     final addressesAsync = ref.watch(addressesProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Your Basket'),
-        leading: IconButton(
-          tooltip: 'Back',
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+    return CustomerShell(
+      selectedIndex: 2,
+      title: 'Cart',
+      subtitle: 'Review, schedule, and check out in one flow.',
       body: ResponsiveContent(
         child: cart.isEmpty
-            ? CartEmptyView(onBack: () => context.pop())
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                      itemCount: cart.length,
-                      itemBuilder: (context, index) {
-                        final item = cart.values.toList()[index];
-                        return CartItemWidget(
-                          item: item.item,
-                          quantity: item.quantity,
-                          onIncrement: () => cartNotifier.addItem(item.item),
-                          onDecrement: () => cartNotifier.removeItem(item.item),
-                          onRemove: () => cartNotifier.removeItem(item.item), // Remove completely
-                        );
-                      },
+            ? CartEmptyView(onBack: () => context.go('/'))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 18),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.heroGradient,
+                      borderRadius: BorderRadius.circular(28),
                     ),
-                    _buildSummary(context, addressesAsync),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Icon(
+                            Icons.bolt_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${cart.length} items ready',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(color: Colors.white),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Keep everything in one vendor basket for the fastest handoff.',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.88),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            itemCount: cart.length,
+                            itemBuilder: (context, index) {
+                              final item = cart.values.toList()[index];
+                              return CartItemWidget(
+                                item: item.item,
+                                quantity: item.quantity,
+                                onIncrement: () => cartNotifier.addItem(item.item),
+                                onDecrement: () =>
+                                    cartNotifier.removeItem(item.item),
+                                onRemove: () =>
+                                    cartNotifier.removeItem(item.item),
+                              );
+                            },
+                          ),
+                          _buildSummary(context, addressesAsync),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
       ),
     );
@@ -715,44 +763,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   }
 
   Future<void> _placeOrder(BuildContext context) async {
-    final cart = ref.read(cartProvider);
-    if (cart.isEmpty) return;
-
-    final firstItem = cart.values.first;
-    final vendorId = firstItem.item.vendorId;
-    if (vendorId == null || vendorId.isEmpty) return;
-
     try {
-      final subtotal = ref.read(cartProvider.notifier).totalAmount;
-      final deliveryMode = _deliverToClass ? 'class' : 'standard';
-      final order = await ref
-          .read(orderServiceProvider)
-          .placeOrder(
-            vendorId: vendorId,
-            items: cart.values
-                .map(
-                  (i) => {
-                    'id': i.item.id,
-                    'quantity': i.quantity,
-                    'price': i.item.price,
-                  },
-                )
-                .toList(),
-            totalAmount: subtotal,
-            promoCode: _appliedPromoCode,
-            scheduledFor: _scheduledFor,
-            deliveryMode: deliveryMode,
-            deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
-            deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
-            deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
-            quietMode: _deliverToClass ? _quietMode : null,
-            deliveryInstructions: _deliverToClass
-                ? _instructionsController.text.trim()
-                : null,
-            deliveryLocationLabel: _deliverToClass ? 'Classroom' : null,
-            classStartAt: _deliverToClass ? _classStartAt : null,
-            classEndAt: _deliverToClass ? _classEndAt : null,
-          );
+      final order = await _createBackendOrderForCheckout();
 
       if (!context.mounted) return;
 
@@ -767,6 +779,49 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         ),
       );
     }
+  }
+
+  Future<dynamic> _createBackendOrderForCheckout() async {
+    final cart = ref.read(cartProvider);
+    if (cart.isEmpty) {
+      throw StateError('Cart is empty.');
+    }
+
+    final firstItem = cart.values.first;
+    final vendorId = firstItem.item.vendorId;
+    if (vendorId == null || vendorId.isEmpty) {
+      throw StateError('Missing vendor context.');
+    }
+
+    final subtotal = ref.read(cartProvider.notifier).totalAmount;
+    final deliveryMode = _deliverToClass ? 'class' : 'standard';
+
+    return ref.read(orderServiceProvider).placeOrder(
+      vendorId: vendorId,
+      items: cart.values
+          .map(
+            (i) => {
+              'id': i.item.id,
+              'quantity': i.quantity,
+              'price': i.item.price,
+            },
+          )
+          .toList(),
+      totalAmount: subtotal,
+      promoCode: _appliedPromoCode,
+      scheduledFor: _scheduledFor,
+      deliveryMode: deliveryMode,
+      deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
+      deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
+      deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
+      quietMode: _deliverToClass ? _quietMode : null,
+      deliveryInstructions: _deliverToClass
+          ? _instructionsController.text.trim()
+          : null,
+      deliveryLocationLabel: _deliverToClass ? 'Classroom' : null,
+      classStartAt: _deliverToClass ? _classStartAt : null,
+      classEndAt: _deliverToClass ? _classEndAt : null,
+    );
   }
 
   Future<void> _startRazorpayPayment(BuildContext context) async {
@@ -786,43 +841,68 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     setState(() => _paymentInProgress = true);
     try {
+      if (_pendingOrder == null) {
+        final createdBackendOrder = await _createBackendOrderForCheckout();
+        final backendOrderId = createdBackendOrder.id.toString();
+
+        _pendingOrder = PendingOrder(
+          vendorId: vendorId,
+          items: cart.values
+              .map(
+                (i) => {
+                  'id': i.item.id,
+                  'quantity': i.quantity,
+                  'price': i.item.price,
+                },
+              )
+              .toList(),
+          subtotalAmount: subtotal,
+          finalAmount: finalAmount,
+          promoCode: _appliedPromoCode,
+          scheduledFor: _scheduledFor,
+          deliveryMode: _deliverToClass ? 'class' : 'standard',
+          deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
+          deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
+          deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
+          quietMode: _deliverToClass ? _quietMode : null,
+          deliveryInstructions: _deliverToClass
+              ? _instructionsController.text.trim()
+              : null,
+          classStartAt: _deliverToClass ? _classStartAt : null,
+          classEndAt: _deliverToClass ? _classEndAt : null,
+          backendOrderId: backendOrderId,
+          razorpayOrderId: '',
+        );
+      }
+
       final paymentService = PaymentService();
       final order = await paymentService.createRazorpayOrder(
-        amount: finalAmount,
+        backendOrderId: _pendingOrder!.backendOrderId,
       );
       final user = ref.read(userProvider);
 
       _pendingOrder = PendingOrder(
-        vendorId: vendorId,
-        items: cart.values
-            .map(
-              (i) => {
-                'id': i.item.id,
-                'quantity': i.quantity,
-                'price': i.item.price,
-              },
-            )
-            .toList(),
-        subtotalAmount: subtotal,
-        finalAmount: finalAmount,
-        promoCode: _appliedPromoCode,
-        scheduledFor: _scheduledFor,
-        deliveryMode: _deliverToClass ? 'class' : 'standard',
-        deliveryBuildingId: _deliverToClass ? _selectedBuildingId : null,
-        deliveryRoom: _deliverToClass ? _roomController.text.trim() : null,
-        deliveryZoneId: _deliverToClass ? _selectedZoneId : null,
-        quietMode: _deliverToClass ? _quietMode : null,
-        deliveryInstructions: _deliverToClass
-            ? _instructionsController.text.trim()
-            : null,
-        classStartAt: _deliverToClass ? _classStartAt : null,
-        classEndAt: _deliverToClass ? _classEndAt : null,
+        vendorId: _pendingOrder!.vendorId,
+        items: _pendingOrder!.items,
+        subtotalAmount: _pendingOrder!.subtotalAmount,
+        finalAmount: _pendingOrder!.finalAmount,
+        promoCode: _pendingOrder!.promoCode,
+        scheduledFor: _pendingOrder!.scheduledFor,
+        deliveryMode: _pendingOrder!.deliveryMode,
+        deliveryBuildingId: _pendingOrder!.deliveryBuildingId,
+        deliveryRoom: _pendingOrder!.deliveryRoom,
+        deliveryZoneId: _pendingOrder!.deliveryZoneId,
+        quietMode: _pendingOrder!.quietMode,
+        deliveryInstructions: _pendingOrder!.deliveryInstructions,
+        classStartAt: _pendingOrder!.classStartAt,
+        classEndAt: _pendingOrder!.classEndAt,
+        backendOrderId: _pendingOrder!.backendOrderId,
         razorpayOrderId: order['id']?.toString() ?? '',
       );
 
       final options = {
         'key': order['key'] ?? '',
-        'amount': (finalAmount * 100).toInt(),
+        'amount': (_pendingOrder!.finalAmount * 100).toInt(),
         'name': PaymentConfig.merchantName,
         'description': PaymentConfig.merchantDescription,
         'order_id': _pendingOrder!.razorpayOrderId,
@@ -849,33 +929,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         signature: response.signature ?? '',
       );
 
-      final order = await ref
-          .read(orderServiceProvider)
-          .placeOrder(
-            vendorId: pending.vendorId,
-            items: pending.items,
-            totalAmount: pending.subtotalAmount,
-            promoCode: pending.promoCode,
-            scheduledFor: pending.scheduledFor,
-            deliveryMode: pending.deliveryMode,
-            deliveryBuildingId: pending.deliveryBuildingId,
-            deliveryRoom: pending.deliveryRoom,
-            deliveryZoneId: pending.deliveryZoneId,
-            quietMode: pending.quietMode,
-            deliveryInstructions: pending.deliveryInstructions,
-            deliveryLocationLabel: pending.deliveryMode == 'class'
-                ? 'Classroom'
-                : null,
-            classStartAt: pending.classStartAt,
-            classEndAt: pending.classEndAt,
-          );
-
       if (!mounted) return;
       ref.read(cartProvider.notifier).clearCart();
+      _pendingOrder = null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payment successful. Order placed.')),
       );
-      context.go('/order-status/${order.id}');
+      context.go('/order-status/${pending.backendOrderId}');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -952,6 +1012,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () async {
                       Navigator.of(sheetContext).pop();
+                      if (_pendingOrder != null) {
+                        ref.read(cartProvider.notifier).clearCart();
+                        final backendOrderId = _pendingOrder!.backendOrderId;
+                        _pendingOrder = null;
+                        context.go('/order-status/$backendOrderId');
+                        return;
+                      }
                       await _placeOrder(context);
                     },
                     icon: const Icon(Icons.storefront_rounded),

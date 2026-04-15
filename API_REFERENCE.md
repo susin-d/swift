@@ -7,7 +7,7 @@ Creates a Razorpay payment order and returns the order details and public key.
 - **Request Body:**
   ```json
   {
-    "amount": 150.0,
+    "order_id": "uuid-of-backend-order",
     "currency": "INR" // optional, defaults to INR
   }
   ```
@@ -15,7 +15,8 @@ Creates a Razorpay payment order and returns the order details and public key.
   ```json
   {
     "id": "order_xyz...", // Razorpay order ID
-    "amount": 15000, // in paise
+    "backend_order_id": "uuid-of-backend-order",
+    "amount": 15000, // derived from backend order total, in paise
     "currency": "INR",
     ...other Razorpay order fields,
     "key": "rzp_test_..." // public Razorpay key for frontend
@@ -588,6 +589,8 @@ Register a new customer.
   ```json
   { "message": "Registration successful", "user": { "id": "uuid" } }
   ```
+- **Notes**:
+  - On successful registration, backend dispatches a 6-digit email OTP through Brevo to the registered email address.
 - **Error Responses**:
   - `400 ValidationError` when name/email/password are missing or password is shorter than 8 characters.
   - `409 Conflict` when the email is already registered.
@@ -1344,7 +1347,7 @@ Perform a global search across menu items and vendors.
 Protected by `authenticate` + customer-user role enforcement.
 
 ### `POST /payments/create-order`
-Initialize a Razorpay order.
+Initialize a Razorpay order using a previously created backend order (`order_id`).
 
 ### `POST /payments/verify`
 Verify payment signature from Razorpay.

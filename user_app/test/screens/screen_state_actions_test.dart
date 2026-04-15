@@ -37,7 +37,7 @@ void main() {
     });
 
     test('muted text token remains readable on white backgrounds', () {
-      expect(AppColors.textMuted.toARGB32(), 0xFF64748B);
+      expect(AppColors.textMuted.toARGB32(), 0xFF708090);
     });
   });
 }

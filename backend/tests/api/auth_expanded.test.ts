@@ -25,23 +25,41 @@ describe('API - Auth Controller Expansion', () => {
     beforeEach(() => {
         mockSupabase.from.resetHistory();
         mockSupabase.from.resetBehavior();
-        mockSupabase.auth.signUp.resetHistory();
-        mockSupabase.auth.signUp.resetBehavior();
-        mockSupabase.auth.admin.updateUserById.resetHistory();
-        mockSupabase.auth.admin.updateUserById.resetBehavior();
         fetchStub.resetHistory();
         fetchStub.resetBehavior();
     });
 
     it('POST /register - should register a new student', async () => {
-        const newUser = { id: 'new_123', email: 'student@campus.edu' };
+        process.env.BREVO_API_KEY = 'test-brevo-key';
+        process.env.BREVO_FROM_EMAIL = 'no-reply@swift.campus';
 
-        mockSupabase.auth.signUp.resolves({ data: { user: newUser as any, session: null }, error: null } as any);
+        const authAccountsTable = {
+            select: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: null, error: null }),
+            insert: Sinon.stub().resolves({ error: null }),
+        } as any;
+
+        const passwordCodesTable = {
+            update: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            is: Sinon.stub().resolves({ data: null, error: null }),
+            insert: Sinon.stub().resolves({ data: null, error: null }),
+        } as any;
+
+        mockSupabase.from.withArgs('auth_accounts').returns(authAccountsTable);
+        mockSupabase.from.withArgs('password_reset_codes').returns(passwordCodesTable);
         mockSupabase.from.withArgs('users').returns({
             insert: Sinon.stub().resolves({ error: null })
         } as any);
         mockSupabase.from.withArgs('customer_profiles').returns({
             insert: Sinon.stub().resolves({ error: null })
+        } as any);
+
+        fetchStub.resolves({
+            ok: true,
+            status: 201,
+            text: async () => '',
         } as any);
 
         const response = await supertest(app.server as any)
@@ -54,16 +72,24 @@ describe('API - Auth Controller Expansion', () => {
             });
 
         expect(response.status).toBe(201);
-        expect(response.body.user.id).toBe('new_123');
+        expect(response.body.user.email).toBe('student@campus.edu');
+        expect(response.body.user.role).toBe('user');
+        Sinon.assert.calledOnce(passwordCodesTable.insert);
+        Sinon.assert.calledOnce(fetchStub);
     });
 
     it('POST /register - enforces user role regardless of payload role override', async () => {
-        const newUser = { id: 'forced_user_1', email: 'override@campus.edu' };
-
         const usersInsertStub = Sinon.stub().resolves({ error: null });
         const profilesInsertStub = Sinon.stub().resolves({ error: null });
+        const authAccountsInsertStub = Sinon.stub().resolves({ error: null });
 
-        mockSupabase.auth.signUp.resolves({ data: { user: newUser as any, session: null }, error: null } as any);
+        mockSupabase.from.withArgs('auth_accounts').returns({
+            select: Sinon.stub().returnsThis(),
+            ilike: Sinon.stub().returnsThis(),
+            maybeSingle: Sinon.stub().resolves({ data: null, error: null }),
+            insert: authAccountsInsertStub,
+        } as any);
+
         mockSupabase.from.withArgs('users').returns({ insert: usersInsertStub } as any);
         mockSupabase.from.withArgs('customer_profiles').returns({ insert: profilesInsertStub } as any);
 
@@ -77,21 +103,12 @@ describe('API - Auth Controller Expansion', () => {
             });
 
         expect(response.status).toBe(201);
-        Sinon.assert.calledOnce(mockSupabase.auth.signUp);
-        expect(mockSupabase.auth.signUp.firstCall.args[0]).toMatchObject({
-            options: {
-                data: {
-                    role: 'user',
-                },
-            },
-        });
-        Sinon.assert.calledWithExactly(usersInsertStub, {
-            id: 'forced_user_1',
-            name: 'Role Override',
-            email: 'override@campus.edu',
-            role: 'user',
-        });
-        Sinon.assert.calledWithExactly(profilesInsertStub, { id: 'forced_user_1' });
+        Sinon.assert.calledOnce(authAccountsInsertStub);
+        Sinon.assert.calledOnce(usersInsertStub);
+        Sinon.assert.calledOnce(profilesInsertStub);
+        const userInsertArg = usersInsertStub.firstCall.args[0] as any;
+        expect(userInsertArg.role).toBe('user');
+        expect(userInsertArg.email).toBe('override@campus.edu');
     });
 
     it('GET /me - should return authenticated user profile', async () => {
@@ -182,7 +199,7 @@ describe('API - Auth Controller Expansion', () => {
     });
 
     it('POST /password/forgot - returns generic success when account is unknown', async () => {
-        mockSupabase.from.withArgs('users').returns({
+        mockSupabase.from.withArgs('auth_accounts').returns({
             select: Sinon.stub().returnsThis(),
             ilike: Sinon.stub().returnsThis(),
             maybeSingle: Sinon.stub().resolves({ data: null, error: null }),
@@ -231,8 +248,13 @@ describe('API - Auth Controller Expansion', () => {
             error: null,
         });
 
+        const authAccountsTable = {
+            update: Sinon.stub().returnsThis(),
+            eq: Sinon.stub().resolves({ error: null }),
+        } as any;
+
         mockSupabase.from.withArgs('password_reset_codes').returns(passwordCodesTable);
-        mockSupabase.auth.admin.updateUserById.resolves({ data: {}, error: null } as any);
+        mockSupabase.from.withArgs('auth_accounts').returns(authAccountsTable);
 
         const response = await supertest(app.server as any)
             .post('/api/v1/auth/password/reset')
@@ -240,18 +262,18 @@ describe('API - Auth Controller Expansion', () => {
 
         expect(response.status).toBe(200);
         expect(response.body.message).toBe('Password updated successfully');
-        Sinon.assert.calledOnce(mockSupabase.auth.admin.updateUserById);
+        Sinon.assert.calledOnce(authAccountsTable.update);
     });
 
     it('POST /password/forgot - stores OTP and sends email via Brevo fetch path', async () => {
         process.env.BREVO_API_KEY = 'test-brevo-key';
         process.env.BREVO_FROM_EMAIL = 'no-reply@swift.campus';
 
-        const usersTable = {
+        const authAccountsTable = {
             select: Sinon.stub().returnsThis(),
             ilike: Sinon.stub().returnsThis(),
             maybeSingle: Sinon.stub().resolves({
-                data: { id: 'user_123', email: 'test@campus.edu' },
+                data: { user_id: 'user_123', email: 'test@campus.edu' },
                 error: null,
             }),
         } as any;
@@ -263,7 +285,7 @@ describe('API - Auth Controller Expansion', () => {
             insert: Sinon.stub().resolves({ data: null, error: null }),
         } as any;
 
-        mockSupabase.from.withArgs('users').returns(usersTable);
+        mockSupabase.from.withArgs('auth_accounts').returns(authAccountsTable);
         mockSupabase.from.withArgs('password_reset_codes').returns(passwordCodesTable);
 
         fetchStub.resolves({

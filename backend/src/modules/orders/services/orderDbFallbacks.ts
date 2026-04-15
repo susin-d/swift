@@ -1,4 +1,4 @@
-import { createSupabaseUserClient, supabase } from '../../../services/supabase';
+import { supabase } from '../../../services/supabase';
 
 export const isAccessDeniedError = (error: any) => {
     const message = String(error?.message || error || '').toLowerCase();
@@ -14,18 +14,12 @@ export const insertWithAccessFallback = async (
     payload: Record<string, unknown> | Record<string, unknown>[],
 ) => {
     const isMockedSupabase = typeof (supabase as any)?.from?.withArgs === 'function';
-    if (!token) {
-        if (isMockedSupabase) {
-            return supabase.from(table).insert(payload as any);
-        }
-        return {
-            data: null,
-            error: { message: 'Missing access token', statusCode: 401 },
-        } as any;
+    if (!token && !isMockedSupabase) {
+        // With custom JWT auth, server writes are service-role scoped.
+        return supabase.from(table).insert(payload as any);
     }
 
-    const userClient = createSupabaseUserClient(token);
-    return userClient.from(table).insert(payload as any);
+    return supabase.from(table).insert(payload as any);
 };
 
 export const insertAndSelectSingleWithAccessFallback = async (
@@ -34,18 +28,11 @@ export const insertAndSelectSingleWithAccessFallback = async (
     payload: Record<string, unknown>,
 ) => {
     const isMockedSupabase = typeof (supabase as any)?.from?.withArgs === 'function';
-    if (!token) {
-        if (isMockedSupabase) {
-            return supabase.from(table).insert(payload).select().single();
-        }
-        return {
-            data: null,
-            error: { message: 'Missing access token', statusCode: 401 },
-        } as any;
+    if (!token && !isMockedSupabase) {
+        return supabase.from(table).insert(payload).select().single();
     }
 
-    const userClient = createSupabaseUserClient(token);
-    return userClient.from(table).insert(payload).select().single();
+    return supabase.from(table).insert(payload).select().single();
 };
 
 export const listUserOrdersWithFallback = async (userId: string) => {

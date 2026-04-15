@@ -40,18 +40,18 @@ Feature work without corresponding tests is incomplete and must not be merged.
 Before merge, run:
 
 ```powershell
-cd c:\project\food\backend
+cd c:\project\swift\backend
 npm test
 
-cd c:\project\food\user_app
+cd c:\project\swift\user_app
 flutter analyze
 flutter test
 
-cd c:\project\food\vendor_app
+cd c:\project\swift\vendor_app
 flutter analyze
 flutter test
 
-cd c:\project\food\admin_app
+cd c:\project\swift\admin_app
 flutter analyze
 flutter test
 ```

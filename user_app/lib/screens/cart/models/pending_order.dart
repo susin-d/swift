@@ -13,6 +13,7 @@ class PendingOrder {
   final String? deliveryInstructions;
   final DateTime? classStartAt;
   final DateTime? classEndAt;
+  final String backendOrderId;
   final String razorpayOrderId;
 
   PendingOrder({
@@ -30,6 +31,7 @@ class PendingOrder {
     this.deliveryInstructions,
     this.classStartAt,
     this.classEndAt,
+    required this.backendOrderId,
     required this.razorpayOrderId,
   });
 }

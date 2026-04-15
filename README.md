@@ -14,7 +14,8 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 2. **Vendor App (Flutter)**: Vendor operations app for queue triage, prep-time pacing, and live order handling.
 3. **Admin App (Flutter)**: Governance control panel for moderation, audits, settings safety, and finance visibility.
 4. **Backend API (Node.js/Fastify)**: The central brain handling authentication, order processing, contracts, and RBAC security.
-5. **Database (Supabase PostgreSQL)**: A strictly secured database using Row Level Security (RLS) with Realtime support.
+5. **Admin Web (React/Vite)**: Browser-based admin operations interface with landing, login, and dashboard routes.
+6. **Database (Supabase PostgreSQL)**: A strictly secured database using Row Level Security (RLS) with Realtime support.
 
 ## 🚀 Getting Started
 
@@ -62,6 +63,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - `GET /api/v1/contracts/changelog` returns versioned contract change history for consumer sync.
    - `GET /api/v1/contracts/flags` returns staged rollout flags for contract/reliability features.
     - Password reset OTP flow endpoints:
+       - `POST /api/v1/auth/register` creates the user and dispatches a 6-digit OTP email through Brevo.
        - `POST /api/v1/auth/password/forgot` sends a 6-digit PIN through Brevo.
        - `POST /api/v1/auth/password/reset` verifies email + PIN and updates password.
    - `POST /api/v1/chat/rooms`, `GET /api/v1/chat/rooms/:id/messages`, and `POST /api/v1/chat/rooms/:id/messages` provide authenticated in-app chat room workflows.
@@ -92,6 +94,7 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - Finance surfaces now highlight payout health and top-vendor visibility for faster operator review.
 
    Security hardening:
+   - Authentication now uses backend-managed email/password credentials with backend-issued JWT access tokens.
    - Auth middleware rejects blocked or actively banned accounts with `403 Forbidden` on protected session flows.
    - Admin client now propagates `X-Client-Request-Id` and persistent `X-Device-Trust` headers for privileged API calls.
    - Backend error observability logs include server request id plus client request id correlation.
@@ -104,6 +107,8 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
 
    Live API smoke test:
    - Run `cd backend && npm run test:api:live` to execute a live deployment API sweep.
+   - Run `cd backend && npm run test:api:live:flow` for a single-flow test that attempts one signup, logs in as the user, then sweeps the remaining endpoints.
+   - Optional credential env vars for broader role coverage: `LIVE_USER_EMAIL`, `LIVE_USER_PASSWORD`, `LIVE_VENDOR_EMAIL`, `LIVE_VENDOR_PASSWORD`, `LIVE_ADMIN_EMAIL`, `LIVE_ADMIN_PASSWORD`.
    - JSON response reports are written to `backend/reports/live-api-responses-latest.json` and timestamped files under `backend/reports/`.
    - Health checks are exposed as both `/health` and `/api/health` for compatibility with local and serverless path routing.
    - Several read/list APIs now degrade to safe empty or reduced-shape responses when optional DB relations are unavailable, reducing live `500` risk.
@@ -122,17 +127,13 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    cd user_app
    flutter pub get
     flutter run \
-         --dart-define=API_BASE_URL=<API_BASE_URL> \
-         --dart-define=SUPABASE_URL=<SUPABASE_URL> \
-         --dart-define=SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+         --dart-define=BACKEND_API_URL=<BACKEND_API_URL>
    ```
 
     Release build example:
     ```bash
     flutter build apk --release \
-       --dart-define=API_BASE_URL=<API_BASE_URL> \
-       --dart-define=SUPABASE_URL=<SUPABASE_URL> \
-       --dart-define=SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY>
+       --dart-define=BACKEND_API_URL=<BACKEND_API_URL>
     ```
 
     Optional support contact defines:
@@ -153,11 +154,20 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    - `--dart-define=DEMO_VENDOR_EMAIL=... --dart-define=DEMO_VENDOR_PASSWORD=...`
    - `--dart-define=DEMO_ADMIN_EMAIL=... --dart-define=DEMO_ADMIN_PASSWORD=...`
 
+6. **Admin Web (React)**
+   ```bash
+   cd apps/admin_web
+   npm install
+   npm run dev
+   ```
+
 API contract versioning:
 - Existing clients continue on `/api/v1`.
 - Security-hardened finance/growth routes are available at `/api/v2` (`/wallet/*`, growth endpoints), with controlled migration and deprecation of unsafe v1 mutation patterns.
 
 ## 🎨 UI Language
+- User app now uses a shell-based customer layout with a shared floating bottom navigation, branded ambient background, and consistent header treatment across Home, Orders, Cart, and Profile.
+- User app primary flows now share the same visual language for discovery, checkout, tracking, and account management instead of screen-by-screen layout variations.
 - Vendor and Admin apps now use a shared white-mode visual direction with stronger typographic hierarchy, cleaner card geometry, and calmer surface contrast.
 - Vendor app theme is centralized in `vendor_app/lib/core/vendor_theme.dart` for consistent styling across future screens.
 - Admin app theme has been refined in `admin_app/lib/core/config/admin_theme.dart` with expressive typography and improved readability for operations-heavy screens.

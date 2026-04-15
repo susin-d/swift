@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { supabase } from '../services/supabase';
+import { verifyAccessToken } from '../services/customAuth';
 
 declare module 'fastify' {
     interface FastifyInstance {
@@ -41,19 +42,36 @@ export const authMiddlewarePlugin = fp(async (app: FastifyInstance) => {
                 });
             }
 
-            const { data: { user }, error } = await supabase.auth.getUser(token);
+            const decoded = verifyAccessToken(token);
 
-            if (error || !user) {
+            if (!decoded.sub) {
                 return reply.code(401).send({
                     error: 'Unauthorized',
                     message: 'Invalid or expired token'
                 });
             }
 
-            const isBlocked = user.user_metadata?.is_blocked === true;
-            const bannedUntilRaw = (user as any).banned_until as string | null | undefined;
-            const bannedUntilMs = bannedUntilRaw ? Date.parse(bannedUntilRaw) : Number.NaN;
-            const isBanned = Number.isFinite(bannedUntilMs) && bannedUntilMs > Date.now();
+            const { data: account, error: accountError } = await supabase
+                .from('auth_accounts')
+                .select('is_blocked')
+                .eq('user_id', decoded.sub)
+                .maybeSingle();
+
+            const { data: userRow } = await supabase
+                .from('users')
+                .select('id, email, role')
+                .eq('id', decoded.sub)
+                .maybeSingle();
+
+            if (accountError || !userRow) {
+                return reply.code(401).send({
+                    error: 'Unauthorized',
+                    message: 'Invalid or expired token'
+                });
+            }
+
+            const isBlocked = Boolean((account as any)?.is_blocked);
+            const isBanned = false;
 
             if (isBlocked || isBanned) {
                 return reply.code(403).send({
@@ -62,11 +80,10 @@ export const authMiddlewarePlugin = fp(async (app: FastifyInstance) => {
                 });
             }
 
-            // Map Supabase user to request.user for consistency
             request.user = {
-                sub: user.id,
-                email: user.email,
-                role: user.user_metadata?.role || 'user'
+                sub: userRow.id,
+                email: userRow.email,
+                role: userRow.role || decoded.role || 'user'
             };
         } catch (_err) {
             reply.code(401).send({

@@ -9,7 +9,7 @@ class AppTheme {
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
-        secondary: AppColors.primaryDark,
+        secondary: AppColors.secondary,
         surface: AppColors.cardBackground,
         error: AppColors.error,
         onPrimary: Colors.white,
@@ -17,28 +17,39 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
-      
-      // Modern Typography using Outfit for Headlines and Inter for Body
+      dividerColor: AppColors.divider,
+
       textTheme: GoogleFonts.interTextTheme().copyWith(
         displayLarge: GoogleFonts.outfit(
-          fontSize: 36,
-          fontWeight: FontWeight.w900,
-          color: AppColors.textPrimary,
-          letterSpacing: -1.5,
-        ),
-        displayMedium: GoogleFonts.outfit(
-          fontSize: 28,
+          fontSize: 40,
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
-          letterSpacing: -0.5,
+          letterSpacing: -1.6,
+        ),
+        displayMedium: GoogleFonts.outfit(
+          fontSize: 30,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.8,
         ),
         displaySmall: GoogleFonts.outfit(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: GoogleFonts.outfit(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
         ),
+        titleMedium: GoogleFonts.outfit(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
         bodyLarge: GoogleFonts.inter(
-          fontSize: 17,
+          fontSize: 16,
           fontWeight: FontWeight.w500,
           color: AppColors.textPrimary,
           letterSpacing: 0.1,
@@ -49,84 +60,103 @@ class AppTheme {
           color: AppColors.textSecondary,
         ),
         labelLarge: GoogleFonts.outfit(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w700,
           color: AppColors.primary,
-          letterSpacing: 1.2,
+          letterSpacing: 0.2,
         ),
       ),
 
-      // Premium Card Design with deeper shadows and smoother corners
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: const BorderSide(color: AppColors.border, width: 1.5),
+          side: const BorderSide(color: AppColors.border),
         ),
       ),
 
-      // AppBar Design
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.outfit(
           color: AppColors.textPrimary,
-          fontSize: 22,
-          fontWeight: FontWeight.w900,
+          fontSize: 24,
+          fontWeight: FontWeight.w800,
           letterSpacing: -0.5,
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary, size: 24),
       ),
 
-      // Modern Buttons with gradients and shadows
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 12,
-          shadowColor: AppColors.primary.withValues(alpha: 0.4),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(20),
           ),
           textStyle: GoogleFonts.outfit(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            letterSpacing: 0.5,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textPrimary,
+          side: const BorderSide(color: AppColors.border),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          textStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
           ),
         ),
       ),
 
-      // Input Decoration with glassmorphism style
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.inputBackground,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(22),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         hintStyle: GoogleFonts.inter(
           color: AppColors.textMuted,
           fontWeight: FontWeight.w500,
           fontSize: 15,
         ),
         prefixIconColor: AppColors.primary,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.primaryContainer,
+        selectedColor: AppColors.primary,
+        secondarySelectedColor: AppColors.primary,
+        side: const BorderSide(color: AppColors.border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        labelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
       ),
     );
   }

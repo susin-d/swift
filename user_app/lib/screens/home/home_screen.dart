@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/customer_shell.dart';
 import '../../providers/vendor_provider.dart';
-import '../../providers/cart_provider.dart';
 import '../../providers/order_provider.dart';
 import '../../models/order_model.dart';
 import '../../models/recommended_item.dart';
@@ -180,23 +180,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final pagePadding = isCompactWidth ? 16.0 : 24.0;
     final heroTopPadding = isCompactWidth ? 52.0 : 64.0;
     final heroBottomPadding = isCompactWidth ? 22.0 : 28.0;
-    final floatingNavInset = isCompactWidth ? 16.0 : 24.0;
-    final floatingNavBottom = isCompactWidth ? 20.0 : 32.0;
     final recommendedItemsAsync = ref.watch(allFoodItemsProvider);
     final userOrdersAsync = ref.watch(userOrdersProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(allFoodItemsProvider);
-            },
-            color: AppColors.primary,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
+    return CustomerShell(
+      selectedIndex: 0,
+      showHeader: false,
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(allFoodItemsProvider);
+        },
+        color: AppColors.primary,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
                 // Vibrant Hero Section
                 SliverToBoxAdapter(
                   child: Container(
@@ -567,18 +564,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          // Floating Bottom Navigation
-          Positioned(
-            left: floatingNavInset,
-            right: floatingNavInset,
-            bottom: floatingNavBottom,
-            child: _buildBottomNav(context, ref),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -650,183 +637,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildBottomNav(BuildContext context, WidgetRef ref) {
-    final cartCount = ref.watch(cartProvider).length;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.whiteGlass,
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(Icons.home_filled, homeBottomNavLabels[0], true, () {}),
-          _buildNavItem(
-            Icons.history_rounded,
-            homeBottomNavLabels[1],
-            false,
-            () {
-              HapticFeedback.lightImpact();
-              context.push('/order-history');
-            },
-          ),
-          _buildNavItemWithBadge(
-            Icons.shopping_bag_rounded,
-            homeBottomNavLabels[2],
-            cartCount,
-            () {
-              HapticFeedback.lightImpact();
-              context.push('/cart');
-            },
-          ),
-          _buildNavItem(
-            Icons.person_rounded,
-            homeBottomNavLabels[3],
-            false,
-            () {
-              HapticFeedback.lightImpact();
-              context.push('/profile');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    IconData icon,
-    String label,
-    bool isActive,
-    VoidCallback onTap,
-  ) {
-    return Semantics(
-      button: true,
-      selected: isActive,
-      label: label,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: isActive ? AppColors.primary : Colors.transparent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: isActive ? Colors.white : AppColors.textSecondary,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                    color: isActive
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItemWithBadge(
-    IconData icon,
-    String label,
-    int count,
-    VoidCallback onTap,
-  ) {
-    final semanticLabel = count > 0 ? '$label, $count items in cart' : label;
-    return Semantics(
-      button: true,
-      label: semanticLabel,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Icon(
-                        icon,
-                        color: AppColors.textSecondary,
-                        size: 24,
-                      ),
-                    ),
-                    if (count > 0)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '$count',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _MoodChip {

@@ -4,11 +4,11 @@ class PaymentService {
   final ApiService _api = ApiService();
 
   Future<Map<String, dynamic>> createRazorpayOrder({
-    required double amount,
+    required String backendOrderId,
     String currency = 'INR',
   }) async {
     final response = await _api.post('/payments/create-order', data: {
-      'amount': amount,
+      'order_id': backendOrderId,
       'currency': currency,
     });
     return (response.data as Map).cast<String, dynamic>();

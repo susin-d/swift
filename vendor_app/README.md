@@ -95,6 +95,25 @@ flutter test
 flutter run
 ```
 
+## Test Documentation
+
+Run from `vendor_app/`:
+
+```bash
+flutter analyze
+flutter test
+```
+
+What this covers:
+
+- Static analysis and lint checks for vendor workflows.
+- Provider, widget, and feature-level regression coverage under `test/` for queue, ops, and settings flows.
+
+Passing criteria:
+
+- `flutter analyze` returns no errors.
+- `flutter test` completes with all tests passing.
+
 ## Monorepo Verification Policy
 
 Changes that affect shared contracts or backend behavior must be validated with corresponding backend and app checks as defined in the repository governance docs.

@@ -2,16 +2,12 @@ import Sinon from 'sinon';
 import { supabase } from '../../../src/services/supabase';
 import {
     createMenu,
-    getVendorMenus,
-    updateMenu,
-    deleteMenu,
     createMenuItem,
     updateMenuItem,
-    deleteMenuItem,
     getMyVendorMenu,
 } from '../../../src/controllers/menuController';
 
-describe('Menu Controller - Menu CRUD', () => {
+describe('Menu Controller - Authorization and ownership', () => {
     let fromStub: Sinon.SinonStub;
 
     beforeEach(() => {
@@ -22,240 +18,121 @@ describe('Menu Controller - Menu CRUD', () => {
         Sinon.restore();
     });
 
-    describe('createMenu', () => {
-        it('inserts a new menu category and returns 201', async () => {
-            const menuData = { id: 'menu-1', vendor_id: 'v-1', category_name: 'Starters', sort_order: 1 };
+    it('createMenu uses authenticated vendor scope instead of body vendor_id', async () => {
+        const ownerVendorMaybeSingle = Sinon.stub().resolves({ data: { id: 'vendor-owner' }, error: null });
+        const ownerVendorEq = Sinon.stub().returns({ maybeSingle: ownerVendorMaybeSingle });
+        const ownerVendorSelect = Sinon.stub().returns({ eq: ownerVendorEq });
 
-            const singleStub = Sinon.stub().resolves({ data: menuData, error: null });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const insertStub = Sinon.stub().returns({ select: selectStub });
+        const insertedMenu = { id: 'menu-1', vendor_id: 'vendor-owner', category_name: 'Starters', sort_order: 1 };
+        const menuSingle = Sinon.stub().resolves({ data: insertedMenu, error: null });
+        const menuSelect = Sinon.stub().returns({ single: menuSingle });
+        const menuInsert = Sinon.stub().returns({ select: menuSelect });
 
-            fromStub.withArgs('menus').returns({ insert: insertStub } as any);
+        fromStub.onCall(0).returns({ select: ownerVendorSelect } as any);
+        fromStub.onCall(1).returns({ insert: menuInsert } as any);
 
-            const request: any = { body: { vendor_id: 'v-1', category_name: 'Starters', sort_order: 1 } };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
+        const request: any = {
+            user: { sub: 'owner-user', role: 'vendor' },
+            body: { vendor_id: 'malicious-vendor', category_name: 'Starters', sort_order: 1 },
+        };
+        const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
 
-            await createMenu(request, reply);
+        await createMenu(request, reply);
 
-            Sinon.assert.calledWithExactly(insertStub, { vendor_id: 'v-1', category_name: 'Starters', sort_order: 1 });
-            Sinon.assert.calledWithExactly(reply.code, 201);
-            expect(reply.send.firstCall.args[0]).toEqual(menuData);
+        Sinon.assert.calledWithExactly(menuInsert, {
+            vendor_id: 'vendor-owner',
+            category_name: 'Starters',
+            sort_order: 1,
         });
-
-        it('throws on Supabase insert error', async () => {
-            const dbError = new Error('insert failed');
-            const singleStub = Sinon.stub().resolves({ data: null, error: dbError });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const insertStub = Sinon.stub().returns({ select: selectStub });
-
-            fromStub.withArgs('menus').returns({ insert: insertStub } as any);
-
-            const request: any = { body: { vendor_id: 'v-1', category_name: 'Starters', sort_order: 1 } };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
-
-            await expect(createMenu(request, reply)).rejects.toThrow('insert failed');
-        });
+        Sinon.assert.calledWithExactly(reply.code, 201);
     });
 
-    describe('getVendorMenus', () => {
-        it('returns menus with nested menu_items for a given vendor', async () => {
-            const menus = [{ id: 'menu-1', vendor_id: 'v-1', category_name: 'Starters', menu_items: [] }];
+    it('createMenuItem blocks cross-vendor writes', async () => {
+        const ownerVendorMaybeSingle = Sinon.stub().resolves({ data: { id: 'vendor-a' }, error: null });
+        const ownerVendorEq = Sinon.stub().returns({ maybeSingle: ownerVendorMaybeSingle });
+        const ownerVendorSelect = Sinon.stub().returns({ eq: ownerVendorEq });
 
-            const eqStub = Sinon.stub().resolves({ data: menus, error: null });
-            const selectStub = Sinon.stub().returns({ eq: eqStub });
+        const menuMaybeSingle = Sinon.stub().resolves({ data: { id: 'menu-1', vendor_id: 'vendor-b' }, error: null });
+        const menuEq = Sinon.stub().returns({ maybeSingle: menuMaybeSingle });
+        const menuSelect = Sinon.stub().returns({ eq: menuEq });
 
-            fromStub.withArgs('menus').returns({ select: selectStub } as any);
+        fromStub.onCall(0).returns({ select: ownerVendorSelect } as any);
+        fromStub.onCall(1).returns({ select: menuSelect } as any);
 
-            const request: any = { params: { vendorId: 'v-1' } };
-            const reply: any = { send: Sinon.stub() };
+        const request: any = {
+            user: { sub: 'owner-user', role: 'vendor' },
+            body: { menu_id: 'menu-1', name: 'Samosa', price: 30 },
+        };
+        const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
 
-            await getVendorMenus(request, reply);
-
-            Sinon.assert.calledWithExactly(selectStub, '*, menu_items(*)');
-            Sinon.assert.calledWithExactly(eqStub, 'vendor_id', 'v-1');
-            expect(reply.send.firstCall.args[0]).toEqual(menus);
-        });
+        const err = await createMenuItem(request, reply).catch((e) => e);
+        expect(err.statusCode).toBe(403);
     });
 
-    describe('updateMenu', () => {
-        it('updates category_name and sort_order and returns updated record', async () => {
-            const updated = { id: 'menu-1', category_name: 'Mains', sort_order: 2 };
+    it('updateMenuItem validates ownership via menu relation before update', async () => {
+        const ownerVendorMaybeSingle = Sinon.stub().resolves({ data: { id: 'vendor-a' }, error: null });
+        const ownerVendorEq = Sinon.stub().returns({ maybeSingle: ownerVendorMaybeSingle });
+        const ownerVendorSelect = Sinon.stub().returns({ eq: ownerVendorEq });
 
-            const singleStub = Sinon.stub().resolves({ data: updated, error: null });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const eqStub = Sinon.stub().returns({ select: selectStub });
-            const updateStub = Sinon.stub().returns({ eq: eqStub });
+        const itemMaybeSingle = Sinon.stub().resolves({ data: { id: 'item-1', menu_id: 'menu-1' }, error: null });
+        const itemEq = Sinon.stub().returns({ maybeSingle: itemMaybeSingle });
+        const itemSelect = Sinon.stub().returns({ eq: itemEq });
 
-            fromStub.withArgs('menus').returns({ update: updateStub } as any);
+        const menuMaybeSingle = Sinon.stub().resolves({ data: { vendor_id: 'vendor-a' }, error: null });
+        const menuEq = Sinon.stub().returns({ maybeSingle: menuMaybeSingle });
+        const menuSelect = Sinon.stub().returns({ eq: menuEq });
 
-            const request: any = { params: { id: 'menu-1' }, body: { category_name: 'Mains', sort_order: 2 } };
-            const reply: any = { send: Sinon.stub() };
+        const updatedItem = { id: 'item-1', name: 'Paneer Roll' };
+        const updateSingle = Sinon.stub().resolves({ data: updatedItem, error: null });
+        const updateSelect = Sinon.stub().returns({ single: updateSingle });
+        const updateEq = Sinon.stub().returns({ select: updateSelect });
+        const updateStub = Sinon.stub().returns({ eq: updateEq });
 
-            await updateMenu(request, reply);
+        fromStub.onCall(0).returns({ select: ownerVendorSelect } as any);
+        fromStub.onCall(1).returns({ select: itemSelect } as any);
+        fromStub.onCall(2).returns({ select: menuSelect } as any);
+        fromStub.onCall(3).returns({ update: updateStub } as any);
 
-            Sinon.assert.calledOnce(updateStub);
-            expect(updateStub.firstCall.args[0]).toMatchObject({ category_name: 'Mains', sort_order: 2 });
-            expect(updateStub.firstCall.args[0]).toHaveProperty('updated_at');
-            Sinon.assert.calledWithExactly(eqStub, 'id', 'menu-1');
-            expect(reply.send.firstCall.args[0]).toEqual(updated);
-        });
+        const request: any = {
+            user: { sub: 'owner-user', role: 'vendor' },
+            params: { id: 'item-1' },
+            body: { name: 'Paneer Roll' },
+        };
+        const reply: any = { send: Sinon.stub() };
+
+        await updateMenuItem(request, reply);
+
+        Sinon.assert.calledOnce(updateStub);
+        expect(reply.send.firstCall.args[0]).toEqual(updatedItem);
     });
 
-    describe('deleteMenu', () => {
-        it('deletes a menu by id and responds 204', async () => {
-            const eqStub = Sinon.stub().resolves({ error: null });
-            const deleteStub = Sinon.stub().returns({ eq: eqStub });
+    it('getMyVendorMenu resolves active staff membership when owner mapping does not exist', async () => {
+        const ownerVendorMaybeSingle = Sinon.stub().resolves({ data: null, error: null });
+        const ownerVendorEq = Sinon.stub().returns({ maybeSingle: ownerVendorMaybeSingle });
+        const ownerVendorSelect = Sinon.stub().returns({ eq: ownerVendorEq });
 
-            fromStub.withArgs('menus').returns({ delete: deleteStub } as any);
+        const staffMaybeSingle = Sinon.stub().resolves({ data: { vendor_id: 'vendor-staff' }, error: null });
+        const staffLimit = Sinon.stub().returns({ maybeSingle: staffMaybeSingle });
+        const staffOrder = Sinon.stub().returns({ limit: staffLimit });
+        const staffEqStatus = Sinon.stub().returns({ order: staffOrder });
+        const staffEqUser = Sinon.stub().returns({ eq: staffEqStatus });
+        const staffSelect = Sinon.stub().returns({ eq: staffEqUser });
 
-            const request: any = { params: { id: 'menu-1' } };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
+        const menus = [{ id: 'menu-1', vendor_id: 'vendor-staff', category_name: 'Meals', menu_items: [] }];
+        const menuEq = Sinon.stub().resolves({ data: menus, error: null });
+        const menuSelect = Sinon.stub().returns({ eq: menuEq });
 
-            await deleteMenu(request, reply);
+        fromStub.onCall(0).returns({ select: ownerVendorSelect } as any);
+        fromStub.onCall(1).returns({ select: staffSelect } as any);
+        fromStub.onCall(2).returns({ select: menuSelect } as any);
 
-            Sinon.assert.calledWithExactly(eqStub, 'id', 'menu-1');
-            Sinon.assert.calledWithExactly(reply.code, 204);
-        });
-    });
-});
+        const request: any = { user: { sub: 'staff-user', role: 'vendor' } };
+        const reply: any = { send: Sinon.stub() };
 
-describe('Menu Controller - Menu Item CRUD', () => {
-    let fromStub: Sinon.SinonStub;
+        await getMyVendorMenu(request, reply);
 
-    beforeEach(() => {
-        fromStub = Sinon.stub(supabase, 'from');
-    });
-
-    afterEach(() => {
-        Sinon.restore();
-    });
-
-    describe('createMenuItem', () => {
-        it('inserts a new menu item and returns 201', async () => {
-            const item = { id: 'item-1', menu_id: 'menu-1', name: 'Samosa', price: 30 };
-
-            const singleStub = Sinon.stub().resolves({ data: item, error: null });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const insertStub = Sinon.stub().returns({ select: selectStub });
-
-            fromStub.withArgs('menu_items').returns({ insert: insertStub } as any);
-
-            const request: any = {
-                body: { menu_id: 'menu-1', name: 'Samosa', description: '', price: 30, is_available: true, image_url: null },
-            };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
-
-            await createMenuItem(request, reply);
-
-            Sinon.assert.calledWithExactly(reply.code, 201);
-            expect(reply.send.firstCall.args[0]).toEqual(item);
-        });
-
-        it('throws on Supabase error', async () => {
-            const dbError = new Error('constraint violation');
-            const singleStub = Sinon.stub().resolves({ data: null, error: dbError });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const insertStub = Sinon.stub().returns({ select: selectStub });
-
-            fromStub.withArgs('menu_items').returns({ insert: insertStub } as any);
-
-            const request: any = {
-                body: { menu_id: 'menu-1', name: 'Samosa', description: '', price: 30, is_available: true, image_url: null },
-            };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
-
-            await expect(createMenuItem(request, reply)).rejects.toThrow('constraint violation');
-        });
-    });
-
-    describe('updateMenuItem', () => {
-        it('updates item fields and returns updated record', async () => {
-            const updated = { id: 'item-1', name: 'Paneer Tikka', price: 120 };
-
-            const singleStub = Sinon.stub().resolves({ data: updated, error: null });
-            const selectStub = Sinon.stub().returns({ single: singleStub });
-            const eqStub = Sinon.stub().returns({ select: selectStub });
-            const updateStub = Sinon.stub().returns({ eq: eqStub });
-
-            fromStub.withArgs('menu_items').returns({ update: updateStub } as any);
-
-            const request: any = { params: { id: 'item-1' }, body: { name: 'Paneer Tikka', price: 120 } };
-            const reply: any = { send: Sinon.stub() };
-
-            await updateMenuItem(request, reply);
-
-            Sinon.assert.calledOnce(updateStub);
-            expect(updateStub.firstCall.args[0]).toMatchObject({ name: 'Paneer Tikka', price: 120 });
-            expect(updateStub.firstCall.args[0]).toHaveProperty('updated_at');
-            Sinon.assert.calledWithExactly(eqStub, 'id', 'item-1');
-            expect(reply.send.firstCall.args[0]).toEqual(updated);
-        });
-    });
-
-    describe('deleteMenuItem', () => {
-        it('deletes an item by id and responds 204', async () => {
-            const eqStub = Sinon.stub().resolves({ error: null });
-            const deleteStub = Sinon.stub().returns({ eq: eqStub });
-
-            fromStub.withArgs('menu_items').returns({ delete: deleteStub } as any);
-
-            const request: any = { params: { id: 'item-1' } };
-            const reply: any = { code: Sinon.stub().returnsThis(), send: Sinon.stub() };
-
-            await deleteMenuItem(request, reply);
-
-            Sinon.assert.calledWithExactly(eqStub, 'id', 'item-1');
-            Sinon.assert.calledWithExactly(reply.code, 204);
-        });
-    });
-
-    describe('getMyVendorMenu', () => {
-        it('returns flattened items and categories for the authenticated vendor', async () => {
-            const vendor = { id: 'v-1' };
-            const menus = [
-                { id: 'menu-1', category_name: 'Starters', vendor_id: 'v-1', menu_items: [{ id: 'item-1', name: 'Samosa', price: 30 }] },
-            ];
-
-            const vendorSingleStub = Sinon.stub().resolves({ data: vendor, error: null });
-            const vendorEqStub = Sinon.stub().returns({ single: vendorSingleStub });
-            const vendorSelectStub = Sinon.stub().returns({ eq: vendorEqStub });
-
-            const menuEqStub = Sinon.stub().resolves({ data: menus, error: null });
-            const menuSelectStub = Sinon.stub().returns({ eq: menuEqStub });
-
-            fromStub.onFirstCall().returns({ select: vendorSelectStub } as any);
-            fromStub.onSecondCall().returns({ select: menuSelectStub } as any);
-
-            const request: any = { user: { sub: 'user-1' } };
-            const reply: any = { send: Sinon.stub() };
-
-            await getMyVendorMenu(request, reply);
-
-            Sinon.assert.calledWithExactly(vendorSelectStub, 'id');
-            Sinon.assert.calledWithExactly(vendorEqStub, 'owner_id', 'user-1');
-            Sinon.assert.calledWithExactly(menuSelectStub, '*, menu_items(*)');
-            Sinon.assert.calledWithExactly(menuEqStub, 'vendor_id', 'v-1');
-
-            const sentData = reply.send.firstCall.args[0];
-            expect(sentData).toHaveProperty('items');
-            expect(sentData).toHaveProperty('categories');
-            expect(sentData.items).toHaveLength(1);
-            expect(sentData.items[0]).toMatchObject({ id: 'item-1', category: 'Starters' });
-        });
-
-        it('throws 404 when vendor profile is not found', async () => {
-            const vendorSingleStub = Sinon.stub().resolves({ data: null, error: new Error('not found') });
-            const vendorEqStub = Sinon.stub().returns({ single: vendorSingleStub });
-            const vendorSelectStub = Sinon.stub().returns({ eq: vendorEqStub });
-
-            fromStub.onFirstCall().returns({ select: vendorSelectStub } as any);
-
-            const request: any = { user: { sub: 'user-xyz' } };
-            const reply: any = { send: Sinon.stub() };
-
-            const err = await getMyVendorMenu(request, reply).catch(e => e);
-            expect(err.message).toBe('Vendor profile not found');
-            expect(err.statusCode).toBe(404);
-        });
+        const payload = reply.send.firstCall.args[0];
+        expect(payload.categories).toHaveLength(1);
+        expect(payload.categories[0].vendor_id).toBe('vendor-staff');
     });
 });

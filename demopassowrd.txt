@@ -1,0 +1,18 @@
+Swift Demo Password Reference
+Generated: 2026-04-15
+
+Default/Fallback Demo Password:
+ChangeMeBeforeUse!123
+
+Placeholder Demo Credentials File Value:
+replace-before-use
+
+Demo account emails (from backend/demo-credentials.json):
+- demo.user@example.com
+- demo.vendor@example.com
+- demo.admin@example.com
+
+Notes:
+- backend/.env and backend/.env .production currently do not define:
+  DEMO_USER_PASSWORD, DEMO_VENDOR_PASSWORD, DEMO_ADMIN_PASSWORD, DEMO_DEFAULT_PASSWORD
+- If no DEMO_* password vars are set, seed script fallback is ChangeMeBeforeUse!123.

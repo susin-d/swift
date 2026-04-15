@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { createSupabaseUserClient, supabase } from '../../services/supabase';
+import { supabase } from '../../services/supabase';
 import { createNotification } from '../../services/notificationService';
 import { isPointInsideGeojson } from '../../services/geofenceService';
 import { validatePromo } from '../../services/promoService';
@@ -15,13 +15,9 @@ import { vendorOrderEvents } from './services/vendorOrderEvents';
 
 export const createOrder = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as any;
-    const authHeader = (request.headers as Record<string, unknown> | undefined)?.authorization;
-    const rawToken = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
-        ? authHeader.slice('Bearer '.length).trim()
-        : '';
-    const token = rawToken.split('.').length === 3 ? rawToken : '';
     const isMockedSupabase = typeof (supabase as any)?.from?.withArgs === 'function';
-    const writeClient = token ? createSupabaseUserClient(token) : supabase;
+    const token = undefined;
+    const writeClient = supabase;
     const {
         vendor_id,
         items,
@@ -292,7 +288,16 @@ export const createOrder = async (request: FastifyRequest, reply: FastifyReply) 
         itemsInsert = await insertWithAccessFallback(token, 'order_items', orderItemsModernPrice);
     }
 
-    if (itemsInsert.error) throw itemsInsert.error;
+    if (itemsInsert.error) {
+        // Best-effort compensation for partial writes when order item persistence fails.
+        try {
+            await supabase.from('order_items').delete().eq('order_id', order.id);
+            await supabase.from('orders').delete().eq('id', order.id);
+        } catch {
+            // Ignore rollback issues and return the primary failure cause.
+        }
+        throw itemsInsert.error;
+    }
 
     if (promoId) {
         const redemptionInsert = await writeClient.from('promotion_redemptions').insert({
@@ -450,13 +455,42 @@ const resolveVendorIdForUser = async (user: any) => {
         .eq('owner_id', user?.sub)
         .single();
 
-    if (vendorError || !vendor?.id) {
-        const err = new Error('Vendor not found') as any;
-        err.statusCode = 404;
-        throw err;
+    if (!vendorError && vendor?.id) {
+        return vendor.id as string;
     }
 
-    return vendor.id as string;
+    if (vendorError) {
+        const ownerErrorText = String(vendorError.message || '').toLowerCase();
+        const maybeNoRows = ownerErrorText.includes('no rows')
+            || ownerErrorText.includes('multiple (or no) rows')
+            || ownerErrorText.includes('json object requested');
+        if (!maybeNoRows) {
+            const err = new Error('Vendor not found') as any;
+            err.statusCode = 404;
+            throw err;
+        }
+    }
+
+    const { data: staffMembership, error: staffError } = await supabase
+        .from('vendor_staff_members')
+        .select('vendor_id')
+        .eq('user_id', user?.sub)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (staffError) {
+        throw staffError;
+    }
+
+    if (staffMembership?.vendor_id) {
+        return String(staffMembership.vendor_id);
+    }
+
+    const err = new Error('Vendor not found') as any;
+    err.statusCode = 404;
+    throw err;
 };
 
 const fetchScopedOrder = async (orderId: string, vendorId: string | null) => {

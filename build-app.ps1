@@ -17,6 +17,9 @@
 
         [Parameter(Mandatory=$false)]
         [string]$UserRazorpayKeyId = "",
+
+        [Parameter(Mandatory=$false)]
+        [switch]$SkipSymlinkCheck,
         
         [Parameter(Mandatory=$false)]
         [switch]$All
@@ -206,8 +209,14 @@
         Write-Host "Running: flutter $($buildArgs -join ' ')" -ForegroundColor Gray
 
         if (-not (Test-SymlinkCapability)) {
-            Show-SymlinkFixSteps -Name $Name
-            return $false
+            if ($SkipSymlinkCheck) {
+                Write-Host "WARNING: Symlink capability check failed, but continuing because -SkipSymlinkCheck was provided." -ForegroundColor Yellow
+                Write-Host "The Flutter build may still fail later if the environment cannot create symlinks." -ForegroundColor Yellow
+            }
+            else {
+                Show-SymlinkFixSteps -Name $Name
+                return $false
+            }
         }
         
         Push-Location $AppDir
@@ -298,8 +307,14 @@
         $apps = @("vendor_app", "admin_app", "user_app")
 
         if (-not (Test-SymlinkCapability)) {
-            Show-SymlinkFixSteps -Name "all apps"
-            exit 1
+            if ($SkipSymlinkCheck) {
+                Write-Host "WARNING: Symlink capability check failed, but continuing because -SkipSymlinkCheck was provided." -ForegroundColor Yellow
+                Write-Host "One or more Flutter builds may still fail if symlinks are required by the environment." -ForegroundColor Yellow
+            }
+            else {
+                Show-SymlinkFixSteps -Name "all apps"
+                exit 1
+            }
         }
 
         $jobs = @()
@@ -485,11 +500,13 @@
     }
     else {
         # No app specified, show usage
-        Write-Host "Usage: .\build-app.ps1 [-AppName <name>] [-BuildType <release|debug>] [-All]" -ForegroundColor Yellow
+        Write-Host "Usage: .\build-app.ps1 [-AppName <name>] [-BuildType <release|debug>] [-SkipSymlinkCheck] [-All]" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "Examples:" -ForegroundColor Cyan
         Write-Host "  .\build-app.ps1 -All              # Build all apps (vendor_app, admin_app, user_app)" -ForegroundColor White
+        Write-Host "  .\build-app.ps1 -All -SkipSymlinkCheck  # Try all builds even if symlink precheck fails" -ForegroundColor White
         Write-Host "  .\build-app.ps1 -AppName vendor_app    # Build only vendor_app" -ForegroundColor White
+        Write-Host "  .\build-app.ps1 -AppName vendor_app -SkipSymlinkCheck  # Try single build even if symlink precheck fails" -ForegroundColor White
         Write-Host "  .\build-app.ps1 -AppName admin_app -BuildType debug  # Build debug version" -ForegroundColor White
         Write-Host ""
         Write-Host "Available apps: vendor_app, admin_app, user_app" -ForegroundColor Cyan

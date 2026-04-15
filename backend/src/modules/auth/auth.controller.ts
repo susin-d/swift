@@ -1,9 +1,18 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { supabase } from '../../services/supabase';
 import crypto from 'crypto';
+import {
+    buildSessionPayload,
+    createAccessToken,
+    hashPassword,
+    verifyPassword,
+} from '../../services/customAuth';
 
 const OTP_TTL_MINUTES = Number(process.env.PASSWORD_RESET_OTP_TTL_MINUTES || 10);
 const OTP_MAX_ATTEMPTS = Number(process.env.PASSWORD_RESET_OTP_MAX_ATTEMPTS || 5);
+const FORGOT_PASSWORD_WINDOW_SECONDS = Number(process.env.FORGOT_PASSWORD_WINDOW_SECONDS || 300);
+const FORGOT_PASSWORD_MAX_REQUESTS = Number(process.env.FORGOT_PASSWORD_MAX_REQUESTS || 5);
+const FORGOT_PASSWORD_COOLDOWN_SECONDS = Number(process.env.FORGOT_PASSWORD_COOLDOWN_SECONDS || 900);
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
@@ -14,10 +23,71 @@ const generateSixDigitOtp = () => {
     return n.toString().padStart(6, '0');
 };
 
-const sendPasswordResetEmailViaBrevo = async (email: string, otp: string) => {
+type OtpPurpose = 'password_reset' | 'registration';
+
+type RateLimitBucket = {
+    count: number;
+    resetAtMs: number;
+    blockedUntilMs: number;
+};
+
+const forgotPasswordRateMap = new Map<string, RateLimitBucket>();
+
+const enforceForgotPasswordRateLimit = (request: FastifyRequest, email: string) => {
+    const ip = String((request as any).ip || 'unknown');
+    const now = Date.now();
+    const key = `${ip}:${email}`;
+    const windowMs = Math.max(1, FORGOT_PASSWORD_WINDOW_SECONDS) * 1000;
+    const cooldownMs = Math.max(1, FORGOT_PASSWORD_COOLDOWN_SECONDS) * 1000;
+
+    // Opportunistic cleanup to prevent unbounded growth.
+    if (forgotPasswordRateMap.size > 2000) {
+        for (const [bucketKey, bucketValue] of forgotPasswordRateMap.entries()) {
+            if (bucketValue.resetAtMs < now && bucketValue.blockedUntilMs < now) {
+                forgotPasswordRateMap.delete(bucketKey);
+            }
+        }
+    }
+
+    const existing = forgotPasswordRateMap.get(key);
+    if (!existing || existing.resetAtMs < now) {
+        forgotPasswordRateMap.set(key, {
+            count: 1,
+            resetAtMs: now + windowMs,
+            blockedUntilMs: 0,
+        });
+        return;
+    }
+
+    if (existing.blockedUntilMs > now) {
+        const err = new Error('Too many password reset requests. Try again later.') as any;
+        err.statusCode = 429;
+        throw err;
+    }
+
+    existing.count += 1;
+    if (existing.count > Math.max(1, FORGOT_PASSWORD_MAX_REQUESTS)) {
+        existing.blockedUntilMs = now + cooldownMs;
+        const err = new Error('Too many password reset requests. Try again later.') as any;
+        err.statusCode = 429;
+        throw err;
+    }
+};
+
+const sendOtpEmailViaBrevo = async (email: string, otp: string, purpose: OtpPurpose) => {
     const apiKey = process.env.BREVO_API_KEY;
     const senderEmail = process.env.BREVO_FROM_EMAIL;
     const senderName = process.env.BREVO_FROM_NAME || 'Swift Support';
+
+    const isRegistrationOtp = purpose === 'registration';
+    const subject = isRegistrationOtp ? 'Your Swift verification code' : 'Your Swift password reset code';
+    const heading = isRegistrationOtp ? 'Verify your email' : 'Reset your password';
+    const intro = isRegistrationOtp
+        ? 'Use this 6-digit code to verify your Swift account:'
+        : 'Use this 6-digit code to reset your Swift password:';
+    const footer = isRegistrationOtp
+        ? 'If you did not create this account, you can ignore this email.'
+        : 'If you did not request this, you can ignore this email.';
 
     if (!apiKey || !senderEmail) {
         throw new Error('Brevo configuration missing: BREVO_API_KEY and BREVO_FROM_EMAIL are required');
@@ -32,17 +102,17 @@ const sendPasswordResetEmailViaBrevo = async (email: string, otp: string) => {
         body: JSON.stringify({
             sender: { email: senderEmail, name: senderName },
             to: [{ email }],
-            subject: 'Your Swift password reset code',
+            subject,
             htmlContent: `
                 <div style="font-family:Arial,sans-serif;line-height:1.5;color:#1b1b1b;">
-                  <h2 style="margin:0 0 12px 0;">Reset your password</h2>
-                  <p>Use this 6-digit code to reset your Swift password:</p>
+                  <h2 style="margin:0 0 12px 0;">${heading}</h2>
+                  <p>${intro}</p>
                   <p style="font-size:28px;font-weight:700;letter-spacing:6px;margin:12px 0;">${otp}</p>
                   <p>This code expires in ${OTP_TTL_MINUTES} minutes.</p>
-                  <p>If you did not request this, you can ignore this email.</p>
+                  <p>${footer}</p>
                 </div>
             `,
-            textContent: `Reset your Swift password. Your 6-digit code is ${otp}. This code expires in ${OTP_TTL_MINUTES} minutes.`,
+            textContent: `${heading}. Your 6-digit code is ${otp}. This code expires in ${OTP_TTL_MINUTES} minutes.`,
         }),
     });
 
@@ -52,35 +122,92 @@ const sendPasswordResetEmailViaBrevo = async (email: string, otp: string) => {
     }
 };
 
+const issueOtpForEmail = async (email: string, userId: string, purpose: OtpPurpose) => {
+    const otp = generateSixDigitOtp();
+    const otpHash = hashOtp(otp);
+    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
+
+    await supabase
+        .from('password_reset_codes')
+        .update({ consumed_at: new Date().toISOString() })
+        .ilike('email', email)
+        .is('consumed_at', null);
+
+    const { error: insertError } = await supabase
+        .from('password_reset_codes')
+        .insert({
+            user_id: userId,
+            email,
+            code_hash: otpHash,
+            expires_at: expiresAt,
+            attempts: 0,
+        });
+
+    if (insertError) {
+        throw insertError;
+    }
+
+    await sendOtpEmailViaBrevo(email, otp, purpose);
+};
+
 export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password } = request.body as any;
     if (!email || !password) return reply.code(400).send({ error: 'Email and password required' });
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-    });
+    const normalizedEmail = normalizeEmail(email);
 
-    if (error) {
-        const err = new Error(error.message) as any;
+    const { data: account, error: accountError } = await supabase
+        .from('auth_accounts')
+        .select('user_id, email, password_hash, is_blocked')
+        .ilike('email', normalizedEmail)
+        .maybeSingle();
+
+    if (accountError || !account) {
+        const err = new Error('Invalid login credentials') as any;
         err.statusCode = 401;
         throw err;
     }
 
-    // Get user role from public.users table
-    const { data: profile } = await supabase
+    const isValid = await verifyPassword(password, String((account as any).password_hash || ''));
+    if (!isValid) {
+        const err = new Error('Invalid login credentials') as any;
+        err.statusCode = 401;
+        throw err;
+    }
+
+    if ((account as any).is_blocked) {
+        const err = new Error('Account is blocked. Contact support.') as any;
+        err.statusCode = 403;
+        throw err;
+    }
+
+    const { data: profile, error: profileError } = await supabase
         .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
+        .select('id, email, role, name')
+        .eq('id', (account as any).user_id)
+        .maybeSingle();
+
+    if (profileError || !profile) {
+        const err = new Error('Invalid login credentials') as any;
+        err.statusCode = 401;
+        throw err;
+    }
+
+    const accessToken = createAccessToken({
+        sub: profile.id,
+        email: profile.email,
+        role: (profile.role || 'user') as 'user' | 'vendor' | 'admin',
+    });
+    const session = buildSessionPayload(accessToken);
 
     return reply.send({
         user: {
-            id: data.user.id,
-            email: data.user.email,
-            role: profile?.role || 'user'
+            id: profile.id,
+            email: profile.email,
+            role: profile.role || 'user',
+            name: profile.name,
         },
-        session: data.session
+        session,
     });
 };
 
@@ -151,73 +278,80 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
         throw err;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: { name, role: 'user' } // Force default role to user
-        }
-    });
+    const normalizedEmail = normalizeEmail(email);
 
-    if (error) {
-        const message = (error.message || '').toLowerCase();
-        const err = new Error(error.message) as any;
-        err.statusCode = message.includes('already registered') ? 409 : 400;
-        throw err;
-    }
+    const { data: existingAccount } = await supabase
+        .from('auth_accounts')
+        .select('user_id')
+        .ilike('email', normalizedEmail)
+        .maybeSingle();
 
-    if (!data.user) {
-        const err = new Error('Unable to complete registration') as any;
-        err.statusCode = 500;
-        throw err;
-    }
-
-    const identities = (data.user as any).identities as Array<unknown> | undefined;
-    if (Array.isArray(identities) && identities.length === 0) {
+    if (existingAccount?.user_id) {
         const err = new Error('User already registered') as any;
         err.statusCode = 409;
         throw err;
     }
 
-    // 1. Sync to public.users (idempotent)
-    const usersTable = supabase.from('users') as any;
-    let userError: any = null;
-    if (usersTable?.insert) {
-        const inserted = await usersTable.insert({
-            id: data.user.id,
-            name,
-            email,
-            role: 'user'
-        });
-        userError = inserted?.error ?? null;
-    } else {
-        const upserted = await usersTable.upsert({
-            id: data.user.id,
-            name,
-            email,
-            role: 'user'
-        }, { onConflict: 'id' });
-        userError = upserted?.error ?? null;
-    }
+    const userId = crypto.randomUUID();
+    const passwordHash = await hashPassword(password);
 
-    if (userError) {
-        const err = new Error(userError.message) as any;
+    const { error: userInsertError } = await supabase
+        .from('users')
+        .insert({
+            id: userId,
+            name,
+            email: normalizedEmail,
+            role: 'user',
+        });
+
+    if (userInsertError) {
+        const err = new Error(userInsertError.message) as any;
         err.statusCode = 400;
         throw err;
     }
 
-    // 2. Ensure customer profile exists (idempotent)
+    const { error: accountInsertError } = await supabase
+        .from('auth_accounts')
+        .insert({
+            user_id: userId,
+            email: normalizedEmail,
+            password_hash: passwordHash,
+            is_blocked: false,
+        });
+
+    if (accountInsertError) {
+        await supabase.from('users').delete().eq('id', userId);
+        const message = String(accountInsertError.message || '').toLowerCase();
+        const err = new Error(accountInsertError.message) as any;
+        err.statusCode = message.includes('duplicate') ? 409 : 400;
+        throw err;
+    }
+
     const customerProfilesTable = supabase.from('customer_profiles') as any;
     const profileWrite = customerProfilesTable?.insert
-        ? await customerProfilesTable.insert({ id: data.user.id })
-        : await customerProfilesTable.upsert({ id: data.user.id }, { onConflict: 'id' });
+        ? await customerProfilesTable.insert({ id: userId })
+        : await customerProfilesTable.upsert({ id: userId }, { onConflict: 'id' });
     const profileError = profileWrite?.error ?? null;
 
     if (profileError) {
         console.error('Customer profile creation error:', profileError);
     }
 
-    return reply.code(201).send({ message: 'Registration successful', user: data.user });
+    try {
+        await issueOtpForEmail(normalizedEmail, userId, 'registration');
+    } catch (otpError: any) {
+        console.error(`Registration OTP dispatch failed for ${normalizedEmail}:`, otpError?.message || otpError);
+    }
+
+    return reply.code(201).send({
+        message: 'Registration successful',
+        user: {
+            id: userId,
+            email: normalizedEmail,
+            role: 'user',
+            name,
+        },
+    });
 };
 
 export const updateMeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -397,43 +531,20 @@ export const forgotPasswordHandler = async (request: FastifyRequest, reply: Fast
     }
 
     const normalizedEmail = normalizeEmail(email);
+    enforceForgotPasswordRateLimit(request, normalizedEmail);
 
     const { data: userRecord } = await supabase
-        .from('users')
-        .select('id, email')
+        .from('auth_accounts')
+        .select('user_id, email')
         .ilike('email', normalizedEmail)
         .maybeSingle();
 
     // Always return a generic success response to avoid account enumeration.
-    if (!userRecord?.id) {
+    if (!(userRecord as any)?.user_id) {
         return reply.send({ message: 'If the account exists, a 6-digit reset code has been sent.' });
     }
 
-    const otp = generateSixDigitOtp();
-    const otpHash = hashOtp(otp);
-    const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000).toISOString();
-
-    await supabase
-        .from('password_reset_codes')
-        .update({ consumed_at: new Date().toISOString() })
-        .ilike('email', normalizedEmail)
-        .is('consumed_at', null);
-
-    const { error: insertError } = await supabase
-        .from('password_reset_codes')
-        .insert({
-            user_id: userRecord.id,
-            email: normalizedEmail,
-            code_hash: otpHash,
-            expires_at: expiresAt,
-            attempts: 0,
-        });
-
-    if (insertError) {
-        throw insertError;
-    }
-
-    await sendPasswordResetEmailViaBrevo(normalizedEmail, otp);
+    await issueOtpForEmail(normalizedEmail, (userRecord as any).user_id, 'password_reset');
 
     return reply.send({ message: 'If the account exists, a 6-digit reset code has been sent.' });
 };
@@ -507,9 +618,12 @@ export const resetPasswordWithOtpHandler = async (request: FastifyRequest, reply
         throw err;
     }
 
-    const { error: updateAuthError } = await supabase.auth.admin.updateUserById(codeRow.user_id, {
-        password: new_password,
-    });
+    const nextPasswordHash = await hashPassword(new_password);
+
+    const { error: updateAuthError } = await supabase
+        .from('auth_accounts')
+        .update({ password_hash: nextPasswordHash, updated_at: new Date().toISOString() })
+        .eq('user_id', codeRow.user_id);
 
     if (updateAuthError) {
         throw updateAuthError;

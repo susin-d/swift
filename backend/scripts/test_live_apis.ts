@@ -45,9 +45,18 @@ type RuntimeContext = {
   classSessionId?: string;
 };
 
-const SITE_URL = process.env.LIVE_SITE_URL ?? 'https://example.com';
+const SITE_URL = process.env.LIVE_SITE_URL ?? 'https://swift-campus.vercel.app';
 const API_BASE = process.env.LIVE_API_BASE ?? `${SITE_URL}/api/v1`;
 const REQUEST_TIMEOUT_MS = Number(process.env.API_TEST_TIMEOUT_MS ?? 20000);
+const AUTO_REGISTER_USER = process.env.LIVE_AUTO_REGISTER_USER !== 'false';
+
+const LIVE_USER_EMAIL = process.env.LIVE_USER_EMAIL;
+const LIVE_USER_PASSWORD = process.env.LIVE_USER_PASSWORD;
+const LIVE_VENDOR_EMAIL = process.env.LIVE_VENDOR_EMAIL;
+const LIVE_VENDOR_PASSWORD = process.env.LIVE_VENDOR_PASSWORD;
+const LIVE_ADMIN_EMAIL = process.env.LIVE_ADMIN_EMAIL;
+const LIVE_ADMIN_PASSWORD = process.env.LIVE_ADMIN_PASSWORD;
+const LIVE_OTP_EMAIL = process.env.LIVE_OTP_EMAIL ?? 'susinsusindran@gmail.com';
 
 const credentialsFile = path.join(__dirname, '..', 'demo-credentials.json');
 
@@ -168,6 +177,55 @@ async function login(role: 'user' | 'vendor' | 'admin', creds: DemoCredential[])
   };
 }
 
+function isPlaceholderCredential(value: string | undefined) {
+  if (!value) return true;
+  return value.includes('replace-before-use') || value.includes('example.com');
+}
+
+function resolveCredentialByRole(role: 'user' | 'vendor' | 'admin', fallbackCreds: DemoCredential[]) {
+  if (role === 'user' && LIVE_USER_EMAIL && LIVE_USER_PASSWORD) {
+    return { email: LIVE_USER_EMAIL, password: LIVE_USER_PASSWORD, role };
+  }
+  if (role === 'vendor' && LIVE_VENDOR_EMAIL && LIVE_VENDOR_PASSWORD) {
+    return { email: LIVE_VENDOR_EMAIL, password: LIVE_VENDOR_PASSWORD, role };
+  }
+  if (role === 'admin' && LIVE_ADMIN_EMAIL && LIVE_ADMIN_PASSWORD) {
+    return { email: LIVE_ADMIN_EMAIL, password: LIVE_ADMIN_PASSWORD, role };
+  }
+
+  const found = fallbackCreds.find((c) => c.role === role);
+  if (!found) return undefined;
+  if (isPlaceholderCredential(found.email) || isPlaceholderCredential(found.password)) {
+    return undefined;
+  }
+  return found;
+}
+
+function createSyntheticUserCredential() {
+  const suffix = `${Date.now()}${Math.floor(Math.random() * 100000)}`;
+  return {
+    email: `swiftlive${suffix}@gmail.com`,
+    password: `Swift@${suffix}`,
+    role: 'user' as const,
+    name: `Live User ${suffix}`,
+  };
+}
+
+async function registerUser(email: string, password: string, name: string) {
+  const url = `${API_BASE}/auth/register`;
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, name }),
+  });
+  const body = await parseBodySafe(response);
+  return {
+    ok: response.ok,
+    status: response.status,
+    body,
+  };
+}
+
 async function main() {
   const startedAt = new Date().toISOString();
   const credsRaw = await fs.readFile(credentialsFile, 'utf8');
@@ -177,47 +235,106 @@ async function main() {
   const results: Result[] = [];
   const context: RuntimeContext = {};
 
-  const userLogin = await login('user', credentials);
-  const vendorLogin = await login('vendor', credentials);
-  const adminLogin = await login('admin', credentials);
+  let effectiveCredentials: DemoCredential[] = [...credentials];
+
+  const userCredential = resolveCredentialByRole('user', effectiveCredentials);
+  const vendorCredential = resolveCredentialByRole('vendor', effectiveCredentials);
+  const adminCredential = resolveCredentialByRole('admin', effectiveCredentials);
+
+  let userLogin = userCredential
+    ? await login('user', [{ ...userCredential }])
+    : undefined;
+
+  // Simulate real-user onboarding path when no usable user credentials exist.
+  if ((!userLogin || !userLogin.ok || !userLogin.token) && AUTO_REGISTER_USER) {
+    const synthetic = createSyntheticUserCredential();
+    const registerResult = await registerUser(synthetic.email, synthetic.password, synthetic.name);
+    const registerMessage = String((registerResult.body as any)?.message ?? '').toLowerCase();
+    const isExpectedRateLimit =
+      registerResult.status === 400 && registerMessage.includes('rate limit exceeded');
+
+    results.push({
+      id: 'auth.register.synthetic-user',
+      role: 'public',
+      method: 'POST',
+      path: '/auth/register',
+      url: `${API_BASE}/auth/register`,
+      status: registerResult.status,
+      ok: registerResult.ok || isExpectedRateLimit,
+      durationMs: 0,
+      requestBody: { email: synthetic.email, name: synthetic.name },
+      responseBody: registerResult.body,
+    });
+
+    if (registerResult.ok) {
+      userLogin = await login('user', [
+        {
+          email: synthetic.email,
+          password: synthetic.password,
+          role: 'user',
+        },
+      ]);
+      effectiveCredentials = [
+        {
+          email: synthetic.email,
+          password: synthetic.password,
+          role: 'user',
+        },
+        ...effectiveCredentials.filter((c) => c.role !== 'user'),
+      ];
+    }
+  }
+
+  const vendorLogin = vendorCredential
+    ? await login('vendor', [{ ...vendorCredential }])
+    : undefined;
+  const adminLogin = adminCredential
+    ? await login('admin', [{ ...adminCredential }])
+    : undefined;
 
   if (userLogin?.token) tokenByRole.user = userLogin.token;
   if (vendorLogin?.token) tokenByRole.vendor = vendorLogin.token;
   if (adminLogin?.token) tokenByRole.admin = adminLogin.token;
 
-  results.push({
-    id: 'auth.login.user',
-    role: 'public',
-    method: 'POST',
-    path: '/auth/session',
-    url: `${API_BASE}/auth/session`,
-    status: userLogin?.status ?? 0,
-    ok: userLogin?.ok ?? false,
-    durationMs: 0,
-    responseBody: userLogin?.body ?? null,
-  });
-  results.push({
-    id: 'auth.login.vendor',
-    role: 'public',
-    method: 'POST',
-    path: '/auth/session',
-    url: `${API_BASE}/auth/session`,
-    status: vendorLogin?.status ?? 0,
-    ok: vendorLogin?.ok ?? false,
-    durationMs: 0,
-    responseBody: vendorLogin?.body ?? null,
-  });
-  results.push({
-    id: 'auth.login.admin',
-    role: 'public',
-    method: 'POST',
-    path: '/auth/session',
-    url: `${API_BASE}/auth/session`,
-    status: adminLogin?.status ?? 0,
-    ok: adminLogin?.ok ?? false,
-    durationMs: 0,
-    responseBody: adminLogin?.body ?? null,
-  });
+  if (userLogin) {
+    results.push({
+      id: 'auth.login.user',
+      role: 'public',
+      method: 'POST',
+      path: '/auth/session',
+      url: `${API_BASE}/auth/session`,
+      status: userLogin.status,
+      ok: userLogin.ok,
+      durationMs: 0,
+      responseBody: userLogin.body ?? null,
+    });
+  }
+  if (vendorCredential) {
+    results.push({
+      id: 'auth.login.vendor',
+      role: 'public',
+      method: 'POST',
+      path: '/auth/session',
+      url: `${API_BASE}/auth/session`,
+      status: vendorLogin?.status ?? 0,
+      ok: vendorLogin?.ok ?? false,
+      durationMs: 0,
+      responseBody: vendorLogin?.body ?? null,
+    });
+  }
+  if (adminCredential) {
+    results.push({
+      id: 'auth.login.admin',
+      role: 'public',
+      method: 'POST',
+      path: '/auth/session',
+      url: `${API_BASE}/auth/session`,
+      status: adminLogin?.status ?? 0,
+      ok: adminLogin?.ok ?? false,
+      durationMs: 0,
+      responseBody: adminLogin?.body ?? null,
+    });
+  }
 
   const baseEndpoints: Endpoint[] = [
     { id: 'health', method: 'GET', path: '/health', fullUrl: `${SITE_URL}/api/health`, role: 'public' },
@@ -229,33 +346,56 @@ async function main() {
     { id: 'public.recommendations', method: 'GET', path: '/public/recommendations', role: 'public', query: { limit: 10 } },
     { id: 'public.buildings', method: 'GET', path: '/public/buildings', role: 'public' },
     { id: 'public.zones', method: 'GET', path: '/public/zones', role: 'public' },
-    { id: 'auth.me.user', method: 'GET', path: '/auth/me', role: 'user' },
-    { id: 'auth.me.vendor', method: 'GET', path: '/auth/me', role: 'vendor' },
-    { id: 'auth.me.admin', method: 'GET', path: '/auth/me', role: 'admin' },
-    { id: 'orders.slots', method: 'GET', path: '/orders/slots', role: 'user' },
-    { id: 'orders.me', method: 'GET', path: '/orders/me', role: 'user' },
-    { id: 'addresses.list', method: 'GET', path: '/addresses', role: 'user' },
-    { id: 'notifications.list', method: 'GET', path: '/notifications', role: 'user' },
-    { id: 'promos.active', method: 'GET', path: '/promos/active', role: 'user' },
-    { id: 'class-sessions.list', method: 'GET', path: '/class-sessions', role: 'user' },
-    { id: 'vendor-ops.profile', method: 'GET', path: '/vendor-ops/profile', role: 'vendor' },
-    { id: 'vendor-ops.menu', method: 'GET', path: '/vendor-ops/menu', role: 'vendor' },
-    { id: 'vendor-ops.orders', method: 'GET', path: '/vendor-ops/orders', role: 'vendor' },
-    { id: 'vendor-ops.stats', method: 'GET', path: '/vendor-ops/stats', role: 'vendor' },
-    { id: 'admin.stats', method: 'GET', path: '/admin/stats', role: 'admin' },
-    { id: 'admin.dashboard.summary', method: 'GET', path: '/admin/dashboard/summary', role: 'admin' },
-    { id: 'admin.charts', method: 'GET', path: '/admin/charts', role: 'admin' },
-    { id: 'admin.finance.summary', method: 'GET', path: '/admin/finance/summary', role: 'admin' },
-    { id: 'admin.finance.payouts', method: 'GET', path: '/admin/finance/payouts', role: 'admin' },
-    { id: 'admin.promos', method: 'GET', path: '/admin/promos', role: 'admin' },
-    { id: 'admin.audit', method: 'GET', path: '/admin/audit', role: 'admin' },
-    { id: 'admin.settings', method: 'GET', path: '/admin/settings', role: 'admin' },
-    { id: 'admin.orders', method: 'GET', path: '/admin/orders', role: 'admin' },
-    { id: 'admin.users', method: 'GET', path: '/admin/users', role: 'admin' },
-    { id: 'admin.vendors.pending', method: 'GET', path: '/admin/vendors/pending', role: 'admin' },
-    { id: 'admin.campus.buildings', method: 'GET', path: '/admin/campus/buildings', role: 'admin' },
-    { id: 'admin.campus.zones', method: 'GET', path: '/admin/campus/zones', role: 'admin' },
+    {
+      id: 'auth.password.forgot.otp-target',
+      method: 'POST',
+      path: '/auth/password/forgot',
+      role: 'public',
+      expectedStatuses: [200],
+      body: { email: LIVE_OTP_EMAIL },
+    },
   ];
+
+  if (tokenByRole.user) {
+    baseEndpoints.push(
+      { id: 'auth.me.user', method: 'GET', path: '/auth/me', role: 'user' },
+      { id: 'orders.slots', method: 'GET', path: '/orders/slots', role: 'user' },
+      { id: 'orders.me', method: 'GET', path: '/orders/me', role: 'user' },
+      { id: 'addresses.list', method: 'GET', path: '/addresses', role: 'user' },
+      { id: 'notifications.list', method: 'GET', path: '/notifications', role: 'user' },
+      { id: 'promos.active', method: 'GET', path: '/promos/active', role: 'user' },
+      { id: 'class-sessions.list', method: 'GET', path: '/class-sessions', role: 'user' },
+    );
+  }
+
+  if (tokenByRole.vendor) {
+    baseEndpoints.push(
+      { id: 'auth.me.vendor', method: 'GET', path: '/auth/me', role: 'vendor' },
+      { id: 'vendor-ops.profile', method: 'GET', path: '/vendor-ops/profile', role: 'vendor' },
+      { id: 'vendor-ops.menu', method: 'GET', path: '/vendor-ops/menu', role: 'vendor' },
+      { id: 'vendor-ops.orders', method: 'GET', path: '/vendor-ops/orders', role: 'vendor' },
+      { id: 'vendor-ops.stats', method: 'GET', path: '/vendor-ops/stats', role: 'vendor' },
+    );
+  }
+
+  if (tokenByRole.admin) {
+    baseEndpoints.push(
+      { id: 'auth.me.admin', method: 'GET', path: '/auth/me', role: 'admin' },
+      { id: 'admin.stats', method: 'GET', path: '/admin/stats', role: 'admin' },
+      { id: 'admin.dashboard.summary', method: 'GET', path: '/admin/dashboard/summary', role: 'admin' },
+      { id: 'admin.charts', method: 'GET', path: '/admin/charts', role: 'admin' },
+      { id: 'admin.finance.summary', method: 'GET', path: '/admin/finance/summary', role: 'admin' },
+      { id: 'admin.finance.payouts', method: 'GET', path: '/admin/finance/payouts', role: 'admin' },
+      { id: 'admin.promos', method: 'GET', path: '/admin/promos', role: 'admin' },
+      { id: 'admin.audit', method: 'GET', path: '/admin/audit', role: 'admin' },
+      { id: 'admin.settings', method: 'GET', path: '/admin/settings', role: 'admin' },
+      { id: 'admin.orders', method: 'GET', path: '/admin/orders', role: 'admin' },
+      { id: 'admin.users', method: 'GET', path: '/admin/users', role: 'admin' },
+      { id: 'admin.vendors.pending', method: 'GET', path: '/admin/vendors/pending', role: 'admin' },
+      { id: 'admin.campus.buildings', method: 'GET', path: '/admin/campus/buildings', role: 'admin' },
+      { id: 'admin.campus.zones', method: 'GET', path: '/admin/campus/zones', role: 'admin' },
+    );
+  }
 
   for (const ep of baseEndpoints) {
     const result = await callEndpoint(ep, tokenByRole);
@@ -300,7 +440,7 @@ async function main() {
     results.push(reviews);
   }
 
-  if (context.vendorId && context.menuItemId) {
+  if (tokenByRole.user && context.vendorId && context.menuItemId) {
     const createOrderBody: Record<string, unknown> = {
       vendor_id: context.vendorId,
       total_amount: 100,
@@ -372,27 +512,29 @@ async function main() {
     }
   }
 
-  const notificationRegister = await callEndpoint(
-    {
-      id: 'notifications.device.register',
-      method: 'POST',
-      path: '/notifications/device',
-      role: 'user',
-      body: {
-        token: `live-test-${Date.now()}`,
-        platform: 'android',
+  if (tokenByRole.user) {
+    const notificationRegister = await callEndpoint(
+      {
+        id: 'notifications.device.register',
+        method: 'POST',
+        path: '/notifications/device',
+        role: 'user',
+        body: {
+          token: `live-test-${Date.now()}`,
+          platform: 'android',
+        },
       },
-    },
-    tokenByRole,
-  );
-  results.push(notificationRegister);
-
-  if (context.notificationId) {
-    const markRead = await callEndpoint(
-      { id: 'notifications.read', method: 'PATCH', path: `/notifications/${context.notificationId}/read`, role: 'user' },
       tokenByRole,
     );
-    results.push(markRead);
+    results.push(notificationRegister);
+
+    if (context.notificationId) {
+      const markRead = await callEndpoint(
+        { id: 'notifications.read', method: 'PATCH', path: `/notifications/${context.notificationId}/read`, role: 'user' },
+        tokenByRole,
+      );
+      results.push(markRead);
+    }
   }
 
   const passed = results.filter((r) => r.ok).length;

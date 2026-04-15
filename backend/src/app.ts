@@ -16,7 +16,30 @@ export const buildApp = async (authOverride?: any) => {
     const app = Fastify({ logger: false }); // Disable logger for cleaner test output
 
     // Plugins
-    await app.register(cors, { origin: '*' });
+    const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0);
+    const fallbackOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8080'];
+    const allowedOrigins = new Set(configuredOrigins.length > 0 ? configuredOrigins : fallbackOrigins);
+
+    await app.register(cors, {
+        credentials: true,
+        origin: (origin, callback) => {
+            // Allow non-browser clients that do not send Origin.
+            if (!origin) {
+                callback(null, true);
+                return;
+            }
+
+            if (allowedOrigins.has(origin)) {
+                callback(null, true);
+                return;
+            }
+
+            callback(new Error('Origin not allowed by CORS policy'), false);
+        },
+    });
 
     // Custom auth Plugin
     if (authOverride) {

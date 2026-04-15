@@ -1,21 +1,53 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { razorpay } from '../services/razorpay';
+import { supabase } from '../services/supabase';
 import crypto from 'crypto';
 
 export const createRazorpayOrder = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { amount, currency = 'INR' } = request.body as any;
+    const user = request.user as any;
+    const { order_id, currency = 'INR' } = request.body as any;
+    if (!order_id || typeof order_id !== 'string') {
+        return reply.code(400).send({ error: 'order_id is required' });
+    }
 
     try {
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .select('id, user_id, total_amount, status')
+            .eq('id', order_id)
+            .maybeSingle();
+
+        if (orderError) throw orderError;
+        if (!order) {
+            return reply.code(404).send({ error: 'Order not found' });
+        }
+
+        const role = String(user?.role || '').toLowerCase();
+        const isAdmin = role === 'admin';
+        if (!isAdmin && order.user_id !== user?.sub) {
+            return reply.code(403).send({ error: 'Forbidden' });
+        }
+
+        const normalizedStatus = String(order.status || '').toLowerCase();
+        if (['cancelled'].includes(normalizedStatus)) {
+            return reply.code(409).send({ error: 'Cannot create payment order for cancelled order' });
+        }
+
+        const amountPaise = Math.round(Number(order.total_amount || 0) * 100);
+        if (!Number.isFinite(amountPaise) || amountPaise <= 0) {
+            return reply.code(400).send({ error: 'Order amount must be greater than zero' });
+        }
+
         const options = {
-            amount: Math.round(amount * 100), // Razorpay expects amount in paise
+            amount: amountPaise, // Razorpay expects amount in paise
             currency,
             receipt: `receipt_${Date.now()}`,
         };
 
-        const order = await razorpay.orders.create(options);
+        const gatewayOrder = await razorpay.orders.create(options);
         // Attach public key to response
         const keyId = process.env.RAZORPAY_KEY_ID || '';
-        return reply.send({ ...order, key: keyId });
+        return reply.send({ ...gatewayOrder, key: keyId, backend_order_id: order.id });
     } catch (error: any) {
         return reply.code(400).send({ error: error.message });
     }
