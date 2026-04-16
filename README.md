@@ -119,28 +119,30 @@ A comprehensive, real-time logistics and food delivery platform connecting stude
    ```bash
    cd vendor_app
    flutter pub get
-   flutter run --dart-define=API_BASE_URL=http://localhost:3000/api/v1
+   flutter run
    ```
+
+   Environment files:
+   - `.env` for local development
+   - `.env.production` for release builds
 
 4. **User App**
    ```bash
    cd user_app
    flutter pub get
-    flutter run \
-         --dart-define=BACKEND_API_URL=<BACKEND_API_URL>
+   flutter run
    ```
 
     Release build example:
     ```bash
-    flutter build apk --release \
-       --dart-define=BACKEND_API_URL=<BACKEND_API_URL>
+    flutter build apk --release
     ```
 
-    Optional support contact defines:
-   - `--dart-define=SUPPORT_EMAIL=<SUPPORT_EMAIL>`
-    - `--dart-define=SUPPORT_EMAIL_SUBJECT="Support Request"`
-   - `--dart-define=SUPPORT_PHONE=<SUPPORT_PHONE>`
-   - `--dart-define=SUPPORT_PHONE_DISPLAY="<SUPPORT_PHONE_DISPLAY>"`
+   Environment files:
+   - `.env` for local development
+   - `.env.production` for release builds
+
+   Optional support contact keys live in the same env files.
 
 5. **Admin App**
    ```bash

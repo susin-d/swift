@@ -408,6 +408,30 @@ Admin triage endpoint for status, priority, assignment, and resolution notes.
   }
   ```
 
+### `POST /admin/notifications/broadcast`
+Broadcast a notification to users, vendors, or both audiences from the admin portal.
+
+- **Request body**:
+  ```json
+  {
+    "title": "Lunch service delay",
+    "body": "Kiosk delivery windows are delayed by 15 minutes today.",
+    "audience": "both",
+    "type": "service_update",
+    "metadata": { "source": "admin_web" }
+  }
+  ```
+- **Response** `201 Created`:
+  ```json
+  {
+    "message": "Notification sent to users and vendors",
+    "audiences": ["user", "vendor"],
+    "recipients": 24,
+    "sent": 24,
+    "failed": 0
+  }
+  ```
+
 ## Wallet
 
 All wallet routes require an authenticated user token.
@@ -1419,6 +1443,9 @@ Get global platform statistics.
 
 ### `GET /admin/audit/vendor-mutations`
 Get filtered audit log rows for vendor staff and vendor preference mutation actions.
+
+Implementation note:
+- If `admin_logs` is unavailable in a deployment schema, the endpoint returns an empty paginated result (`logs: []`) instead of `500`.
 
 ### `GET /admin/charts`
 Fetch analytical chart data.

@@ -51,12 +51,14 @@ Apply in sequence:
 
 ## What This Recovery Added
 - Persistent chat/support with admin support triage tooling.
+- Admin notification broadcast tooling for user/vendor audiences with notification UI surfaces in both user and vendor apps.
 - Admin promo CRUD persistence contract.
 - Wallet APIs and transaction ledger model.
 - Deferred user account deletion workflow.
 - Growth and retention API set (referrals, loyalty, subscriptions, analytics, vendor watch).
 - Advanced APIs (group order lifecycle, refunds).
 - User/admin app UX updates for support, growth hub, and operational triage.
+- Vendor app dashboard notification broadcast card for platform updates and announcements.
 
 ## User App UI Architecture
 - `user_app/lib/core/widgets/customer_shell.dart` is the shared customer-app scaffold for the primary tabs.

@@ -253,24 +253,20 @@ flutter run
 
 ### Staging
 ```bash
-flutter run --dart-define=BACKEND_API_URL=https://staging-api.example.com/api/v1
+# Edit user_app/.env or user_app/.env.production as needed
+flutter run
 ```
 
 ### Production
 ```bash
-flutter build apk --dart-define=BACKEND_API_URL=https://api.example.com/api/v1
+flutter build apk --release
 ```
 
 ### Configuration File
-File: `user_app/lib/core/config/runtime_config.dart`
+Files: `user_app/.env`, `user_app/.env.production`, `user_app/lib/core/config/runtime_config.dart`
 ```dart
-factory RuntimeConfig.fromEnvironment() {
-  const backendApiUrl = String.fromEnvironment(
-    'BACKEND_API_URL',
-    defaultValue: 'http://localhost:3000/api/v1',
-  );
-  return RuntimeConfig(backendApiUrl: backendApiUrl);
-}
+static String get backendApiUrl =>
+    dotenv.env['BACKEND_API_URL'] ?? 'http://localhost:3000/api/v1';
 ```
 
 ---
@@ -278,7 +274,7 @@ factory RuntimeConfig.fromEnvironment() {
 ## 🚀 Deployment Checklist
 
 - [ ] Backend running on secure HTTPS endpoint
-- [ ] BACKEND_API_URL environment variable configured
+- [ ] `.env` and `.env.production` files present for Flutter apps
 - [ ] JWT expiration policies set appropriately
 - [ ] RLS policies enforced in Supabase
 - [ ] Brevo SMTP credentials configured
