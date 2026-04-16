@@ -351,12 +351,6 @@ export const registerHandler = async (request: FastifyRequest, reply: FastifyRep
         console.error('Customer profile creation error:', profileError);
     }
 
-    try {
-        await issueOtpForEmail(normalizedEmail, userId, 'registration');
-    } catch (otpError: any) {
-        console.error(`Registration OTP dispatch failed for ${normalizedEmail}:`, otpError?.message || otpError);
-    }
-
     return reply.code(201).send({
         message: 'Registration successful',
         user: {
