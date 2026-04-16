@@ -15,6 +15,7 @@ import 'package:vendor_app/features/analytics/analytics_screen.dart';
 import 'package:vendor_app/features/staff/staff_management_screen.dart';
 import 'package:vendor_app/features/reports/reports_screen.dart';
 import 'package:vendor_app/features/preferences/preferences_screen.dart';
+import 'package:vendor_app/features/register/register_screen.dart';
 
 final routerProvider = Provider((ref) {
   final authState = ref.watch(authProvider);
@@ -181,6 +182,10 @@ final routerProvider = Provider((ref) {
           title: state.uri.queryParameters['title'] ?? 'Feature',
           section: state.uri.queryParameters['section'] ?? 'Vendor',
         ),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
       ),
     ],
   );
