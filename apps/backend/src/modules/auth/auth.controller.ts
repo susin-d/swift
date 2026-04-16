@@ -162,7 +162,14 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         .ilike('email', normalizedEmail)
         .maybeSingle();
 
-    if (accountError || !account) {
+    if (accountError) {
+        console.error('[loginHandler] Database error fetching account:', accountError);
+        const err = new Error('Service temporarily unavailable') as any;
+        err.statusCode = 503;
+        throw err;
+    }
+
+    if (!account) {
         const err = new Error('Invalid login credentials') as any;
         err.statusCode = 401;
         throw err;
@@ -187,7 +194,14 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         .eq('id', (account as any).user_id)
         .maybeSingle();
 
-    if (profileError || !profile) {
+    if (profileError) {
+        console.error('[loginHandler] Database error fetching profile:', profileError);
+        const err = new Error('Service temporarily unavailable') as any;
+        err.statusCode = 503;
+        throw err;
+    }
+
+    if (!profile) {
         const err = new Error('Invalid login credentials') as any;
         err.statusCode = 401;
         throw err;

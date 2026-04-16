@@ -2,7 +2,7 @@ Swift Demo Password Reference
 Generated: 2026-04-15
 
 Default/Fallback Demo Password:
-ChangeMeBeforeUse!123
+demo@123
 
 Placeholder Demo Credentials File Value:
 replace-before-use

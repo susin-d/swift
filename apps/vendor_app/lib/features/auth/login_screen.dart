@@ -242,42 +242,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                                 : const Text('Login'),
                           ),
                         ),
-                        const SizedBox(height: 32),
-
-                        // Divider
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('OR', style: GoogleFonts.inter(color: Colors.grey[400], fontWeight: FontWeight.w600, fontSize: 12)),
-                            ),
-                            Expanded(child: Divider(color: Colors.grey[300])),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Create Account Button
-                        Center(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: _teal.withValues(alpha: 0.4), width: 1.5),
-                            ),
-                            child: TextButton.icon(
-                              key: const Key('createAccountButton'),
-                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14)),
-                              onPressed: authState.isLoading
-                                  ? null
-                                  : () => context.push('/register'),
-                              icon: const Icon(Icons.person_add_alt_1_rounded, size: 20, color: _teal),
-                              label: Text(
-                                'Create Account',
-                                style: GoogleFonts.outfit(color: _teal, fontWeight: FontWeight.w800, fontSize: 15),
-                              ),
-                            ),
-                          ),
-                        ),
                         const SizedBox(height: 60),
                       ],
                     ),

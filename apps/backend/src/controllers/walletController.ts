@@ -1,5 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { supabase } from '../services/supabase';
+import { razorpay } from '../services/razorpay';
+import crypto from 'crypto';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination';
 
 const userFromRequest = (request: FastifyRequest) => request.user as { sub: string; role: string } | undefined;
@@ -172,4 +174,116 @@ export const getWalletTransactions = async (
         total,
         meta: buildPaginationMeta(page, limit, total),
     });
+};
+
+export const createTopupPayment = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = userFromRequest(request);
+    const { amount, currency = 'INR' } = request.body as any;
+
+    if (!user?.sub) {
+        return reply.code(401).send({ error: 'Unauthorized' });
+    }
+
+    if (!amount || amount <= 0) {
+        return reply.code(400).send({ error: 'Amount must be greater than zero' });
+    }
+
+    try {
+        const amountPaise = Math.round(Number(amount) * 100);
+        const options = {
+            amount: amountPaise,
+            currency,
+            receipt: `topup_${Date.now()}_${user.sub.substring(0, 8)}`,
+        };
+
+        const gatewayOrder = await razorpay.orders.create(options);
+        const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+
+        return reply.send({
+            ...gatewayOrder,
+            key: keyId,
+            user_id: user.sub,
+        });
+    } catch (error: any) {
+        return reply.code(500).send({ error: error.message });
+    }
+};
+
+export const verifyAndCompleteTopup = async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = userFromRequest(request);
+    const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        amount,
+    } = request.body as any;
+
+    if (!user?.sub) {
+        return reply.code(401).send({ error: 'Unauthorized' });
+    }
+
+    // 1. Verify Signature
+    const secret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+    const generated_signature = crypto
+        .createHmac('sha256', secret)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest('hex');
+
+    if (generated_signature !== razorpay_signature) {
+        return reply.code(400).send({ error: 'Invalid signature' });
+    }
+
+    // 2. Atomically update balance and create transaction
+    try {
+        const topupAmount = toAmount(amount);
+        
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('wallet_balance')
+            .eq('id', user.sub)
+            .single();
+
+        if (userError) throw userError;
+
+        const previousBalance = toAmount((userData as any)?.wallet_balance);
+        const nextBalance = toAmount(previousBalance + topupAmount);
+
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ wallet_balance: nextBalance })
+            .eq('id', user.sub);
+
+        if (updateError) throw updateError;
+
+        const { data: transaction, error: txError } = await supabase
+            .from('wallet_transactions')
+            .insert({
+                user_id: user.sub,
+                amount: topupAmount,
+                transaction_type: 'topup',
+                status: 'completed',
+                source: 'razorpay',
+                reference: razorpay_payment_id,
+                metadata: {
+                    razorpay_order_id,
+                    previous_balance: previousBalance,
+                    next_balance: nextBalance
+                }
+            })
+            .select()
+            .single();
+
+        if (txError) {
+            await supabase.from('users').update({ wallet_balance: previousBalance }).eq('id', user.sub);
+            throw txError;
+        }
+
+        return reply.send({
+            status: 'success',
+            balance: nextBalance,
+            transaction
+        });
+    } catch (error: any) {
+        return reply.code(500).send({ error: error.message });
+    }
 };

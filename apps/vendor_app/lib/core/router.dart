@@ -15,7 +15,6 @@ import 'package:vendor_app/features/analytics/analytics_screen.dart';
 import 'package:vendor_app/features/staff/staff_management_screen.dart';
 import 'package:vendor_app/features/reports/reports_screen.dart';
 import 'package:vendor_app/features/preferences/preferences_screen.dart';
-import 'package:vendor_app/features/auth/register_screen.dart';
 
 final routerProvider = Provider((ref) {
   final authState = ref.watch(authProvider);
@@ -30,7 +29,10 @@ final routerProvider = Provider((ref) {
       final isPublicInfoRoute = loc == '/legal' || loc == '/privacy';
       final requested = state.uri.toString();
       final fromParam = state.uri.queryParameters['from'];
-      final fromIsAuth = fromParam != null && (fromParam.startsWith('/login') || fromParam.startsWith('/forgot-password'));
+      final fromIsAuth =
+          fromParam != null &&
+          (fromParam.startsWith('/login') ||
+              fromParam.startsWith('/forgot-password'));
 
       if (isSplash) return null;
       if (isPublicInfoRoute) return null;
@@ -54,13 +56,13 @@ final routerProvider = Provider((ref) {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const DashboardScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
       GoRoute(
         path: '/menu',
-        builder: (context, state) => const MenuManagementScreen(),
+        builder: (context, state) {
+          final tab = state.uri.queryParameters['tab'];
+          return MenuManagementScreen(initialTab: tab);
+        },
       ),
       GoRoute(
         path: '/profile',
@@ -154,10 +156,7 @@ final routerProvider = Provider((ref) {
         path: '/preferences/app',
         builder: (context, state) => const AppSettingsScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
@@ -166,14 +165,16 @@ final routerProvider = Provider((ref) {
         path: '/legal',
         builder: (context, state) => const LegalScreen(
           title: 'Vendor Terms',
-          content: 'As a Swift Vendor, you agree to: 1. Quality: Maintain high food quality and hygiene standards. 2. Timeliness: Update order status promptly. 3. Transparency: Ensure menu prices match campus regulations. 4. Security: Keep your vendor credentials safe.',
+          content:
+              'As a Swift Vendor, you agree to: 1. Quality: Maintain high food quality and hygiene standards. 2. Timeliness: Update order status promptly. 3. Transparency: Ensure menu prices match campus regulations. 4. Security: Keep your vendor credentials safe.',
         ),
       ),
       GoRoute(
         path: '/privacy',
         builder: (context, state) => const LegalScreen(
           title: 'Vendor Privacy Policy',
-          content: 'Swift collects vendor business data, contact info, and transaction history. We use this to facilitate payments and improve the platform. 1. Transparency: Data is shared only with relevant campus units. 2. Control: You can request logs of your transactions anytime.',
+          content:
+              'Swift collects vendor business data, contact info, and transaction history. We use this to facilitate payments and improve the platform. 1. Transparency: Data is shared only with relevant campus units. 2. Control: You can request logs of your transactions anytime.',
         ),
       ),
       GoRoute(
@@ -182,10 +183,6 @@ final routerProvider = Provider((ref) {
           title: state.uri.queryParameters['title'] ?? 'Feature',
           section: state.uri.queryParameters['section'] ?? 'Vendor',
         ),
-      ),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterScreen(),
       ),
     ],
   );

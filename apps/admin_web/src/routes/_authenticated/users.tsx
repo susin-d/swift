@@ -84,10 +84,14 @@ function UsersPage() {
     const { userId, action } = reasonDialog;
     const blocked = action === 'block';
 
+    console.log(`Attempting to ${action} user ${userId} with reason:`, reason);
+    
     void backendApi.patch(`/admin/users/${userId}/block`, { blocked, reason }).then(() => {
+      console.log(`Successfully ${action}ed user ${userId}`);
       setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, status: blocked ? 'blocked' : 'active' } : user)));
       toast.success(`User ${blocked ? 'blocked' : 'unblocked'} successfully`, { description: `Reason: ${reason}` });
     }).catch((error: any) => {
+      console.error(`Failed to ${action} user ${userId}:`, error);
       toast.error(error?.message || 'Failed to update user status');
     });
   };

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/payment_config.dart';
@@ -11,6 +12,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/address_provider.dart';
 import '../../models/address_model.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../models/order_model.dart';
 import '../../widgets/cart_item_widget.dart';
 import '../../services/payment_service.dart';
 import '../../services/promo_service.dart';
@@ -378,7 +380,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
               Switch(
                 value: _deliverToClass,
-                onChanged: (value) => setState(() => _deliverToClass = value),
+                onChanged: (value) {
+                  if (value && (buildingsAsync.value?.isEmpty ?? true)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Class delivery is unavailable: No campus buildings configured.'),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                    return;
+                  }
+                  setState(() => _deliverToClass = value);
+                },
               ),
             ],
           ),
@@ -665,29 +678,50 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cart = ref.read(cartProvider);
     if (cart.isEmpty) return;
 
-    final firstItem = cart.values.first;
-    final vendorId = firstItem.item.vendorId;
-    if (vendorId == null || vendorId.isEmpty) {
+    final vendorGroups = <String, List<CartItem>>{};
+    for (final cartItem in cart.values) {
+      final vId = cartItem.item.vendorId;
+      if (vId != null && vId.isNotEmpty) {
+        vendorGroups.putIfAbsent(vId, () => []).add(cartItem);
+      }
+    }
+
+    if (vendorGroups.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Unable to place order right now. Missing vendor context.',
-          ),
+          content: Text('Unable to place order. Missing vendor context.'),
           backgroundColor: AppColors.error,
         ),
       );
       return;
     }
 
-    final vendorIds = cart.values.map((i) => i.item.vendorId).toSet();
-    if (vendorIds.length > 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please checkout items from one vendor at a time.'),
-          backgroundColor: AppColors.error,
+    if (vendorGroups.length > 1) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(
+            'Split Orders',
+            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            'Your cart contains items from ${vendorGroups.length} vendors. We will place separate orders for each.',
+            style: GoogleFonts.inter(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: const Text('PROCEED'),
+            ),
+          ],
         ),
       );
-      return;
+      if (confirm != true) return;
     }
 
     if (_deliverToClass) {
@@ -695,8 +729,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           _selectedBuildingId!.isEmpty ||
           _roomController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Select a building and room for class delivery.'),
+          SnackBar(
+            content: Text(
+              _selectedBuildingId == null || _selectedBuildingId!.isEmpty
+                  ? 'Please select a campus building for class delivery.'
+                  : 'Please enter a room/classroom number.',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -712,22 +750,57 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     if (!context.mounted) return;
     if (result == null) return;
 
-    if (result == PaymentMethod.payOnPickup) {
-      await _placeOrder(context);
-      return;
+    final vendors = vendorGroups.keys.toList();
+    for (var i = 0; i < vendors.length; i++) {
+      final vId = vendors[i];
+      final items = vendorGroups[vId]!;
+      
+      if (result == PaymentMethod.payOnPickup) {
+        await _placeOrder(context, vId, items);
+      } else {
+        await _startRazorpayPayment(context, vId, items);
+        // Break after first Razorpay to avoid double overlapping sheets
+        // User will need to checkout remaining items after first payment success
+        if (vendors.length > 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please complete payment for the first vendor. You can checkout the rest after.'),
+            ),
+          );
+          break;
+        }
+      }
     }
-
-    await _startRazorpayPayment(context);
   }
 
-  Future<void> _placeOrder(BuildContext context) async {
+  Future<void> _placeOrder(BuildContext context, [String? vendorId, List<CartItem>? items]) async {
     try {
-      final order = await _createBackendOrderForCheckout();
+      final targetVendorId = vendorId ?? _pendingOrder?.vendorId;
+      // Reconstruction of CartItems from Map for the placement logic if items is null
+      final targetItems = items ?? (ref.read(cartProvider).values.toList());
+
+      if (targetVendorId == null || targetItems.isEmpty) {
+        throw StateError('Cannot retry order: missing vendor or item context.');
+      }
+
+      final order = await _createBackendOrderForCheckout(targetVendorId, targetItems);
 
       if (!context.mounted) return;
 
-      ref.read(cartProvider.notifier).clearCart();
-      context.push('/order-status/${order.id}');
+      // Remove only processed items from cart
+      if (items != null) {
+        for (final cartItem in items) {
+          ref.read(cartProvider.notifier).removeItem(cartItem.item);
+        }
+      }
+
+      if (ref.read(cartProvider).isEmpty) {
+        context.push('/order-status/${order.id}');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Order placed for one vendor. ${ref.read(cartProvider).length} items remaining.')),
+        );
+      }
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -739,24 +812,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
   }
 
-  Future<dynamic> _createBackendOrderForCheckout() async {
-    final cart = ref.read(cartProvider);
-    if (cart.isEmpty) {
-      throw StateError('Cart is empty.');
+  Future<OrderModel> _createBackendOrderForCheckout(String vendorId, List<CartItem> items) async {
+    if (items.isEmpty) {
+      throw StateError('No items for this vendor.');
     }
 
-    final firstItem = cart.values.first;
-    final vendorId = firstItem.item.vendorId;
-    if (vendorId == null || vendorId.isEmpty) {
-      throw StateError('Missing vendor context.');
-    }
-
-    final subtotal = ref.read(cartProvider.notifier).totalAmount;
+    final subtotal = items.fold<double>(0, (sum, i) => sum + (i.item.price * i.quantity));
     final deliveryMode = _deliverToClass ? 'class' : 'standard';
 
     return ref.read(orderServiceProvider).placeOrder(
       vendorId: vendorId,
-      items: cart.values
+      items: items
           .map(
             (i) => {
               'id': i.item.id,
@@ -782,17 +848,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Future<void> _startRazorpayPayment(BuildContext context) async {
+  Future<void> _startRazorpayPayment(BuildContext context, [String? vendorId, List<CartItem>? items]) async {
     if (_paymentInProgress) return;
 
-    final cart = ref.read(cartProvider);
-    if (cart.isEmpty) return;
+    final targetVendorId = vendorId ?? _pendingOrder?.vendorId;
+    final targetItems = items ?? (ref.read(cartProvider).values.toList());
 
-    final firstItem = cart.values.first;
-    final vendorId = firstItem.item.vendorId;
-    if (vendorId == null || vendorId.isEmpty) return;
+    if (targetVendorId == null || targetItems.isEmpty) {
+      _showCartSnack(context, 'Unable to retry payment: session lost.');
+      return;
+    }
 
-    final subtotal = ref.read(cartProvider.notifier).totalAmount;
+    final subtotal = targetItems.fold<double>(0, (sum, i) => sum + (i.item.price * i.quantity));
     final finalAmount = (subtotal - _discountAmount)
         .clamp(0, double.infinity)
         .toDouble();
@@ -800,12 +867,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     setState(() => _paymentInProgress = true);
     try {
       if (_pendingOrder == null) {
-        final createdBackendOrder = await _createBackendOrderForCheckout();
+        final createdBackendOrder = await _createBackendOrderForCheckout(targetVendorId, targetItems);
         final backendOrderId = createdBackendOrder.id.toString();
 
         _pendingOrder = PendingOrder(
-          vendorId: vendorId,
-          items: cart.values
+          vendorId: targetVendorId,
+          items: targetItems
               .map(
                 (i) => {
                   'id': i.item.id,
@@ -996,6 +1063,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _showCartSnack(BuildContext context, String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
     );
   }
 }

@@ -15,9 +15,10 @@ const String menuCategoryCardSemanticPrefix = 'Menu category';
 const String menuItemCardSemanticPrefix = 'Menu item';
 
 class MenuManagementScreen extends ConsumerStatefulWidget {
-  const MenuManagementScreen({super.key, this.imagePicker});
+  const MenuManagementScreen({super.key, this.imagePicker, this.initialTab});
 
   final MenuImagePicker? imagePicker;
+  final String? initialTab;
 
   @override
   ConsumerState<MenuManagementScreen> createState() =>
@@ -28,7 +29,20 @@ class _MenuManagementScreenState extends ConsumerState<MenuManagementScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(menuProvider.notifier).fetchMenus());
+    final tab = widget.initialTab;
+    Future.microtask(() {
+      ref.read(menuProvider.notifier).fetchMenus();
+      if (tab != null && tab != 'categories' && tab != 'items') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Showing $tab'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        });
+      }
+    });
   }
 
   @override

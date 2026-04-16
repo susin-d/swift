@@ -5,18 +5,45 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/widgets/customer_shell.dart';
 import '../../core/widgets/responsive_content.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../models/order_model.dart';
 import '../../providers/order_provider.dart';
+import '../../services/wallet_service.dart';
+import 'widgets/topup_sheet.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  late Razorpay _razorpay;
+  bool _isProcessing = false;
+  double _lastAttemptedAmount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     final ordersAsync = ref.watch(userOrdersProvider);
     final balanceRaw = user?['wallet_balance'] ?? user?['walletBalance'] ?? 480;
@@ -30,18 +57,28 @@ class WalletScreen extends ConsumerWidget {
       title: 'Wallet',
       subtitle: 'Balance, rewards, and recent money flow.',
       actions: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
+        if (_isProcessing)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: IconButton(
+              tooltip: 'Wallet history',
+              onPressed: () => context.push('/order-history'),
+              icon: const Icon(Icons.receipt_long_rounded, color: AppColors.primary),
+            ),
           ),
-          child: IconButton(
-            tooltip: 'Wallet history',
-            onPressed: () => context.push('/order-history'),
-            icon: const Icon(Icons.receipt_long_rounded, color: AppColors.primary),
-          ),
-        ),
       ],
       body: ResponsiveContent(
         child: RefreshIndicator(
@@ -89,6 +126,8 @@ class WalletScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         _memberLabel(user),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
                           color: Colors.white.withValues(alpha: 0.88),
                           fontSize: 15,
@@ -102,7 +141,7 @@ class WalletScreen extends ConsumerWidget {
                             child: _ActionPill(
                               label: '+ Top up',
                               icon: Icons.add_rounded,
-                              onTap: () => _showWalletSnack(context, 'Top up is not linked yet.'),
+                              onTap: _showTopupSheet,
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -179,15 +218,95 @@ class WalletScreen extends ConsumerWidget {
     );
   }
 
+  void _showTopupSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TopupSheet(
+        onProceed: (amount) {
+          Navigator.pop(context);
+          _startTopup(amount);
+        },
+      ),
+    );
+  }
+
+  Future<void> _startTopup(double amount) async {
+    setState(() {
+      _isProcessing = true;
+      _lastAttemptedAmount = amount;
+    });
+
+    try {
+      final paymentData = await WalletService().createTopupPayment(amount);
+      
+      final options = {
+        'key': paymentData['key'],
+        'amount': paymentData['amount'],
+        'name': 'Swift Wallet',
+        'order_id': paymentData['id'],
+        'description': 'Wallet Top-up',
+        'prefill': {
+          'contact': '',
+          'email': ref.read(userProvider)?['email'] ?? '',
+        },
+        'external': {
+          'wallets': ['paytm']
+        }
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      _showWalletSnack(context, 'Failed to initiate payment: $e');
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    try {
+      await WalletService().verifyTopup(
+        orderId: response.orderId!,
+        paymentId: response.paymentId!,
+        signature: response.signature!,
+        amount: _lastAttemptedAmount,
+      );
+
+      _showWalletSnack(context, 'Successfully topped up ₹${_lastAttemptedAmount.toInt()}!');
+      
+      // Refresh user data (balance) and transactions
+      ref.invalidate(userProvider);
+      ref.invalidate(userOrdersProvider);
+    } catch (e) {
+      _showWalletSnack(context, 'Payment verification failed: $e');
+    } finally {
+      setState(() => _isProcessing = false);
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    setState(() => _isProcessing = false);
+    _showWalletSnack(context, 'Payment failed: ${response.message}');
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    _showWalletSnack(context, 'External wallet selected: ${response.walletName}');
+  }
+
   String _memberLabel(Map<String, dynamic>? user) {
     final name = user?['user_metadata']?['name']?.toString() ?? 'Swift Wallet';
     return '$name · Silver member';
   }
 
   void _showWalletSnack(BuildContext context, String message) {
+    if (!mounted) return;
     HapticFeedback.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
     );
   }
 }
@@ -214,12 +333,16 @@ class _ActionPill extends StatelessWidget {
             children: [
               Icon(icon, color: Colors.white, size: 18),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],

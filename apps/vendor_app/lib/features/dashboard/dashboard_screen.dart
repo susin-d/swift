@@ -260,23 +260,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _SidebarItem(
             'Categories',
             Icons.category_rounded,
-            _featureRoute(section: 'Menu & Inventory', title: 'Categories'),
+            '/menu?tab=categories',
           ),
           _SidebarItem(
             'Add / Edit Items',
             Icons.edit_note_rounded,
-            _featureRoute(
-              section: 'Menu & Inventory',
-              title: 'Add / Edit Items',
-            ),
+            '/menu?tab=items',
           ),
           _SidebarItem(
             'Inventory / Stock Control',
             Icons.inventory_2_rounded,
-            _featureRoute(
-              section: 'Menu & Inventory',
-              title: 'Inventory / Stock Control',
-            ),
+            '/menu?tab=inventory',
           ),
         ],
       ),
@@ -338,11 +332,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Icons.local_shipping_rounded,
             _featureRoute(section: 'Operations', title: 'Delivery Management'),
           ),
-          _SidebarItem(
-            'Live Order Tracking',
-            Icons.location_on_rounded,
-            _featureRoute(section: 'Operations', title: 'Live Order Tracking'),
-          ),
+          _SidebarItem('Live Order Tracking', Icons.location_on_rounded, '/'),
           _SidebarItem(
             'Rider / Delivery Partner Info',
             Icons.pedal_bike_rounded,
@@ -359,24 +349,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _SidebarItem(
             'Promotions & Offers',
             Icons.campaign_rounded,
-            _featureRoute(
-              section: 'Growth & Marketing',
-              title: 'Promotions & Offers',
-            ),
+            '/analytics',
           ),
           _SidebarItem(
             'Discounts / Coupons',
             Icons.local_offer_rounded,
-            _featureRoute(
-              section: 'Growth & Marketing',
-              title: 'Discounts / Coupons',
-            ),
+            '/analytics',
           ),
-          _SidebarItem(
-            'Campaigns',
-            Icons.auto_graph_rounded,
-            _featureRoute(section: 'Growth & Marketing', title: 'Campaigns'),
-          ),
+          _SidebarItem('Campaigns', Icons.auto_graph_rounded, '/analytics'),
         ],
       ),
       _SidebarSection(
@@ -386,7 +366,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _SidebarItem(
             'Store Settings',
             Icons.settings_rounded,
-            _featureRoute(section: 'Store Management', title: 'Store Settings'),
+            '/preferences',
           ),
           _SidebarItem(
             'Open / Close Store Toggle',
@@ -397,7 +377,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _SidebarItem(
             'Working Hours',
             Icons.access_time_filled_rounded,
-            _featureRoute(section: 'Store Management', title: 'Working Hours'),
+            '/profile',
           ),
         ],
       ),

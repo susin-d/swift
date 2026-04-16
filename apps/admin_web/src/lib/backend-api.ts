@@ -33,9 +33,18 @@ export const setAdminToken = (token: string | null) => {
 };
 
 const parseResponseBody = async (response: Response) => {
+  if (response.status === 204) {
+    return null;
+  }
+  
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
-    return response.json();
+    try {
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    } catch {
+      return null;
+    }
   }
 
   const text = await response.text();

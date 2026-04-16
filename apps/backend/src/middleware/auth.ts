@@ -63,7 +63,15 @@ export const authMiddlewarePlugin = fp(async (app: FastifyInstance) => {
                 .eq('id', decoded.sub)
                 .maybeSingle();
 
-            if (accountError || !userRow) {
+            if (accountError) {
+                console.error('[authMiddleware] Database error fetching account/user:', accountError);
+                return reply.code(503).send({
+                    error: 'ServiceUnavailable',
+                    message: 'Service temporarily unavailable'
+                });
+            }
+
+            if (!userRow) {
                 return reply.code(401).send({
                     error: 'Unauthorized',
                     message: 'Invalid or expired token'

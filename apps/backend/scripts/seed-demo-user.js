@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const defaultDemoPassword = process.env.DEMO_DEFAULT_PASSWORD || 'ChangeMeBeforeUse!123';
+const defaultDemoPassword = process.env.DEMO_DEFAULT_PASSWORD || 'demo@123';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -59,6 +59,10 @@ async function seedDemoUser(userData) {
     } else {
         userId = existingAuthUser.id;
         console.log(`✓ Auth user already exists with ID: ${userId}`);
+        console.log(`Updating password for existing user: ${email}`);
+        const { error: updateError } = await supabase.auth.admin.updateUserById(userId, { password });
+        if (updateError) throw updateError;
+        console.log(`✓ Password updated`);
     }
 
     // Sync to public.users
