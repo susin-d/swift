@@ -97,42 +97,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       gradient: AppColors.heroGradient,
                       borderRadius: BorderRadius.circular(28),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                          child: const Icon(
-                            Icons.bolt_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${cart.length} items ready',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(color: Colors.white),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Keep everything in one vendor basket for the fastest handoff.',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.88),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Removed 'items ready' banner as requested
                   ),
                   Expanded(
                     child: SingleChildScrollView(

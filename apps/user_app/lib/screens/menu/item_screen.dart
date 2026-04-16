@@ -8,6 +8,8 @@ import '../../core/constants/app_colors.dart';
 import '../../core/widgets/responsive_content.dart';
 import '../../models/menu_model.dart';
 import '../../models/search_result.dart';
+import 'mock_recommendations.dart';
+import 'recommendation_card.dart';
 import '../../providers/cart_provider.dart';
 
 class ItemScreen extends ConsumerWidget {
@@ -133,8 +135,8 @@ class ItemScreen extends ConsumerWidget {
                   child: Row(
                     children: [
                       // Mock recommendations; replace with real data as needed
-                      for (final rec in _mockRecommendations)
-                        _RecommendationCard(item: rec),
+                      for (final rec in mockRecommendations)
+                        RecommendationCard(item: rec),
                     ],
                   ),
                 ),
@@ -143,86 +145,6 @@ class ItemScreen extends ConsumerWidget {
           ),
         ),
       ),
-      // Mock recommendations (replace with real data/provider as needed)
-      final List<SearchResult> _mockRecommendations = [
-        SearchResult(
-          id: '1',
-          name: 'Paneer Butter Masala',
-          description: 'Creamy cottage cheese curry.',
-          price: 120,
-          imageUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=400',
-          vendor: SearchVendor(id: 'v1', name: 'Annapoorna Bhavan'),
-        ),
-        SearchResult(
-          id: '2',
-          name: 'Veg Biryani',
-          description: 'Aromatic rice with veggies.',
-          price: 110,
-          imageUrl: 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?q=80&w=400',
-          vendor: SearchVendor(id: 'v1', name: 'Annapoorna Bhavan'),
-        ),
-        SearchResult(
-          id: '3',
-          name: 'Gulab Jamun',
-          description: 'Classic Indian dessert.',
-          price: 60,
-          imageUrl: 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c?q=80&w=400',
-          vendor: SearchVendor(id: 'v1', name: 'Annapoorna Bhavan'),
-        ),
-      ];
-
-      class _RecommendationCard extends StatelessWidget {
-        final SearchResult item;
-        const _RecommendationCard({required this.item});
-
-        @override
-        Widget build(BuildContext context) {
-          return Container(
-            width: 140,
-            margin: const EdgeInsets.only(right: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    item.imageUrl ?? '',
-                    height: 80,
-                    width: 140,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => Container(
-                      height: 80,
-                      width: 140,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.fastfood, color: Colors.grey),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item.name,
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '\u20B9${item.price.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-      }
       bottomNavigationBar: SafeArea(
         top: false,
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 20),
